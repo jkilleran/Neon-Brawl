@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Neon Brawl, un juego de pelea 2D para uno o dos jugadores."
+      content="Neon Brawl MMA, combate táctico super light para uno o dos jugadores."
     />
     <meta name="theme-color" content="#080816" />
     <title>Neon Brawl</title>
@@ -45,21 +45,21 @@
 
         <div id="menu-screen" class="screen screen--menu">
           <div class="menu-copy">
-            <p class="eyebrow"><span></span> ARCADE PROTOCOL 01</p>
+            <p class="eyebrow"><span></span> MMA PROTOCOL // ALPHA</p>
             <h1>NEON<br /><em>BRAWL</em></h1>
             <p class="menu-copy__description">
-              Domina la arena, carga tu energía y gana dos rondas antes que tu rival.
+              Lee la distancia, protege cabeza y cuerpo, administra tu stamina y domina el octágono.
             </p>
 
             <div class="menu-actions">
               <button class="mode-button mode-button--primary" data-mode="cpu" type="button">
                 <span class="mode-button__number">01</span>
-                <span><strong>VS COMPUTADORA</strong><small>Entrenamiento individual</small></span>
+                <span><strong>QUICK FIGHT</strong><small>Combate MMA contra la CPU</small></span>
                 <span class="mode-button__arrow">→</span>
               </button>
               <button class="mode-button" data-mode="local" type="button">
                 <span class="mode-button__number">02</span>
-                <span><strong>DOS JUGADORES</strong><small>Un teclado, una rivalidad</small></span>
+                <span><strong>LOCAL SPARRING</strong><small>Dos jugadores, un teclado</small></span>
                 <span class="mode-button__arrow">→</span>
               </button>
             </div>
@@ -67,23 +67,21 @@
 
           <div class="fighter-card" aria-hidden="true">
             <div class="fighter-card__rings"></div>
-            <div class="fighter-card__fighter">
-              <span class="fighter-card__head"></span>
-              <span class="fighter-card__body"></span>
-              <span class="fighter-card__arm fighter-card__arm--left"></span>
-              <span class="fighter-card__arm fighter-card__arm--right"></span>
-              <span class="fighter-card__leg fighter-card__leg--left"></span>
-              <span class="fighter-card__leg fighter-card__leg--right"></span>
+            <div class="fighter-card__sprite"></div>
+            <div class="fighter-card__stats">
+              <span><b>82</b> STR</span>
+              <span><b>79</b> GRP</span>
+              <span><b>86</b> STA</span>
             </div>
             <div class="fighter-card__label">
-              <small>PLAYER ONE</small>
-              <strong>KIRA // 01</strong>
+              <small>NEON MMA ROSTER // 01</small>
+              <strong>ROOK // STRIKER</strong>
             </div>
           </div>
 
           <div class="menu-controls">
-            <div><span>P1</span><b>A D</b> mover <b>W</b> saltar <b>S</b> cubrir <b>F / G</b> atacar</div>
-            <div><span>P2</span><b>← →</b> mover <b>↑</b> saltar <b>↓</b> cubrir <b>K / L</b> atacar</div>
+            <div><span>P1</span><b>A D</b> mover <b>W / S</b> guardia <b>F G</b> puños <b>R T</b> patadas <b>E</b> derribo</div>
+            <div><span>P2</span><b>← →</b> mover <b>↑ / ↓</b> guardia <b>K L</b> puños <b>O P</b> patadas <b>I</b> derribo</div>
           </div>
         </div>
 
@@ -100,8 +98,8 @@
         <div id="result-screen" class="screen screen--dialog is-hidden" role="dialog" aria-modal="true">
           <div class="dialog-card dialog-card--result">
             <p id="result-kicker" class="eyebrow"><span></span> COMBATE FINALIZADO</p>
-            <h2 id="result-title">KIRA GANA</h2>
-            <p id="result-copy">La ciudad tiene una nueva campeona.</p>
+            <h2 id="result-title">ROOK GANA</h2>
+            <p id="result-copy">Victoria dentro del octágono.</p>
             <button id="rematch-button" class="dialog-button dialog-button--primary" type="button">REVANCHA</button>
             <button class="dialog-button menu-button" type="button">VOLVER AL MENÚ</button>
           </div>
@@ -111,12 +109,21 @@
           <small id="round-kicker">RONDA 1</small>
           <strong id="round-title">FIGHT</strong>
         </div>
+
+        <div id="combat-controls" class="combat-controls is-hidden" aria-hidden="true">
+          <span><kbd>F</kbd> JAB</span>
+          <span><kbd>G</kbd> CROSS</span>
+          <span><kbd>R</kbd> BODY KICK</span>
+          <span><kbd>T</kbd> HEAD KICK</span>
+          <span><kbd>E</kbd> TAKEDOWN</span>
+          <span><kbd>SPACE</kbd> EVADE</span>
+        </div>
       </section>
 
       <footer class="footer-note">
         <span><i></i> SYSTEM ONLINE</span>
-        <p>ESC para pausar · La habilidad especial consume 40 de energía</p>
-        <span>BUILD 0.1.0</span>
+        <p>ESC para pausar · La stamina y la distancia cambian el daño de cada golpe</p>
+        <span>BUILD 0.2.0 // MMA</span>
       </footer>
     </main>
 

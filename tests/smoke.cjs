@@ -95,6 +95,7 @@ const make = (selector) => {
   "#result-copy",
   "#sound-button",
   "#sound-icon",
+  "#combat-controls",
   "#resume-button",
   "#rematch-button",
   "#fullscreen-button",
@@ -127,6 +128,18 @@ global.window = {
     if (!windowListeners.has(type)) windowListeners.set(type, []);
     windowListeners.get(type).push(callback);
   },
+};
+
+global.Image = class FakeImage {
+  constructor() {
+    this.complete = true;
+    this.naturalWidth = 1774;
+    this.naturalHeight = 887;
+  }
+
+  set src(value) {
+    this.source = value;
+  }
 };
 
 global.requestAnimationFrame = (callback) => {
