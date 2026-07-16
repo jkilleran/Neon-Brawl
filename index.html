@@ -80,18 +80,44 @@
           </div>
 
           <div class="menu-controls">
-            <div><span>P1</span><b>A D</b> mover <b>W / S</b> guardia <b>F</b> jab izq. <b>G</b> jab der. <b>R T</b> patadas</div>
-            <div><span>P2</span><b>← →</b> mover <b>↑ / ↓</b> guardia <b>K</b> jab izq. <b>L</b> jab der. <b>O P</b> patadas</div>
+            <div><span>P1</span><b>W A S D</b> defensa/mov. <b>U I</b> puños <b>J K</b> patadas <b>SPACE + golpe</b> cuerpo</div>
+            <div><span>P2</span><b>↑ ← ↓ →</b> defensa/mov. <b>N M</b> puños <b>, .</b> patadas <b>SPACE + golpe</b> cuerpo</div>
           </div>
         </div>
 
         <div id="pause-screen" class="screen screen--dialog is-hidden" role="dialog" aria-modal="true">
-          <div class="dialog-card">
+          <div class="dialog-card dialog-card--pause">
             <p class="eyebrow"><span></span> COMBATE DETENIDO</p>
             <h2>PAUSA</h2>
-            <p>Respira. La arena te espera.</p>
-            <button id="resume-button" class="dialog-button dialog-button--primary" type="button">CONTINUAR</button>
-            <button class="dialog-button menu-button" type="button">VOLVER AL MENÚ</button>
+            <div class="pause-controls-grid">
+              <section class="pause-control-card pause-control-card--p1">
+                <header><b>P1</b><span>WASD + UIJK</span></header>
+                <div><kbd>W</kbd> guardia alta</div>
+                <div><kbd>A</kbd> retroceder</div>
+                <div><kbd>S</kbd> guardia baja</div>
+                <div><kbd>D</kbd> avanzar</div>
+                <div><kbd>U</kbd> puño izquierdo</div>
+                <div><kbd>I</kbd> puño derecho</div>
+                <div><kbd>J</kbd> patada izquierda</div>
+                <div><kbd>K</kbd> patada derecha</div>
+              </section>
+              <section class="pause-control-card pause-control-card--p2">
+                <header><b>P2</b><span>FLECHAS + NM,.</span></header>
+                <div><kbd>↑</kbd> guardia alta</div>
+                <div><kbd>←</kbd> retroceder</div>
+                <div><kbd>↓</kbd> guardia baja</div>
+                <div><kbd>→</kbd> avanzar</div>
+                <div><kbd>N</kbd> puño izquierdo</div>
+                <div><kbd>M</kbd> puño derecho</div>
+                <div><kbd>,</kbd> patada izquierda</div>
+                <div><kbd>.</kbd> patada derecha</div>
+              </section>
+            </div>
+            <div class="body-modifier"><kbd>SPACE</kbd><span>mantener + cualquier golpe = ataque al cuerpo</span></div>
+            <div class="pause-actions">
+              <button id="resume-button" class="dialog-button dialog-button--primary" type="button">CONTINUAR</button>
+              <button class="dialog-button menu-button" type="button">VOLVER AL MENÚ</button>
+            </div>
           </div>
         </div>
 
@@ -111,18 +137,18 @@
         </div>
 
         <div id="combat-controls" class="combat-controls is-hidden" aria-hidden="true">
-          <span><kbd>F</kbd> LEFT JAB</span>
-          <span><kbd>G</kbd> RIGHT JAB</span>
-          <span><kbd>R</kbd> BODY KICK</span>
-          <span><kbd>T</kbd> HEAD KICK</span>
-          <span><kbd>SPACE</kbd> EVADE</span>
+          <span><kbd>U</kbd> LEFT PUNCH</span>
+          <span><kbd>I</kbd> RIGHT PUNCH</span>
+          <span><kbd>J</kbd> LEFT KICK</span>
+          <span><kbd>K</kbd> RIGHT KICK</span>
+          <span><kbd>SPACE +</kbd> BODY</span>
         </div>
       </section>
 
       <footer class="footer-note">
         <span><i></i> SYSTEM ONLINE</span>
         <p>ESC para pausar · La stamina y la distancia cambian el daño de cada golpe</p>
-        <span>BUILD 0.3.0 // STRIKING</span>
+        <span>BUILD 0.4.0 // FRAME LAB</span>
       </footer>
     </main>
 

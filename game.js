@@ -28,20 +28,21 @@
     takedowns: false,
   });
 
-  function animationSheet(src, columns, rows, frames) {
+  function animationSheet(src, columns, rows, frames, fallbackWidth = 1400, fallbackHeight = 1120) {
     const image = new Image();
     image.src = src;
-    return { image, columns, rows, frames };
+    return { image, columns, rows, frames, fallbackWidth, fallbackHeight };
   }
 
   const ANIMATIONS = {
-    footwork: animationSheet("/assets/anim-footwork.png", 4, 2, 8),
-    leftJab: animationSheet("/assets/anim-left-jab.png", 3, 2, 6),
-    rightJab: animationSheet("/assets/anim-right-jab.png", 3, 2, 6),
-    bodyKick: animationSheet("/assets/anim-body-kick.png", 3, 2, 6),
-    headKick: animationSheet("/assets/anim-head-kick.png", 3, 2, 6),
-    guards: animationSheet("/assets/anim-guards.png", 4, 2, 8),
-    legacy: animationSheet("/assets/fighter-mma-sprites.png", 4, 2, 8),
+    punchesHead: animationSheet("/assets/anim-punches-head-v2.png", 5, 4, 20),
+    punchesBody: animationSheet("/assets/anim-punches-body-v2.png", 5, 4, 20),
+    kicksHead: animationSheet("/assets/anim-kicks-head-v2.png", 5, 4, 20),
+    kicksBody: animationSheet("/assets/anim-kicks-body-v2.png", 5, 4, 20),
+    hitReactions: animationSheet("/assets/anim-hit-reactions-v2.png", 5, 4, 20),
+    footwork: animationSheet("/assets/anim-footwork-v2.png", 5, 4, 20),
+    guards: animationSheet("/assets/anim-guards-v2.png", 5, 4, 20),
+    legacy: animationSheet("/assets/fighter-mma-sprites.png", 4, 2, 8, 1774, 887),
   };
 
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -55,81 +56,183 @@
   }
 
   const ATTACKS = {
-    leftJab: {
-      label: "LEFT JAB",
-      animation: "leftJab",
+    leftPunchHead: {
+      label: "LEFT PUNCH // HEAD",
+      animation: "punchesHead",
+      frameOffset: 0,
+      frameCount: 10,
       target: "head",
-      startup: 0.07,
+      startup: 0.09,
       active: 0.07,
-      recovery: 0.14,
+      recovery: 0.18,
       damage: 6,
       stamina: 5,
-      reach: 118,
-      idealRange: 88,
+      reach: 122,
+      idealRange: 91,
       stun: 0.11,
       knockback: 38,
       strikeRadius: 19,
       strikePath: [
-        { x: 24, y: -134 }, { x: 42, y: -136 }, { x: 76, y: -139 },
-        { x: 120, y: -142 }, { x: 70, y: -138 }, { x: 25, y: -134 },
+        { x: 23, y: -134 }, { x: 31, y: -135 }, { x: 45, y: -137 },
+        { x: 65, y: -139 }, { x: 92, y: -141 }, { x: 122, y: -142 },
+        { x: 116, y: -142 }, { x: 78, y: -139 }, { x: 44, y: -136 }, { x: 24, y: -134 },
       ],
     },
-    rightJab: {
-      label: "RIGHT JAB",
-      animation: "rightJab",
+    rightPunchHead: {
+      label: "RIGHT PUNCH // HEAD",
+      animation: "punchesHead",
+      frameOffset: 10,
+      frameCount: 10,
       target: "head",
       startup: 0.14,
       active: 0.08,
-      recovery: 0.23,
+      recovery: 0.25,
       damage: 11,
       stamina: 10,
-      reach: 136,
-      idealRange: 106,
+      reach: 140,
+      idealRange: 108,
       stun: 0.2,
       knockback: 68,
       strikeRadius: 21,
       strikePath: [
-        { x: 21, y: -131 }, { x: 48, y: -133 }, { x: 88, y: -138 },
-        { x: 138, y: -141 }, { x: 78, y: -136 }, { x: 22, y: -132 },
+        { x: 20, y: -131 }, { x: 30, y: -132 }, { x: 49, y: -134 },
+        { x: 74, y: -137 }, { x: 107, y: -140 }, { x: 140, y: -142 },
+        { x: 132, y: -141 }, { x: 88, y: -137 }, { x: 48, y: -133 }, { x: 21, y: -131 },
       ],
     },
-    bodyKick: {
-      label: "BODY KICK",
-      animation: "bodyKick",
+    leftPunchBody: {
+      label: "LEFT PUNCH // BODY",
+      animation: "punchesBody",
+      frameOffset: 0,
+      frameCount: 10,
       target: "body",
-      startup: 0.2,
+      startup: 0.11,
+      active: 0.08,
+      recovery: 0.2,
+      damage: 8,
+      stamina: 7,
+      reach: 116,
+      idealRange: 84,
+      stun: 0.14,
+      knockback: 44,
+      strikeRadius: 20,
+      strikePath: [
+        { x: 20, y: -120 }, { x: 28, y: -113 }, { x: 42, y: -104 },
+        { x: 62, y: -96 }, { x: 88, y: -90 }, { x: 116, y: -87 },
+        { x: 110, y: -88 }, { x: 76, y: -98 }, { x: 42, y: -111 }, { x: 21, y: -120 },
+      ],
+    },
+    rightPunchBody: {
+      label: "RIGHT PUNCH // BODY",
+      animation: "punchesBody",
+      frameOffset: 10,
+      frameCount: 10,
+      target: "body",
+      startup: 0.16,
+      active: 0.08,
+      recovery: 0.26,
+      damage: 12,
+      stamina: 11,
+      reach: 132,
+      idealRange: 101,
+      stun: 0.22,
+      knockback: 70,
+      strikeRadius: 22,
+      strikePath: [
+        { x: 18, y: -121 }, { x: 28, y: -114 }, { x: 46, y: -104 },
+        { x: 70, y: -95 }, { x: 101, y: -88 }, { x: 132, y: -84 },
+        { x: 126, y: -85 }, { x: 83, y: -96 }, { x: 45, y: -111 }, { x: 19, y: -121 },
+      ],
+    },
+    leftKickHead: {
+      label: "LEFT KICK // HEAD",
+      animation: "kicksHead",
+      frameOffset: 0,
+      frameCount: 10,
+      target: "head",
+      startup: 0.24,
       active: 0.1,
-      recovery: 0.33,
+      recovery: 0.39,
+      damage: 17,
+      stamina: 20,
+      reach: 180,
+      idealRange: 148,
+      stun: 0.3,
+      knockback: 108,
+      heavy: true,
+      strikeRadius: 28,
+      strikePath: [
+        { x: 4, y: -28 }, { x: 15, y: -42 }, { x: 35, y: -69 },
+        { x: 64, y: -101 }, { x: 110, y: -132 }, { x: 176, y: -151 },
+        { x: 168, y: -149 }, { x: 102, y: -117 }, { x: 43, y: -66 }, { x: 7, y: -29 },
+      ],
+    },
+    rightKickHead: {
+      label: "RIGHT KICK // HEAD",
+      animation: "kicksHead",
+      frameOffset: 10,
+      frameCount: 10,
+      target: "head",
+      startup: 0.29,
+      active: 0.11,
+      recovery: 0.46,
+      damage: 21,
+      stamina: 26,
+      reach: 188,
+      idealRange: 156,
+      stun: 0.37,
+      knockback: 132,
+      heavy: true,
+      strikeRadius: 30,
+      strikePath: [
+        { x: 3, y: -28 }, { x: 14, y: -43 }, { x: 37, y: -72 },
+        { x: 69, y: -106 }, { x: 119, y: -137 }, { x: 184, y: -153 },
+        { x: 176, y: -151 }, { x: 108, y: -120 }, { x: 46, y: -68 }, { x: 7, y: -29 },
+      ],
+    },
+    leftKickBody: {
+      label: "LEFT KICK // BODY",
+      animation: "kicksBody",
+      frameOffset: 0,
+      frameCount: 10,
+      target: "body",
+      startup: 0.21,
+      active: 0.1,
+      recovery: 0.34,
       damage: 14,
       stamina: 16,
-      reach: 168,
-      idealRange: 137,
+      reach: 170,
+      idealRange: 139,
       stun: 0.24,
-      knockback: 82,
+      knockback: 84,
       strikeRadius: 27,
       strikePath: [
-        { x: 5, y: -27 }, { x: 31, y: -55 }, { x: 88, y: -77 },
-        { x: 158, y: -90 }, { x: 80, y: -59 }, { x: 8, y: -27 },
+        { x: 5, y: -28 }, { x: 16, y: -40 }, { x: 38, y: -58 },
+        { x: 68, y: -74 }, { x: 112, y: -86 }, { x: 166, y: -91 },
+        { x: 158, y: -90 }, { x: 96, y: -77 }, { x: 39, y: -53 }, { x: 8, y: -28 },
       ],
     },
-    headKick: {
-      label: "HEAD KICK",
-      animation: "headKick",
-      target: "head",
-      startup: 0.28,
+    rightKickBody: {
+      label: "RIGHT KICK // BODY",
+      animation: "kicksBody",
+      frameOffset: 10,
+      frameCount: 10,
+      target: "body",
+      startup: 0.25,
       active: 0.1,
-      recovery: 0.44,
-      damage: 20,
-      stamina: 25,
-      reach: 184,
-      idealRange: 153,
-      stun: 0.34,
-      knockback: 125,
+      recovery: 0.4,
+      damage: 17,
+      stamina: 20,
+      reach: 178,
+      idealRange: 146,
+      stun: 0.29,
+      knockback: 101,
       heavy: true,
       strikeRadius: 29,
       strikePath: [
-        { x: 4, y: -28 }, { x: 34, y: -67 }, { x: 94, y: -114 },
-        { x: 174, y: -151 }, { x: 84, y: -94 }, { x: 8, y: -29 },
+        { x: 4, y: -28 }, { x: 16, y: -41 }, { x: 40, y: -60 },
+        { x: 73, y: -77 }, { x: 120, y: -88 }, { x: 174, y: -92 },
+        { x: 166, y: -91 }, { x: 101, y: -79 }, { x: 42, y: -55 }, { x: 8, y: -28 },
       ],
     },
     takedown: {
@@ -288,6 +391,7 @@
       this.knockdownsSuffered = 0;
       this.moveFlash = 0;
       this.impactMarker = null;
+      this.hitReaction = null;
     }
 
     getHurtZone(target) {
@@ -308,17 +412,25 @@
       return 55 + this.bodyHealth * 0.45;
     }
 
-    update(deltaTime, input, opponent) {
+    updateVisualState(deltaTime) {
       this.animationTime += deltaTime;
-      this.stun = Math.max(0, this.stun - deltaTime);
-      this.evadeTimer = Math.max(0, this.evadeTimer - deltaTime);
-      this.evadeCooldown = Math.max(0, this.evadeCooldown - deltaTime);
-      this.invulnerable = Math.max(0, this.invulnerable - deltaTime);
       this.moveFlash = Math.max(0, this.moveFlash - deltaTime);
+      if (this.hitReaction) {
+        this.hitReaction.elapsed += deltaTime;
+        if (this.hitReaction.elapsed >= this.hitReaction.duration) this.hitReaction = null;
+      }
       if (this.impactMarker) {
         this.impactMarker.life -= deltaTime;
         if (this.impactMarker.life <= 0) this.impactMarker = null;
       }
+    }
+
+    update(deltaTime, input, opponent) {
+      this.updateVisualState(deltaTime);
+      this.stun = Math.max(0, this.stun - deltaTime);
+      this.evadeTimer = Math.max(0, this.evadeTimer - deltaTime);
+      this.evadeCooldown = Math.max(0, this.evadeCooldown - deltaTime);
+      this.invulnerable = Math.max(0, this.invulnerable - deltaTime);
       this.displayHead = lerp(this.displayHead, this.headHealth, 1 - Math.pow(0.00003, deltaTime));
       this.displayBody = lerp(this.displayBody, this.bodyHealth, 1 - Math.pow(0.00003, deltaTime));
 
@@ -362,14 +474,14 @@
           this.startEvade(opponent);
         } else if (FEATURES.takedowns && input.takedown) {
           this.startAttack("takedown");
-        } else if (input.headKick) {
-          this.startAttack("headKick");
-        } else if (input.bodyKick) {
-          this.startAttack("bodyKick");
-        } else if (input.rightJab) {
-          this.startAttack("rightJab");
-        } else if (input.leftJab) {
-          this.startAttack("leftJab");
+        } else if (input.rightKick) {
+          this.startAttack(input.bodyModifier ? "rightKickBody" : "rightKickHead");
+        } else if (input.leftKick) {
+          this.startAttack(input.bodyModifier ? "leftKickBody" : "leftKickHead");
+        } else if (input.rightPunch) {
+          this.startAttack(input.bodyModifier ? "rightPunchBody" : "rightPunchHead");
+        } else if (input.leftPunch) {
+          this.startAttack(input.bodyModifier ? "leftPunchBody" : "leftPunchHead");
         }
       } else if (this.attack) {
         this.velocityX *= Math.pow(0.008, deltaTime);
@@ -439,11 +551,22 @@
     getAttackFrameFloat() {
       const definition = this.currentAttack;
       if (!definition || !this.attack) return 0;
+      const frameCount = definition.frameCount ?? definition.strikePath.length;
+      const contactFrame = Math.min(frameCount - 2, Math.max(1, Math.floor(frameCount * 0.56)));
       const elapsed = this.attack.elapsed;
-      if (elapsed < definition.startup) return clamp(elapsed / definition.startup * 3, 0, 3);
-      if (elapsed <= definition.startup + definition.active) return 3;
+      if (elapsed < definition.startup) {
+        return clamp(elapsed / definition.startup * contactFrame, 0, contactFrame);
+      }
+      if (elapsed <= definition.startup + definition.active) {
+        const activeProgress = (elapsed - definition.startup) / definition.active;
+        return contactFrame + clamp(activeProgress, 0, 1);
+      }
       const recoveryElapsed = elapsed - definition.startup - definition.active;
-      return clamp(3 + recoveryElapsed / definition.recovery * 2, 3, 5);
+      return clamp(
+        contactFrame + 1 + recoveryElapsed / definition.recovery * (frameCount - contactFrame - 2),
+        contactFrame + 1,
+        frameCount - 1,
+      );
     }
 
     getStrikePoint(definition = this.currentAttack) {
@@ -471,8 +594,8 @@
       const rotation = options.rotation ?? (this.knockdownTimer > 0 ? -this.facing * Math.PI / 2 : 0);
       const scale = options.scale ?? 1;
       const facing = options.facing ?? this.facing;
-      const sheetWidth = sheet.image.naturalWidth || (sheet.columns === 3 ? 1536 : 1774);
-      const sheetHeight = sheet.image.naturalHeight || (sheet.columns === 3 ? 1024 : 887);
+      const sheetWidth = sheet.image.naturalWidth || sheet.fallbackWidth;
+      const sheetHeight = sheet.image.naturalHeight || sheet.fallbackHeight;
       const frameWidth = sheetWidth / sheet.columns;
       const frameHeight = sheetHeight / sheet.rows;
       const column = frame % sheet.columns;
@@ -495,6 +618,8 @@
       context.scale(facing, 1);
       context.shadowColor = this.color;
       context.shadowBlur = this.moveFlash > 0 ? 24 : 12;
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = "high";
 
       if (sheet.image.complete && sheetWidth > 0) {
         context.drawImage(
@@ -555,22 +680,31 @@
       if (this.attack) {
         return {
           animation: this.currentAttack.animation,
-          frame: this.currentAttack.legacyFrame ?? Math.floor(this.getAttackFrameFloat()),
+          frame: this.currentAttack.legacyFrame
+            ?? (this.currentAttack.frameOffset ?? 0) + Math.floor(this.getAttackFrameFloat()),
+        };
+      }
+      if (this.hitReaction) {
+        const reactionProgress = clamp(this.hitReaction.elapsed / this.hitReaction.duration, 0, 0.999);
+        const reactionOffset = this.hitReaction.target === "body" ? 10 : 0;
+        return {
+          animation: "hitReactions",
+          frame: reactionOffset + Math.floor(reactionProgress * 10),
         };
       }
       const visibleGuard = this.guard ?? (this.guardBlend > 0 ? this.guardVisual : null);
       if (visibleGuard === "high") {
-        return { animation: "guards", frame: clamp(Math.floor(this.guardBlend * 3), 0, 3) };
+        return { animation: "guards", frame: clamp(Math.floor(this.guardBlend * 9), 0, 9) };
       }
       if (visibleGuard === "low") {
-        return { animation: "guards", frame: 4 + clamp(Math.floor(this.guardBlend * 3), 0, 3) };
+        return { animation: "guards", frame: 10 + clamp(Math.floor(this.guardBlend * 9), 0, 9) };
       }
-      if (this.evadeTimer > 0) return { animation: "footwork", frame: 6 };
+      if (this.evadeTimer > 0) return { animation: "footwork", frame: 15 };
       if (Math.abs(this.velocityX) > 18) {
-        const cycle = Math.floor(this.animationTime * 11) % 8;
+        const cycle = Math.floor(this.animationTime * 14) % 10;
         return {
           animation: "footwork",
-          frame: this.velocityX * this.facing >= 0 ? cycle : 7 - cycle,
+          frame: this.velocityX * this.facing >= 0 ? cycle : 10 + cycle,
         };
       }
       return { animation: "footwork", frame: 0 };
@@ -648,10 +782,11 @@
         move: 0,
         guardHigh: false,
         guardLow: false,
-        leftJab: false,
-        rightJab: false,
-        bodyKick: false,
-        headKick: false,
+        leftPunch: false,
+        rightPunch: false,
+        leftKick: false,
+        rightKick: false,
+        bodyModifier: false,
         takedown: false,
         evade: false,
       };
@@ -728,28 +863,32 @@
 
     getKeyboardInput(player) {
       if (player === 1) {
+        const forward = this.fighterOne.facing;
         return {
-          move: (keys.has("KeyD") ? 1 : 0) - (keys.has("KeyA") ? 1 : 0),
+          move: (keys.has("KeyD") ? forward : 0) - (keys.has("KeyA") ? forward : 0),
           guardHigh: keys.has("KeyW"),
           guardLow: keys.has("KeyS"),
-          leftJab: pressed.has("KeyF"),
-          rightJab: pressed.has("KeyG"),
-          bodyKick: pressed.has("KeyR"),
-          headKick: pressed.has("KeyT"),
+          leftPunch: pressed.has("KeyU"),
+          rightPunch: pressed.has("KeyI"),
+          leftKick: pressed.has("KeyJ"),
+          rightKick: pressed.has("KeyK"),
+          bodyModifier: keys.has("Space"),
           takedown: FEATURES.takedowns && pressed.has("KeyE"),
-          evade: pressed.has("Space"),
+          evade: false,
         };
       }
+      const forward = this.fighterTwo.facing;
       return {
-        move: (keys.has("ArrowRight") ? 1 : 0) - (keys.has("ArrowLeft") ? 1 : 0),
+        move: (keys.has("ArrowRight") ? forward : 0) - (keys.has("ArrowLeft") ? forward : 0),
         guardHigh: keys.has("ArrowUp"),
         guardLow: keys.has("ArrowDown"),
-        leftJab: pressed.has("KeyK"),
-        rightJab: pressed.has("KeyL"),
-        bodyKick: pressed.has("KeyO"),
-        headKick: pressed.has("KeyP"),
-        takedown: FEATURES.takedowns && pressed.has("KeyI"),
-        evade: pressed.has("Slash"),
+        leftPunch: pressed.has("KeyN"),
+        rightPunch: pressed.has("KeyM"),
+        leftKick: pressed.has("Comma"),
+        rightKick: pressed.has("Period"),
+        bodyModifier: keys.has("Space"),
+        takedown: FEATURES.takedowns && pressed.has("Slash"),
+        evade: false,
       };
     }
 
@@ -786,19 +925,21 @@
         } else {
           const choice = Math.random();
           if (FEATURES.takedowns && distance < 105 && choice < 0.13) this.aiIntent.takedown = true;
-          else if (choice < 0.4) this.aiIntent.leftJab = true;
-          else if (choice < 0.63) this.aiIntent.rightJab = true;
-          else if (distance > 105 && choice < 0.84) this.aiIntent.bodyKick = true;
-          else if (distance > 125 && choice < 0.94) this.aiIntent.headKick = true;
+          else if (choice < 0.36) this.aiIntent.leftPunch = true;
+          else if (choice < 0.6) this.aiIntent.rightPunch = true;
+          else if (distance > 105 && choice < 0.81) this.aiIntent.leftKick = true;
+          else if (distance > 125 && choice < 0.94) this.aiIntent.rightKick = true;
           else this.aiIntent.move = Math.random() < 0.5 ? direction : -direction;
+          this.aiIntent.bodyModifier = Math.random() < 0.42;
         }
       }
 
       const input = { ...this.aiIntent };
-      this.aiIntent.leftJab = false;
-      this.aiIntent.rightJab = false;
-      this.aiIntent.bodyKick = false;
-      this.aiIntent.headKick = false;
+      this.aiIntent.leftPunch = false;
+      this.aiIntent.rightPunch = false;
+      this.aiIntent.leftKick = false;
+      this.aiIntent.rightKick = false;
+      this.aiIntent.bodyModifier = false;
       this.aiIntent.takedown = false;
       this.aiIntent.evade = false;
       return input;
@@ -860,7 +1001,16 @@
       target.stamina = Math.max(0, target.stamina - (matchingGuard ? definition.damage * 0.42 : damage * 0.15));
       target.stun = matchingGuard ? 0.08 : definition.stun;
       target.velocityX = attacker.facing * definition.knockback * (matchingGuard ? 0.28 : 1);
-      if (!matchingGuard) target.attack = null;
+      if (!matchingGuard) {
+        target.attack = null;
+        target.guard = null;
+        target.guardBlend = 0;
+        target.hitReaction = {
+          target: definition.target,
+          elapsed: 0,
+          duration: definition.heavy ? 0.42 : definition.target === "body" ? 0.36 : 0.32,
+        };
+      }
 
       target.impactMarker = {
         x: contact.x,
@@ -899,6 +1049,7 @@
       target.knockdownTimer = 1.75;
       target.velocityX = attacker.facing * 150;
       target.attack = null;
+      target.hitReaction = null;
       this.showCallout("KNOCKDOWN", attacker.color, 1);
       if (target.knockdownsSuffered >= 3) this.finishFight(attacker, "TKO");
     }
@@ -938,7 +1089,7 @@
       const attackerInput = sequence.attacker.player === 1
         ? this.getKeyboardInput(1)
         : this.mode === "cpu"
-          ? { ...this.emptyInput(), leftJab: sequence.strikeCooldown <= 0 }
+          ? { ...this.emptyInput(), leftPunch: sequence.strikeCooldown <= 0 }
           : this.getKeyboardInput(2);
       const defenderInput = sequence.target.player === 1
         ? this.getKeyboardInput(1)
@@ -946,7 +1097,7 @@
           ? { ...this.emptyInput(), guardHigh: Math.random() < 0.75 }
           : this.getKeyboardInput(2);
 
-      if ((attackerInput.leftJab || attackerInput.rightJab) && sequence.strikeCooldown <= 0 && sequence.attacker.stamina >= 4) {
+      if ((attackerInput.leftPunch || attackerInput.rightPunch) && sequence.strikeCooldown <= 0 && sequence.attacker.stamina >= 4) {
         const blocked = defenderInput.guardHigh;
         const damage = blocked ? 1.4 : 5.5;
         sequence.target.headHealth = clamp(sequence.target.headHealth - damage, 0, 100);
@@ -1070,8 +1221,8 @@
 
       if (this.state === "intro") {
         this.introTimer -= deltaTime;
-        this.fighterOne.animationTime += deltaTime;
-        this.fighterTwo.animationTime += deltaTime;
+        this.fighterOne.updateVisualState(deltaTime);
+        this.fighterTwo.updateVisualState(deltaTime);
         if (this.introTimer < 0.72 && !this.introFightShown) {
           this.introFightShown = true;
           this.showRoundMessage(`ROUND ${this.round} OF ${MAX_ROUNDS}`, "FIGHT");
@@ -1099,8 +1250,8 @@
         }
       } else if (this.state === "roundOver") {
         this.roundDelay -= deltaTime;
-        this.fighterOne.animationTime += deltaTime;
-        this.fighterTwo.animationTime += deltaTime;
+        this.fighterOne.updateVisualState(deltaTime);
+        this.fighterTwo.updateVisualState(deltaTime);
         if (this.roundDelay <= 0) {
           if (this.matchWinner) this.showResult();
           else {
@@ -1207,7 +1358,7 @@
       context.font = "700 11px Orbitron, sans-serif";
       context.shadowColor = attacker.color;
       context.shadowBlur = 10;
-      context.fillText("GROUND CONTROL // F/G TO STRIKE", center, FLOOR - 235);
+      context.fillText("GROUND CONTROL // U/I TO STRIKE", center, FLOOR - 235);
       context.restore();
     }
 

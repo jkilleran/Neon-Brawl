@@ -1,4 +1,12 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+
+const markup = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+assert.match(markup, /pause-controls-grid/, "Pause menu should expose the complete controls");
+assert.match(markup, /WASD \+ UIJK/, "Pause menu should list Player 1 controls");
+assert.match(markup, /FLECHAS \+ NM,\./, "Pause menu should list Player 2 controls");
+assert.match(markup, /SPACE<\/kbd><span>mantener \+ cualquier golpe/, "Pause menu should explain the body modifier");
 
 class FakeClassList {
   constructor() {
@@ -134,13 +142,19 @@ global.window = {
 global.Image = class FakeImage {
   constructor() {
     this.complete = true;
-    this.naturalWidth = 1774;
-    this.naturalHeight = 887;
   }
 
   set src(value) {
     this.source = value;
     imageSources.push(value);
+  }
+
+  get naturalWidth() {
+    return this.source?.includes("fighter-mma") ? 1774 : 1400;
+  }
+
+  get naturalHeight() {
+    return this.source?.includes("fighter-mma") ? 887 : 1120;
   }
 };
 
@@ -152,9 +166,12 @@ require("../game.js");
 
 assert.equal(animationFrames.length, 1, "The game should schedule its animation loop");
 assert.equal(modeButtons[0].listeners.has("click"), true, "CPU mode should be interactive");
-assert.equal(imageSources.length, 7, "All combat animation sheets should preload");
-assert(imageSources.includes("/assets/anim-left-jab.png"));
-assert(imageSources.includes("/assets/anim-right-jab.png"));
+assert.equal(imageSources.length, 8, "All expanded combat animation sheets should preload");
+assert(imageSources.includes("/assets/anim-punches-head-v2.png"));
+assert(imageSources.includes("/assets/anim-punches-body-v2.png"));
+assert(imageSources.includes("/assets/anim-kicks-head-v2.png"));
+assert(imageSources.includes("/assets/anim-kicks-body-v2.png"));
+assert(imageSources.includes("/assets/anim-hit-reactions-v2.png"));
 
 modeButtons[0].dispatch("click");
 assert.equal(selectors.get("#menu-screen").classList.contains("is-hidden"), true);
@@ -166,21 +183,28 @@ const sendKey = (type, code) => {
 };
 
 const tapFrames = new Map([
-  [130, "KeyF"],
-  [170, "KeyG"],
-  [220, "KeyR"],
-  [280, "KeyT"],
+  [130, "KeyU"],
+  [175, "KeyI"],
+  [235, "KeyJ"],
+  [305, "KeyK"],
+  [390, "KeyU"],
 ]);
 
 let time = performance.now();
-for (let frame = 0; frame < 340; frame += 1) {
+for (let frame = 0; frame < 450; frame += 1) {
   time += 1000 / 60;
   const callback = animationFrames.shift();
   assert(callback, `Missing animation frame ${frame}`);
   callback(time);
 
   if (frame === 112) sendKey("keydown", "KeyD");
+  if (frame === 114) sendKey("keydown", "KeyW");
+  if (frame === 120) sendKey("keyup", "KeyW");
+  if (frame === 121) sendKey("keydown", "KeyS");
+  if (frame === 126) sendKey("keyup", "KeyS");
   if (frame === 126) sendKey("keyup", "KeyD");
+  if (frame === 389) sendKey("keydown", "Space");
+  if (frame === 391) sendKey("keyup", "Space");
   const tappedKey = tapFrames.get(frame);
   if (tappedKey) sendKey("keydown", tappedKey);
   const releasedKey = tapFrames.get(frame - 1);
@@ -192,4 +216,4 @@ assert.equal(selectors.get("#pause-screen").classList.contains("is-hidden"), fal
 selectors.get("#resume-button").dispatch("click");
 assert.equal(selectors.get("#pause-screen").classList.contains("is-hidden"), true);
 
-console.log("Smoke test passed: menu, animation assets, movement, four strikes, CPU loop and pause.");
+console.log("Smoke test passed: expanded sprites, movement, guards, four strikes, body modifier, CPU loop and pause.");
