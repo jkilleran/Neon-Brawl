@@ -95,6 +95,7 @@ const make = (selector) => {
   "#result-copy",
   "#sound-button",
   "#sound-icon",
+  "#combat-controls",
   "#resume-button",
   "#rematch-button",
   "#fullscreen-button",
@@ -105,6 +106,7 @@ const modeButtons = [new FakeElement({ mode: "cpu" }), new FakeElement({ mode: "
 const menuButtons = [new FakeElement(), new FakeElement()];
 const windowListeners = new Map();
 const animationFrames = [];
+const imageSources = [];
 
 global.document = {
   fullscreenElement: null,
@@ -129,6 +131,19 @@ global.window = {
   },
 };
 
+global.Image = class FakeImage {
+  constructor() {
+    this.complete = true;
+    this.naturalWidth = 1774;
+    this.naturalHeight = 887;
+  }
+
+  set src(value) {
+    this.source = value;
+    imageSources.push(value);
+  }
+};
+
 global.requestAnimationFrame = (callback) => {
   animationFrames.push(callback);
 };
@@ -137,32 +152,44 @@ require("../game.js");
 
 assert.equal(animationFrames.length, 1, "The game should schedule its animation loop");
 assert.equal(modeButtons[0].listeners.has("click"), true, "CPU mode should be interactive");
+assert.equal(imageSources.length, 7, "All combat animation sheets should preload");
+assert(imageSources.includes("/assets/anim-left-jab.png"));
+assert(imageSources.includes("/assets/anim-right-jab.png"));
 
 modeButtons[0].dispatch("click");
 assert.equal(selectors.get("#menu-screen").classList.contains("is-hidden"), true);
 
+const sendKey = (type, code) => {
+  for (const listener of windowListeners.get(type) || []) {
+    listener({ code, repeat: false, preventDefault() {} });
+  }
+};
+
+const tapFrames = new Map([
+  [130, "KeyF"],
+  [170, "KeyG"],
+  [220, "KeyR"],
+  [280, "KeyT"],
+]);
+
 let time = performance.now();
-for (let frame = 0; frame < 260; frame += 1) {
+for (let frame = 0; frame < 340; frame += 1) {
   time += 1000 / 60;
   const callback = animationFrames.shift();
   assert(callback, `Missing animation frame ${frame}`);
   callback(time);
 
-  if (frame === 120) {
-    for (const listener of windowListeners.get("keydown") || []) {
-      listener({ code: "KeyF", repeat: false, preventDefault() {} });
-    }
-  }
-  if (frame === 121) {
-    for (const listener of windowListeners.get("keyup") || []) listener({ code: "KeyF" });
-  }
+  if (frame === 112) sendKey("keydown", "KeyD");
+  if (frame === 126) sendKey("keyup", "KeyD");
+  const tappedKey = tapFrames.get(frame);
+  if (tappedKey) sendKey("keydown", tappedKey);
+  const releasedKey = tapFrames.get(frame - 1);
+  if (releasedKey) sendKey("keyup", releasedKey);
 }
 
-for (const listener of windowListeners.get("keydown") || []) {
-  listener({ code: "Escape", repeat: false, preventDefault() {} });
-}
+sendKey("keydown", "Escape");
 assert.equal(selectors.get("#pause-screen").classList.contains("is-hidden"), false);
 selectors.get("#resume-button").dispatch("click");
 assert.equal(selectors.get("#pause-screen").classList.contains("is-hidden"), true);
 
-console.log("Smoke test passed: menu, CPU match loop, input, pause and resume.");
+console.log("Smoke test passed: menu, animation assets, movement, four strikes, CPU loop and pause.");
