@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Neon Brawl, un juego de pelea 2D para uno o dos jugadores."
+    />
+    <meta name="theme-color" content="#080816" />
+    <title>Neon Brawl</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Orbitron:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-glow page-glow--cyan"></div>
+    <div class="page-glow page-glow--pink"></div>
+
+    <main class="app">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Neon Brawl - inicio">
+          <span class="brand__mark">NB</span>
+          <span class="brand__name">NEON BRAWL</span>
+        </a>
+
+        <div class="topbar__actions">
+          <button id="sound-button" class="icon-button" type="button" aria-label="Activar o silenciar sonido">
+            <span id="sound-icon" aria-hidden="true">♪</span>
+          </button>
+          <button id="fullscreen-button" class="icon-button" type="button" aria-label="Pantalla completa">
+            <span aria-hidden="true">⛶</span>
+          </button>
+        </div>
+      </header>
+
+      <section id="game-shell" class="game-shell" aria-label="Juego Neon Brawl">
+        <canvas id="game" width="1280" height="720" tabindex="0">
+          Tu navegador no soporta Canvas.
+        </canvas>
+
+        <div id="menu-screen" class="screen screen--menu">
+          <div class="menu-copy">
+            <p class="eyebrow"><span></span> ARCADE PROTOCOL 01</p>
+            <h1>NEON<br /><em>BRAWL</em></h1>
+            <p class="menu-copy__description">
+              Domina la arena, carga tu energía y gana dos rondas antes que tu rival.
+            </p>
+
+            <div class="menu-actions">
+              <button class="mode-button mode-button--primary" data-mode="cpu" type="button">
+                <span class="mode-button__number">01</span>
+                <span><strong>VS COMPUTADORA</strong><small>Entrenamiento individual</small></span>
+                <span class="mode-button__arrow">→</span>
+              </button>
+              <button class="mode-button" data-mode="local" type="button">
+                <span class="mode-button__number">02</span>
+                <span><strong>DOS JUGADORES</strong><small>Un teclado, una rivalidad</small></span>
+                <span class="mode-button__arrow">→</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="fighter-card" aria-hidden="true">
+            <div class="fighter-card__rings"></div>
+            <div class="fighter-card__fighter">
+              <span class="fighter-card__head"></span>
+              <span class="fighter-card__body"></span>
+              <span class="fighter-card__arm fighter-card__arm--left"></span>
+              <span class="fighter-card__arm fighter-card__arm--right"></span>
+              <span class="fighter-card__leg fighter-card__leg--left"></span>
+              <span class="fighter-card__leg fighter-card__leg--right"></span>
+            </div>
+            <div class="fighter-card__label">
+              <small>PLAYER ONE</small>
+              <strong>KIRA // 01</strong>
+            </div>
+          </div>
+
+          <div class="menu-controls">
+            <div><span>P1</span><b>A D</b> mover <b>W</b> saltar <b>S</b> cubrir <b>F / G</b> atacar</div>
+            <div><span>P2</span><b>← →</b> mover <b>↑</b> saltar <b>↓</b> cubrir <b>K / L</b> atacar</div>
+          </div>
+        </div>
+
+        <div id="pause-screen" class="screen screen--dialog is-hidden" role="dialog" aria-modal="true">
+          <div class="dialog-card">
+            <p class="eyebrow"><span></span> COMBATE DETENIDO</p>
+            <h2>PAUSA</h2>
+            <p>Respira. La arena te espera.</p>
+            <button id="resume-button" class="dialog-button dialog-button--primary" type="button">CONTINUAR</button>
+            <button class="dialog-button menu-button" type="button">VOLVER AL MENÚ</button>
+          </div>
+        </div>
+
+        <div id="result-screen" class="screen screen--dialog is-hidden" role="dialog" aria-modal="true">
+          <div class="dialog-card dialog-card--result">
+            <p id="result-kicker" class="eyebrow"><span></span> COMBATE FINALIZADO</p>
+            <h2 id="result-title">KIRA GANA</h2>
+            <p id="result-copy">La ciudad tiene una nueva campeona.</p>
+            <button id="rematch-button" class="dialog-button dialog-button--primary" type="button">REVANCHA</button>
+            <button class="dialog-button menu-button" type="button">VOLVER AL MENÚ</button>
+          </div>
+        </div>
+
+        <div id="round-message" class="round-message is-hidden" aria-live="polite">
+          <small id="round-kicker">RONDA 1</small>
+          <strong id="round-title">FIGHT</strong>
+        </div>
+      </section>
+
+      <footer class="footer-note">
+        <span><i></i> SYSTEM ONLINE</span>
+        <p>ESC para pausar · La habilidad especial consume 40 de energía</p>
+        <span>BUILD 0.1.0</span>
+      </footer>
+    </main>
+
+    <script type="module" src="game.js"></script>
+  </body>
+</html>
