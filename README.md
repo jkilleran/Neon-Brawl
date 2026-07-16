@@ -17,15 +17,17 @@ Abre la dirección que muestre la terminal, normalmente `http://localhost:5173`.
 
 | Acción | Jugador 1 | Jugador 2 |
 | --- | --- | --- |
-| Moverse | `A` / `D` | `←` / `→` |
+| Retroceder / avanzar | `A` / `D` | `←` / `→` |
 | Guardia alta | `W` | `↑` |
 | Guardia baja | `S` | `↓` |
-| Jab izquierdo | `F` | `K` |
-| Jab derecho | `G` | `L` |
-| Patada al cuerpo | `R` | `O` |
-| Patada a la cabeza | `T` | `P` |
-| Evasión | `Espacio` | `/` |
+| Puño izquierdo | `U` | `N` |
+| Puño derecho | `I` | `M` |
+| Patada izquierda | `J` | `,` |
+| Patada derecha | `K` | `.` |
+| Modificador al cuerpo | Mantener `Espacio` + golpe | Mantener `Espacio` + golpe |
 | Pausa | `Esc` | `Esc` |
+
+Sin modificador, los cuatro golpes apuntan a la cabeza. Mantén `Espacio` al presionar cualquiera de ellos para cambiar su trayectoria y animación hacia el cuerpo.
 
 Los derribos y el control en el suelo están temporalmente desactivados. Su implementación permanece en el motor detrás de `FEATURES.takedowns` para recuperarla cuando las animaciones de grappling estén listas.
 
@@ -34,16 +36,17 @@ Los derribos y el control en el suelo están temporalmente desactivados. Su impl
 - Daño independiente de cabeza y cuerpo
 - Stamina que afecta velocidad, potencia y defensa
 - Guardia alta y baja contextual
-- Jab izquierdo y jab derecho con trayectorias independientes
-- Patadas al cuerpo y cabeza con alcance y timing diferentes
-- Seis frames reales para cada golpe y ocho para desplazamiento/guardias
+- Ocho variantes de ataque: puño/patada izquierda y derecha a cabeza o cuerpo
+- Diez frames por variante, con contacto, recuperación y retorno a guardia
+- Veinte frames de desplazamiento y veinte de guardias alta/baja
+- Diez frames de reacción al golpe para cabeza y diez para cuerpo
 - Colisiones anatómicas de cabeza y cuerpo con impacto en el punto exacto
-- Evasión con ventana breve de invulnerabilidad
+- Controles completos visibles desde el menú de pausa
 - Lógica de derribos y ground-and-pound preservada, pero desactivada
 - Knockdowns y finalizaciones por KO/TKO
 - Tres asaltos con puntuación 10-9 y decisión
 - Rival controlado por computadora
-- Seis sprite sheets transparentes con 40 frames de animación
+- Siete sprite sheets transparentes con 140 frames de animación
 
 ## Validación
 
