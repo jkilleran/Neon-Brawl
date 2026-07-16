@@ -367,7 +367,7 @@ h1 em {
   left: 12%;
   width: 76%;
   aspect-ratio: 1;
-  background-image: url("assets/fighter-mma-sprites.png");
+  background-image: url("/assets/fighter-mma-sprites.png");
   background-position: 0 0;
   background-size: 400% 200%;
   background-repeat: no-repeat;

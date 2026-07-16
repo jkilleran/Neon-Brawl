@@ -24,27 +24,40 @@
   const MAX_ROUNDS = 3;
   const STAGE_LEFT = 105;
   const STAGE_RIGHT = WIDTH - 105;
-  const SPRITE_COLUMNS = 4;
-  const SPRITE_ROWS = 2;
+  const FEATURES = Object.freeze({
+    takedowns: false,
+  });
 
-  const spriteSheet = new Image();
-  spriteSheet.src = "assets/fighter-mma-sprites.png";
+  function animationSheet(src, columns, rows, frames) {
+    const image = new Image();
+    image.src = src;
+    return { image, columns, rows, frames };
+  }
+
+  const ANIMATIONS = {
+    footwork: animationSheet("/assets/anim-footwork.png", 4, 2, 8),
+    leftJab: animationSheet("/assets/anim-left-jab.png", 3, 2, 6),
+    rightJab: animationSheet("/assets/anim-right-jab.png", 3, 2, 6),
+    bodyKick: animationSheet("/assets/anim-body-kick.png", 3, 2, 6),
+    headKick: animationSheet("/assets/anim-head-kick.png", 3, 2, 6),
+    guards: animationSheet("/assets/anim-guards.png", 4, 2, 8),
+    legacy: animationSheet("/assets/fighter-mma-sprites.png", 4, 2, 8),
+  };
 
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const lerp = (from, to, amount) => from + (to - from) * amount;
   const random = (min, max) => Math.random() * (max - min) + min;
 
-  function overlap(a, b) {
-    return a.x < b.x + b.width
-      && a.x + a.width > b.x
-      && a.y < b.y + b.height
-      && a.y + a.height > b.y;
+  function circleHitsEllipse(point, radius, zone) {
+    const normalizedX = (point.x - zone.x) / (zone.radiusX + radius);
+    const normalizedY = (point.y - zone.y) / (zone.radiusY + radius);
+    return normalizedX * normalizedX + normalizedY * normalizedY <= 1;
   }
 
   const ATTACKS = {
-    jab: {
-      label: "JAB",
-      frame: 1,
+    leftJab: {
+      label: "LEFT JAB",
+      animation: "leftJab",
       target: "head",
       startup: 0.07,
       active: 0.07,
@@ -55,10 +68,15 @@
       idealRange: 88,
       stun: 0.11,
       knockback: 38,
+      strikeRadius: 19,
+      strikePath: [
+        { x: 24, y: -134 }, { x: 42, y: -136 }, { x: 76, y: -139 },
+        { x: 120, y: -142 }, { x: 70, y: -138 }, { x: 25, y: -134 },
+      ],
     },
-    cross: {
-      label: "CROSS",
-      frame: 2,
+    rightJab: {
+      label: "RIGHT JAB",
+      animation: "rightJab",
       target: "head",
       startup: 0.14,
       active: 0.08,
@@ -69,10 +87,15 @@
       idealRange: 106,
       stun: 0.2,
       knockback: 68,
+      strikeRadius: 21,
+      strikePath: [
+        { x: 21, y: -131 }, { x: 48, y: -133 }, { x: 88, y: -138 },
+        { x: 138, y: -141 }, { x: 78, y: -136 }, { x: 22, y: -132 },
+      ],
     },
     bodyKick: {
       label: "BODY KICK",
-      frame: 3,
+      animation: "bodyKick",
       target: "body",
       startup: 0.2,
       active: 0.1,
@@ -83,10 +106,15 @@
       idealRange: 137,
       stun: 0.24,
       knockback: 82,
+      strikeRadius: 27,
+      strikePath: [
+        { x: 5, y: -27 }, { x: 31, y: -55 }, { x: 88, y: -77 },
+        { x: 158, y: -90 }, { x: 80, y: -59 }, { x: 8, y: -27 },
+      ],
     },
     headKick: {
       label: "HEAD KICK",
-      frame: 4,
+      animation: "headKick",
       target: "head",
       startup: 0.28,
       active: 0.1,
@@ -98,10 +126,16 @@
       stun: 0.34,
       knockback: 125,
       heavy: true,
+      strikeRadius: 29,
+      strikePath: [
+        { x: 4, y: -28 }, { x: 34, y: -67 }, { x: 94, y: -114 },
+        { x: 174, y: -151 }, { x: 84, y: -94 }, { x: 8, y: -29 },
+      ],
     },
     takedown: {
       label: "TAKEDOWN",
-      frame: 7,
+      animation: "legacy",
+      legacyFrame: 7,
       target: "takedown",
       startup: 0.2,
       active: 0.15,
@@ -112,6 +146,11 @@
       idealRange: 68,
       stun: 0.2,
       knockback: 0,
+      strikeRadius: 34,
+      strikePath: [
+        { x: 20, y: -70 }, { x: 45, y: -67 }, { x: 76, y: -64 },
+        { x: 105, y: -62 }, { x: 70, y: -65 }, { x: 25, y: -69 },
+      ],
     },
   };
 
@@ -236,6 +275,8 @@
       this.stamina = 100;
       this.attack = null;
       this.guard = null;
+      this.guardBlend = 0;
+      this.guardVisual = null;
       this.stun = 0;
       this.evadeTimer = 0;
       this.evadeCooldown = 0;
@@ -246,15 +287,17 @@
       this.knockdownsScored = 0;
       this.knockdownsSuffered = 0;
       this.moveFlash = 0;
+      this.impactMarker = null;
     }
 
-    get hurtbox() {
-      return {
-        x: this.x - 43,
-        y: FLOOR - 178,
-        width: 86,
-        height: 174,
-      };
+    getHurtZone(target) {
+      if (target === "head") {
+        return { x: this.x + this.facing * 2, y: FLOOR - 146, radiusX: 29, radiusY: 34 };
+      }
+      if (target === "takedown") {
+        return { x: this.x, y: FLOOR - 62, radiusX: 48, radiusY: 58 };
+      }
+      return { x: this.x, y: FLOOR - 83, radiusX: 43, radiusY: 52 };
     }
 
     get currentAttack() {
@@ -272,6 +315,10 @@
       this.evadeCooldown = Math.max(0, this.evadeCooldown - deltaTime);
       this.invulnerable = Math.max(0, this.invulnerable - deltaTime);
       this.moveFlash = Math.max(0, this.moveFlash - deltaTime);
+      if (this.impactMarker) {
+        this.impactMarker.life -= deltaTime;
+        if (this.impactMarker.life <= 0) this.impactMarker = null;
+      }
       this.displayHead = lerp(this.displayHead, this.headHealth, 1 - Math.pow(0.00003, deltaTime));
       this.displayBody = lerp(this.displayBody, this.bodyHealth, 1 - Math.pow(0.00003, deltaTime));
 
@@ -292,11 +339,19 @@
         this.facing = opponent.x > this.x ? 1 : -1;
       }
 
-      this.guard = null;
+      let nextGuard = null;
       if (!this.attack && this.stun <= 0 && this.evadeTimer <= 0) {
-        if (input.guardHigh) this.guard = "high";
-        else if (input.guardLow) this.guard = "low";
+        if (input.guardHigh) nextGuard = "high";
+        else if (input.guardLow) nextGuard = "low";
       }
+      if (nextGuard && nextGuard !== this.guard) {
+        this.guardBlend = 0;
+        this.guardVisual = nextGuard;
+      }
+      this.guard = nextGuard;
+      this.guardBlend = this.guard
+        ? clamp(this.guardBlend + deltaTime * 9, 0, 1)
+        : clamp(this.guardBlend - deltaTime * 10, 0, 1);
 
       if (!this.attack && this.stun <= 0 && this.evadeTimer <= 0) {
         const movementPenalty = 0.68 + (this.stamina / 100) * 0.32;
@@ -305,16 +360,16 @@
 
         if (input.evade && this.evadeCooldown <= 0 && this.stamina >= 10) {
           this.startEvade(opponent);
-        } else if (input.takedown) {
+        } else if (FEATURES.takedowns && input.takedown) {
           this.startAttack("takedown");
         } else if (input.headKick) {
           this.startAttack("headKick");
         } else if (input.bodyKick) {
           this.startAttack("bodyKick");
-        } else if (input.cross) {
-          this.startAttack("cross");
-        } else if (input.jab) {
-          this.startAttack("jab");
+        } else if (input.rightJab) {
+          this.startAttack("rightJab");
+        } else if (input.leftJab) {
+          this.startAttack("leftJab");
         }
       } else if (this.attack) {
         this.velocityX *= Math.pow(0.008, deltaTime);
@@ -369,40 +424,61 @@
 
       if (this.attack.elapsed >= activeStart
         && this.attack.elapsed <= activeEnd
-        && !this.attack.connected
-        && overlap(this.getAttackHitbox(), opponent.hurtbox)) {
-        this.attack.connected = true;
-        this.game.resolveAttack(this, opponent, definition);
+        && !this.attack.connected) {
+        const contact = this.game.findAttackContact(this, opponent, definition);
+        if (contact) {
+          this.attack.connected = true;
+          this.game.resolveAttack(this, opponent, definition, contact);
+        }
       }
 
       const totalDuration = definition.startup + definition.active + definition.recovery;
       if (this.attack && this.attack.elapsed >= totalDuration) this.attack = null;
     }
 
-    getAttackHitbox() {
+    getAttackFrameFloat() {
       const definition = this.currentAttack;
+      if (!definition || !this.attack) return 0;
+      const elapsed = this.attack.elapsed;
+      if (elapsed < definition.startup) return clamp(elapsed / definition.startup * 3, 0, 3);
+      if (elapsed <= definition.startup + definition.active) return 3;
+      const recoveryElapsed = elapsed - definition.startup - definition.active;
+      return clamp(3 + recoveryElapsed / definition.recovery * 2, 3, 5);
+    }
+
+    getStrikePoint(definition = this.currentAttack) {
+      const path = definition.strikePath;
+      const frameFloat = this.getAttackFrameFloat();
+      const lowerIndex = clamp(Math.floor(frameFloat), 0, path.length - 1);
+      const upperIndex = clamp(Math.ceil(frameFloat), 0, path.length - 1);
+      const fraction = frameFloat - lowerIndex;
+      const localX = lerp(path[lowerIndex].x, path[upperIndex].x, fraction);
+      const localY = lerp(path[lowerIndex].y, path[upperIndex].y, fraction);
       return {
-        x: this.facing === 1 ? this.x + 16 : this.x - definition.reach - 16,
-        y: FLOOR - 184,
-        width: definition.reach,
-        height: 178,
+        x: this.x + this.facing * localX,
+        y: FLOOR + localY,
       };
     }
 
     draw(context, options = {}) {
-      const frame = options.frame ?? this.getFrame();
+      const visual = options.frame !== undefined
+        ? { animation: options.animation ?? "legacy", frame: options.frame }
+        : this.getVisualFrame();
+      const sheet = ANIMATIONS[visual.animation];
+      const frame = clamp(visual.frame, 0, sheet.frames - 1);
       const drawX = options.x ?? this.x;
       const drawY = options.y ?? FLOOR;
       const rotation = options.rotation ?? (this.knockdownTimer > 0 ? -this.facing * Math.PI / 2 : 0);
       const scale = options.scale ?? 1;
       const facing = options.facing ?? this.facing;
-      const sheetWidth = spriteSheet.naturalWidth || 1774;
-      const sheetHeight = spriteSheet.naturalHeight || 887;
-      const frameWidth = sheetWidth / SPRITE_COLUMNS;
-      const frameHeight = sheetHeight / SPRITE_ROWS;
-      const column = frame % SPRITE_COLUMNS;
-      const row = Math.floor(frame / SPRITE_COLUMNS);
-      const destinationSize = 350 * scale;
+      const sheetWidth = sheet.image.naturalWidth || (sheet.columns === 3 ? 1536 : 1774);
+      const sheetHeight = sheet.image.naturalHeight || (sheet.columns === 3 ? 1024 : 887);
+      const frameWidth = sheetWidth / sheet.columns;
+      const frameHeight = sheetHeight / sheet.rows;
+      const column = frame % sheet.columns;
+      const row = Math.floor(frame / sheet.columns);
+      const destinationHeight = 350 * scale;
+      const destinationWidth = destinationHeight * (frameWidth / frameHeight);
 
       context.save();
       context.globalAlpha = 0.38;
@@ -420,23 +496,43 @@
       context.shadowColor = this.color;
       context.shadowBlur = this.moveFlash > 0 ? 24 : 12;
 
-      if (spriteSheet.complete && sheetWidth > 0) {
+      if (sheet.image.complete && sheetWidth > 0) {
         context.drawImage(
-          spriteSheet,
+          sheet.image,
           column * frameWidth,
           row * frameHeight,
           frameWidth,
           frameHeight,
-          -destinationSize / 2,
-          -destinationSize,
-          destinationSize,
-          destinationSize,
+          -destinationWidth / 2,
+          -destinationHeight,
+          destinationWidth,
+          destinationHeight,
         );
       } else {
         context.fillStyle = this.color;
         context.fillRect(-38, -170, 76, 170);
       }
       context.restore();
+
+      if (this.impactMarker && !options.hideStatus) {
+        const markerAlpha = clamp(this.impactMarker.life / this.impactMarker.maxLife, 0, 1);
+        context.save();
+        context.globalAlpha = markerAlpha;
+        context.strokeStyle = this.impactMarker.color;
+        context.shadowColor = this.impactMarker.color;
+        context.shadowBlur = 18;
+        context.lineWidth = 3;
+        context.beginPath();
+        context.arc(this.impactMarker.x, this.impactMarker.y, 10 + (1 - markerAlpha) * 24, 0, Math.PI * 2);
+        context.stroke();
+        context.beginPath();
+        context.moveTo(this.impactMarker.x - 13, this.impactMarker.y);
+        context.lineTo(this.impactMarker.x + 13, this.impactMarker.y);
+        context.moveTo(this.impactMarker.x, this.impactMarker.y - 13);
+        context.lineTo(this.impactMarker.x, this.impactMarker.y + 13);
+        context.stroke();
+        context.restore();
+      }
 
       if (this.guard && !options.hideStatus) {
         context.save();
@@ -455,11 +551,29 @@
       if (!options.hideStatus) this.drawStatus(context);
     }
 
-    getFrame() {
-      if (this.attack) return this.currentAttack.frame;
-      if (this.guard === "high") return 5;
-      if (this.guard === "low") return 6;
-      return 0;
+    getVisualFrame() {
+      if (this.attack) {
+        return {
+          animation: this.currentAttack.animation,
+          frame: this.currentAttack.legacyFrame ?? Math.floor(this.getAttackFrameFloat()),
+        };
+      }
+      const visibleGuard = this.guard ?? (this.guardBlend > 0 ? this.guardVisual : null);
+      if (visibleGuard === "high") {
+        return { animation: "guards", frame: clamp(Math.floor(this.guardBlend * 3), 0, 3) };
+      }
+      if (visibleGuard === "low") {
+        return { animation: "guards", frame: 4 + clamp(Math.floor(this.guardBlend * 3), 0, 3) };
+      }
+      if (this.evadeTimer > 0) return { animation: "footwork", frame: 6 };
+      if (Math.abs(this.velocityX) > 18) {
+        const cycle = Math.floor(this.animationTime * 11) % 8;
+        return {
+          animation: "footwork",
+          frame: this.velocityX * this.facing >= 0 ? cycle : 7 - cycle,
+        };
+      }
+      return { animation: "footwork", frame: 0 };
     }
 
     drawStatus(context) {
@@ -534,8 +648,8 @@
         move: 0,
         guardHigh: false,
         guardLow: false,
-        jab: false,
-        cross: false,
+        leftJab: false,
+        rightJab: false,
         bodyKick: false,
         headKick: false,
         takedown: false,
@@ -618,11 +732,11 @@
           move: (keys.has("KeyD") ? 1 : 0) - (keys.has("KeyA") ? 1 : 0),
           guardHigh: keys.has("KeyW"),
           guardLow: keys.has("KeyS"),
-          jab: pressed.has("KeyF"),
-          cross: pressed.has("KeyG"),
+          leftJab: pressed.has("KeyF"),
+          rightJab: pressed.has("KeyG"),
           bodyKick: pressed.has("KeyR"),
           headKick: pressed.has("KeyT"),
-          takedown: pressed.has("KeyE"),
+          takedown: FEATURES.takedowns && pressed.has("KeyE"),
           evade: pressed.has("Space"),
         };
       }
@@ -630,11 +744,11 @@
         move: (keys.has("ArrowRight") ? 1 : 0) - (keys.has("ArrowLeft") ? 1 : 0),
         guardHigh: keys.has("ArrowUp"),
         guardLow: keys.has("ArrowDown"),
-        jab: pressed.has("KeyK"),
-        cross: pressed.has("KeyL"),
+        leftJab: pressed.has("KeyK"),
+        rightJab: pressed.has("KeyL"),
         bodyKick: pressed.has("KeyO"),
         headKick: pressed.has("KeyP"),
-        takedown: pressed.has("KeyI"),
+        takedown: FEATURES.takedowns && pressed.has("KeyI"),
         evade: pressed.has("Slash"),
       };
     }
@@ -668,12 +782,12 @@
           this.aiIntent.move = direction;
         } else if (distance < 62) {
           this.aiIntent.move = -direction;
-          if (Math.random() < 0.2) this.aiIntent.takedown = true;
+          if (FEATURES.takedowns && Math.random() < 0.2) this.aiIntent.takedown = true;
         } else {
           const choice = Math.random();
-          if (distance < 105 && choice < 0.13) this.aiIntent.takedown = true;
-          else if (choice < 0.4) this.aiIntent.jab = true;
-          else if (choice < 0.63) this.aiIntent.cross = true;
+          if (FEATURES.takedowns && distance < 105 && choice < 0.13) this.aiIntent.takedown = true;
+          else if (choice < 0.4) this.aiIntent.leftJab = true;
+          else if (choice < 0.63) this.aiIntent.rightJab = true;
           else if (distance > 105 && choice < 0.84) this.aiIntent.bodyKick = true;
           else if (distance > 125 && choice < 0.94) this.aiIntent.headKick = true;
           else this.aiIntent.move = Math.random() < 0.5 ? direction : -direction;
@@ -681,8 +795,8 @@
       }
 
       const input = { ...this.aiIntent };
-      this.aiIntent.jab = false;
-      this.aiIntent.cross = false;
+      this.aiIntent.leftJab = false;
+      this.aiIntent.rightJab = false;
       this.aiIntent.bodyKick = false;
       this.aiIntent.headKick = false;
       this.aiIntent.takedown = false;
@@ -690,7 +804,28 @@
       return input;
     }
 
-    resolveAttack(attacker, target, definition) {
+    findAttackContact(attacker, target, definition) {
+      const strikePoint = attacker.getStrikePoint(definition);
+      const hurtZone = target.getHurtZone(definition.target);
+      if (!circleHitsEllipse(strikePoint, definition.strikeRadius, hurtZone)) return null;
+
+      const angle = Math.atan2(
+        (strikePoint.y - hurtZone.y) * hurtZone.radiusX,
+        (strikePoint.x - hurtZone.x) * hurtZone.radiusY,
+      );
+      const surfacePoint = {
+        x: hurtZone.x + Math.cos(angle) * hurtZone.radiusX,
+        y: hurtZone.y + Math.sin(angle) * hurtZone.radiusY,
+      };
+      return {
+        x: lerp(strikePoint.x, surfacePoint.x, 0.48),
+        y: lerp(strikePoint.y, surfacePoint.y, 0.48),
+        strikePoint,
+        hurtZone,
+      };
+    }
+
+    resolveAttack(attacker, target, definition, contact) {
       if (target.invulnerable > 0) {
         this.showCallout("CLEAN EVADE", target.color, 0.55);
         this.synth.tone(340, 0.08, "sine", 0.015, 620);
@@ -727,7 +862,14 @@
       target.velocityX = attacker.facing * definition.knockback * (matchingGuard ? 0.28 : 1);
       if (!matchingGuard) target.attack = null;
 
-      this.spawnImpact(target.x - attacker.facing * 18, definition.target === "head" ? FLOOR - 142 : FLOOR - 78, attacker.color, definition.heavy ? 22 : 14);
+      target.impactMarker = {
+        x: contact.x,
+        y: contact.y,
+        color: matchingGuard ? target.color : attacker.color,
+        life: definition.heavy ? 0.28 : 0.2,
+        maxLife: definition.heavy ? 0.28 : 0.2,
+      };
+      this.spawnImpact(contact.x, contact.y, attacker.color, definition.heavy ? 22 : 14);
       this.shake = definition.heavy && !matchingGuard ? 14 : matchingGuard ? 3 : 7;
       this.hitStop = definition.heavy ? 0.065 : 0.035;
       this.flash = definition.heavy && !matchingGuard ? 0.13 : 0.04;
@@ -796,7 +938,7 @@
       const attackerInput = sequence.attacker.player === 1
         ? this.getKeyboardInput(1)
         : this.mode === "cpu"
-          ? { ...this.emptyInput(), jab: sequence.strikeCooldown <= 0 }
+          ? { ...this.emptyInput(), leftJab: sequence.strikeCooldown <= 0 }
           : this.getKeyboardInput(2);
       const defenderInput = sequence.target.player === 1
         ? this.getKeyboardInput(1)
@@ -804,7 +946,7 @@
           ? { ...this.emptyInput(), guardHigh: Math.random() < 0.75 }
           : this.getKeyboardInput(2);
 
-      if ((attackerInput.jab || attackerInput.cross) && sequence.strikeCooldown <= 0 && sequence.attacker.stamina >= 4) {
+      if ((attackerInput.leftJab || attackerInput.rightJab) && sequence.strikeCooldown <= 0 && sequence.attacker.stamina >= 4) {
         const blocked = defenderInput.guardHigh;
         const damage = blocked ? 1.4 : 5.5;
         sequence.target.headHealth = clamp(sequence.target.headHealth - damage, 0, 100);
