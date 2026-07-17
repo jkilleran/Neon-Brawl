@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const manifest = require("../animation-manifest.js");
+const { decodeAlpha, frameBounds } = require("./png-alpha.cjs");
 
 const root = path.join(__dirname, "..");
 const seenFiles = new Set();
@@ -16,10 +17,39 @@ function inspectPng(file) {
   };
 }
 
+function assetFile(src) {
+  return path.join(root, "public", src.replace(/^\//, ""));
+}
+
+function assertIsolatedCells(id, sheet) {
+  const file = assetFile(sheet.src);
+  const png = decodeAlpha(file);
+  const capacity = sheet.columns * sheet.rows;
+  const padding = sheet.minCellPadding ?? 0;
+
+  for (let frame = 0; frame < capacity; frame += 1) {
+    const bounds = frameBounds(png, sheet.columns, sheet.rows, frame);
+    if (frame >= sheet.frames) {
+      assert.equal(bounds, null, `${id} frame cell ${frame + 1} must stay transparent`);
+      continue;
+    }
+    assert(bounds, `${id} frame ${frame + 1} is empty`);
+    assert(bounds.minX >= padding, `${id} frame ${frame + 1} touches the left cell edge`);
+    assert(bounds.minY >= padding, `${id} frame ${frame + 1} touches the top cell edge`);
+    assert(bounds.maxX < bounds.cellWidth - padding, `${id} frame ${frame + 1} touches the right cell edge`);
+    assert(bounds.maxY < bounds.cellHeight - padding, `${id} frame ${frame + 1} touches the bottom cell edge`);
+  }
+}
+
 for (const movement of Object.values(manifest.strikes)) {
   assert.equal(movement.frameCount, manifest.frameLimitPerMovement, `${movement.id} must use 10 frames`);
   assert.equal(movement.sourceFacing, manifest.canonicalSourceFacing, `${movement.id} must face right at source`);
   assert.equal(movement.mirrorForFacingLeft, true, `${movement.id} must support deterministic mirroring`);
+  assert.equal(movement.continuityVerification, "frame-by-frame", `${movement.id} must track continuity review`);
+  if (movement.limb.endsWith("-leg")) {
+    const oppositeLeg = movement.limb === "right-leg" ? "left-leg" : "right-leg";
+    assert.equal(movement.supportLimb, oppositeLeg, `${movement.id} must keep the opposite support leg`);
+  }
   assert.equal(movement.frameLabels.length, movement.frameCount, `${movement.id} must label every frame`);
   assert.equal(movement.frameLabels[movement.contactFrame - 1], "contact", `${movement.id} contact label is misplaced`);
   assert(!seenFiles.has(movement.file), `${movement.id} must have its own sprite sheet`);
@@ -30,7 +60,7 @@ for (const movement of Object.values(manifest.strikes)) {
   assert.equal(sheet.frames, movement.frameCount);
   assert(sheet.frames <= sheet.columns * sheet.rows, `${movement.id} exceeds its grid capacity`);
 
-  const file = path.join(root, "public", movement.file.replace(/^\/assets\//, "assets/"));
+  const file = assetFile(movement.file);
   assert(fs.existsSync(file), `${movement.id} asset is missing: ${file}`);
   const png = inspectPng(file);
   assert.equal(png.width, sheet.fallbackWidth, `${movement.id} width differs from the manifest`);
@@ -40,4 +70,9 @@ for (const movement of Object.values(manifest.strikes)) {
   assert.equal(png.height % sheet.rows, 0, `${movement.id} rows must divide evenly`);
 }
 
-console.log("Animation catalog valid: 8 isolated strikes, 10 labeled frames each, canonical right-facing source.");
+for (const [id, sheet] of Object.entries(manifest.sheets)) {
+  if (!sheet.isolatedCells) continue;
+  assertIsolatedCells(id, sheet);
+}
+
+console.log("Animation catalog valid: 8 strikes, 10 labeled frames each, isolated cells and canonical right-facing source.");

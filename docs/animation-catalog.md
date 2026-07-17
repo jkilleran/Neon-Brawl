@@ -9,7 +9,9 @@ Este catálogo es la referencia para arte, lógica y pruebas. Los metadatos cons
 - El motor refleja la hoja completa cuando el rival está a la izquierda; no se mantienen copias duplicadas para P1/P2.
 - La dirección se bloquea al iniciar el ataque, de modo que un cruce de posiciones no puede invertir el golpe a mitad de la animación.
 - Las hojas de ataque usan una cuadrícula `4 × 3`: frames 1–10 en orden de lectura y dos celdas transparentes reservadas.
-- Contacto: frame **6** para puños y ataques al cuerpo; frame **4** para las dos patadas altas, según su pose visual real.
+- Cada celda conserva un margen alfa mínimo de 6 px; el validador rechaza piezas que invadan una celda vecina.
+- En patadas, la pierna de apoyo se fija en el manifiesto y debe permanecer plantada desde carga hasta retroceso.
+- Contacto: frame **6** para puños y para las dos patadas derechas corregidas; la patada alta izquierda conserva contacto en el frame **4**.
 
 ## Fases por frame
 
@@ -32,24 +34,35 @@ Este catálogo es la referencia para arte, lógica y pruebas. Los metadatos cons
 | --- | --- | --- | --- | ---: | --- | --- | --- |
 | `leftPunchHead` | LEFT PUNCH // HEAD | mano izquierda | cabeza | 6 | `U` | `N` | `left-punch-head-v3.png` |
 | `rightPunchHead` | RIGHT PUNCH // HEAD | mano derecha | cabeza | 6 | `I` | `M` | `right-punch-head-v3.png` |
-| `leftPunchBody` | LEFT PUNCH // BODY | mano izquierda | cuerpo | 6 | `Space + U` | `Space + N` | `left-punch-body-v3.png` |
-| `rightPunchBody` | RIGHT PUNCH // BODY | mano derecha | cuerpo | 6 | `Space + I` | `Space + M` | `right-punch-body-v3.png` |
+| `leftPunchBody` | LEFT PUNCH // BODY | mano izquierda | cuerpo | 6 | `Space + U` | `Space + N` | `left-punch-body-v4.png` |
+| `rightPunchBody` | RIGHT PUNCH // BODY | mano derecha | cuerpo | 6 | `Space + I` | `Space + M` | `right-punch-body-v4.png` |
 | `leftKickHead` | LEFT KICK // HEAD | pierna izquierda | cabeza | 4 | `J` | `,` | `left-kick-head-v3.png` |
-| `rightKickHead` | RIGHT KICK // HEAD | pierna derecha | cabeza | 4 | `K` | `.` | `right-kick-head-v3.png` |
+| `rightKickHead` | RIGHT KICK // HEAD | pierna derecha | cabeza | 6 | `K` | `.` | `right-kick-head-v4.png` |
 | `leftKickBody` | LEFT KICK // BODY | pierna izquierda | cuerpo | 6 | `Space + J` | `Space + ,` | `left-kick-body-v3.png` |
-| `rightKickBody` | RIGHT KICK // BODY | pierna derecha | cuerpo | 6 | `Space + K` | `Space + .` | `right-kick-body-v3.png` |
+| `rightKickBody` | RIGHT KICK // BODY | pierna derecha | cuerpo | 6 | `Space + K` | `Space + .` | `right-kick-body-v4.png` |
 
 Ruta común: `public/assets/animations/strikes/`.
+
+## Invariantes biomecánicas
+
+| Movimiento | Pierna de golpe | Pierna de apoyo | Frames críticos |
+| --- | --- | --- | --- |
+| `leftKickHead` | izquierda | derecha | 3–7 |
+| `rightKickHead` | derecha | izquierda | 3–8 |
+| `leftKickBody` | izquierda | derecha | 3–7 |
+| `rightKickBody` | derecha | izquierda | 3–8 |
+
+En `rightKickHead` y `rightKickBody`, el frame 6 conserva explícitamente el pie izquierdo plantado. La pierna derecha sale de la cámara de los frames 3–4, impacta en 6 y vuelve a cámara en 7–8; no puede intercambiarse con la pierna de apoyo.
 
 ## Animaciones no ofensivas conservadas
 
 | ID | Hoja | Segmentos |
 | --- | --- | --- |
-| `hitReactions` | `anim-hit-reactions-v2.png` | cabeza 0–9, cuerpo 10–19 |
-| `footwork` | `anim-footwork-v2.png` | avance 0–9, retroceso 10–19 |
-| `guards` | `anim-guards-v2.png` | alta 0–9, baja 10–19 |
+| `hitReactions` | `animations/support/hit-reactions-v3.png` | cabeza 0–9, cuerpo 10–19 |
+| `footwork` | `animations/support/footwork-v3.png` | avance 0–9, retroceso 10–19 |
+| `guards` | `animations/support/guards-v3.png` | alta 0–9, baja 10–19 |
 | `legacy` | `fighter-mma-sprites.png` | lógica de derribos preservada y desactivada |
 
 ## Verificación
 
-`npm run check` valida que no falte ningún archivo, que cada ataque tenga diez etiquetas, que cada hoja tenga dimensiones divisibles por su cuadrícula y que los PNG conserven transparencia.
+`npm run check` valida archivos, etiquetas, dimensiones, transparencia, celdas reservadas vacías y un margen alfa mínimo por frame. `node scripts/normalize-support-sheets.cjs` reconstruye las hojas de soporte desde sus fuentes v2 sin que pies o brazos crucen los límites de celda.

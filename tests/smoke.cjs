@@ -154,12 +154,12 @@ global.Image = class FakeImage {
 
   get naturalWidth() {
     if (this.source?.includes("fighter-mma")) return 1774;
-    return this.source?.includes("/animations/strikes/") ? 1536 : 1400;
+    return this.source?.includes("/animations/strikes/") ? 1536 : 1920;
   }
 
   get naturalHeight() {
     if (this.source?.includes("fighter-mma")) return 887;
-    return this.source?.includes("/animations/strikes/") ? 1023 : 1120;
+    return this.source?.includes("/animations/strikes/") ? 1023 : 1364;
   }
 };
 
@@ -175,7 +175,9 @@ assert.equal(imageSources.length, 12, "All modular combat animation sheets shoul
 for (const movement of Object.values(animationManifest.strikes)) {
   assert(imageSources.includes(movement.file), `${movement.id} should preload its own sheet`);
 }
-assert(imageSources.includes("/assets/anim-hit-reactions-v2.png"));
+assert(imageSources.includes("/assets/animations/support/hit-reactions-v3.png"));
+assert(imageSources.includes("/assets/animations/support/footwork-v3.png"));
+assert(imageSources.includes("/assets/animations/support/guards-v3.png"));
 
 modeButtons[0].dispatch("click");
 assert.equal(selectors.get("#menu-screen").classList.contains("is-hidden"), true);
