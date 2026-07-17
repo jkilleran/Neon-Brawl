@@ -20,7 +20,7 @@ assert.match(
   "Guard indicator must mirror with the fighter facing",
 );
 assert.equal(Object.keys(animationManifest.strikes).length, 8, "Catalog should expose eight isolated strikes");
-assert.equal(Object.keys(animationManifest.outcomes).length, 10, "Catalog should expose six knockdowns and four knockouts");
+assert.equal(Object.keys(animationManifest.outcomes).length, 18, "Catalog should expose ten knockdowns and eight knockouts");
 assert.equal(animationManifest.outcomes.headKnockdown.result, "knockdown");
 assert.equal(animationManifest.outcomes.bodyKnockdown.target, "body");
 assert.equal(animationManifest.outcomes.headKnockdownForward.variant, "forward-hands-and-knee");
@@ -31,6 +31,14 @@ assert.equal(animationManifest.outcomes.headKnockout.frameLabels[9], "final-ko-p
 assert.equal(animationManifest.outcomes.bodyKnockout.frameCount, 10);
 assert.equal(animationManifest.outcomes.headKnockoutProne.variant, "forward-prone-finish");
 assert.equal(animationManifest.outcomes.bodyKnockoutProne.variant, "kneeling-prone-body-finish");
+assert.equal(animationManifest.outcomes.headKnockdownShoulderRoll.variant, "corkscrew-shoulder-roll-recovery");
+assert.equal(animationManifest.outcomes.headKnockdownKneeDrop.variant, "delayed-one-knee-recovery");
+assert.equal(animationManifest.outcomes.bodyKnockdownElbowFold.variant, "compact-liver-elbow-hip-recovery");
+assert.equal(animationManifest.outcomes.bodyKnockdownThreePoint.variant, "solar-plexus-three-point-recovery");
+assert.equal(animationManifest.outcomes.headKnockoutSide.variant, "spinning-side-finish");
+assert.equal(animationManifest.outcomes.headKnockoutKneeCollapse.variant, "delayed-double-knee-side-finish");
+assert.equal(animationManifest.outcomes.bodyKnockoutSupine.variant, "backward-supine-body-finish");
+assert.equal(animationManifest.outcomes.bodyKnockoutSeatedSlump.variant, "seated-side-slump-body-finish");
 assert.equal(animationManifest.strikes.leftPunchBody.limb, "left-hand");
 assert.equal(animationManifest.strikes.leftPunchBody.target, "body");
 assert.match(animationManifest.strikes.leftPunchBody.file, /left-punch-body-v5\.png$/);
@@ -212,16 +220,17 @@ const { game, ATTACKS } = require("../game.js");
 
 assert.deepEqual(globalThis.NEON_BRAWL_GAMEPLAY_RULES, {
   roundTimeSeconds: 180,
-  strikeDamageScale: 0.425,
+  strikeDamageScale: 0.40375,
+  criticalStrikeDamageScale: 0.425,
   bodyDamageScale: 0.85,
   strikeStaminaScale: 1,
   inefficientStrikeStaminaScale: 1.5,
   minimumFighterDistance: 168,
   guaranteedStrikeDistance: 178,
-  criticalKnockdownChance: 0.25,
+  criticalKnockdownChance: 1 / 2.2,
   criticalAttackerMaxSpeed: 38,
   criticalTargetMinSpeed: 70,
-  vulnerableCriticalHealthThreshold: 45,
+  vulnerableCriticalHealthThresholdByRound: [45, 65, 75],
   vulnerableCriticalChance: 1 / 3.5,
   criticalDamageMultiplier: 1.75,
   criticalStunSeconds: 1,
@@ -230,7 +239,8 @@ assert.deepEqual(globalThis.NEON_BRAWL_GAMEPLAY_RULES, {
 });
 assert.match(gameSource, /spendStrikeStamina\(definition\.stamina\)/, "Every standing strike should spend long-term stamina");
 assert.match(gameSource, /attacker\.attack\?\.stationaryStart[\s\S]*Math\.abs\(target\.velocityX\)/, "Critical hits should require a stationary attacker and moving target");
-assert.match(gameSource, /targetedHealth < GAMEPLAY_RULES\.vulnerableCriticalHealthThreshold[\s\S]*GAMEPLAY_RULES\.vulnerableCriticalChance/, "Low targeted health should unlock vulnerability criticals");
+assert.match(gameSource, /vulnerableCriticalHealthThresholdByRound[\s\S]*targetedHealth < vulnerableThreshold[\s\S]*GAMEPLAY_RULES\.vulnerableCriticalChance/, "Targeted health should use the round-specific vulnerability threshold");
+assert.match(gameSource, /critical\s*\? GAMEPLAY_RULES\.criticalStrikeDamageScale[\s\S]*GAMEPLAY_RULES\.strikeDamageScale/, "Critical strikes should preserve their previous damage scale");
 assert.match(gameSource, /severity: critical \? "critical" : "clean"/, "Clean and critical hits should use distinct reactions");
 assert.match(gameSource, /target\.blockReaction = \{/, "Blocked strikes should trigger a subtle guard reaction");
 assert.match(gameSource, /drawStaminaBar\(context, fighter/, "HUD should draw short and long-term stamina together");
@@ -309,11 +319,11 @@ attacker.attack = {
   stationaryStart: true,
 };
 defender.velocityX = 70;
-const criticalRolls = [0.249, 0.5];
+const criticalRolls = [0.249, 0.3];
 Math.random = () => criticalRolls.shift() ?? 0.5;
 game.resolveAttack(attacker, defender, ATTACKS.leftPunchHead, { x: 480, y: 350 });
 Math.random = originalRandom;
-assert(defender.knockdownTimer > 0, "A critical roll below 0.25 should trigger a knockdown");
+assert(defender.knockdownTimer > 0, "A critical roll below 1/2.2 should trigger a knockdown");
 assert.equal(defender.knockdownTarget, "head");
 assert.equal(defender.getVisualFrame().animation, "headKnockdownForward");
 
@@ -328,10 +338,10 @@ attacker.attack = {
   stationaryStart: true,
 };
 defender.velocityX = 70;
-Math.random = () => 0.25;
+Math.random = () => 1 / 2.2;
 game.resolveAttack(attacker, defender, ATTACKS.leftPunchHead, { x: 480, y: 350 });
 Math.random = originalRandom;
-assert.equal(defender.knockdownTimer, 0, "A critical roll at 0.25 should not trigger a knockdown");
+assert.equal(defender.knockdownTimer, 0, "A critical roll exactly at 1/2.2 should not trigger a knockdown");
 
 attacker.resetMatchStamina();
 attacker.resetRound(400, 1);
@@ -425,12 +435,40 @@ Math.random = originalRandom;
 assert(Math.abs(defender.bodyHealth - 38.9425) < 0.0001, "A body bar below 45% should allow its own 1-in-3.5 critical");
 assert.equal(defender.hitReaction.severity, "critical");
 
+const resolveRoundHeadVulnerability = (round, health, vulnerabilityRoll) => {
+  attacker.resetMatchStamina();
+  attacker.resetRound(400, 1);
+  defender.resetRound(491, -1);
+  defender.headHealth = health;
+  attacker.attack = {
+    type: "leftPunchHead",
+    elapsed: 0,
+    connected: true,
+    inefficientPenaltyApplied: false,
+    facing: 1,
+    stationaryStart: false,
+  };
+  defender.velocityX = 0;
+  game.round = round;
+  const rolls = [vulnerabilityRoll, 0.99];
+  Math.random = () => rolls.shift() ?? 0.5;
+  game.resolveAttack(attacker, defender, ATTACKS.leftPunchHead, { x: 480, y: 350 });
+  Math.random = originalRandom;
+  return defender.hitReaction.severity;
+};
+
+assert.equal(resolveRoundHeadVulnerability(2, 64, 0.28), "critical", "Round 2 should unlock vulnerability criticals below 65%");
+assert.equal(resolveRoundHeadVulnerability(2, 65, 0), "clean", "Round 2 threshold should be strictly below 65%");
+assert.equal(resolveRoundHeadVulnerability(3, 74, 0.28), "critical", "Round 3 should unlock vulnerability criticals below 75%");
+assert.equal(resolveRoundHeadVulnerability(3, 75, 0), "clean", "Round 3 threshold should be strictly below 75%");
+game.round = 1;
+
 attacker.resetRound(400, 1);
 defender.resetRound(568, -1);
 Math.random = () => 0.99;
 game.knockDown(attacker, defender, "body");
 Math.random = originalRandom;
-assert.equal(defender.getVisualFrame().animation, "bodyKnockdownSeated");
+assert.equal(defender.getVisualFrame().animation, "bodyKnockdownThreePoint");
 
 attacker.resetRound(400, 1);
 defender.resetRound(568, -1);
@@ -449,7 +487,7 @@ Math.random = () => 0.99;
 game.finishFight(attacker, "BODY K.O.", defender, "body");
 Math.random = originalRandom;
 assert.equal(game.state, "roundOver");
-assert.equal(defender.getVisualFrame().animation, "bodyKnockoutProne");
+assert.equal(defender.getVisualFrame().animation, "bodyKnockoutSeatedSlump");
 assert.equal(selectors.get("#round-message").classList.contains("is-hidden"), true, "KO banner should wait for the fall");
 game.update(1.2);
 assert.equal(selectors.get("#round-title").textContent, "BODY K.O.", "KO banner should appear after the finish animation begins");
@@ -461,7 +499,7 @@ game.state = "fighting";
 Math.random = () => 0.99;
 game.finishFight(attacker, "K.O.", defender, "head");
 Math.random = originalRandom;
-assert.equal(defender.getVisualFrame().animation, "headKnockoutProne");
+assert.equal(defender.getVisualFrame().animation, "headKnockoutKneeCollapse");
 game.returnToMenu();
 
 attacker.resetRound(400, 1);
@@ -498,8 +536,8 @@ attacker.attack = {
 game.mode = "practice";
 game.damageNumbers.length = 0;
 game.resolveAttack(attacker, defender, ATTACKS.leftPunchBody, { x: 475, y: 430 });
-assert(Math.abs(defender.bodyHealth - 97.11) < 0.0001, "Body strikes should combine the 0.425 global and 0.85 body damage scales");
-assert.equal(game.damageNumbers[0].text, "2.89", "Practice mode should show exact damage with two decimals");
+assert(Math.abs(defender.bodyHealth - 97.2545) < 0.0001, "Normal body strikes should combine the 0.40375 global and 0.85 body damage scales");
+assert.equal(game.damageNumbers[0].text, "2.75", "Practice mode should show exact damage with two decimals");
 defender.bodyHealth = 1;
 game.resolveAttack(attacker, defender, ATTACKS.leftPunchBody, { x: 475, y: 430 });
 assert.equal(game.state, "menu", "Practice damage should not end the session");
@@ -511,7 +549,7 @@ game.mode = "cpu";
 assert.equal(animationFrames.length, 1, "The game should schedule its animation loop");
 assert.equal(modeButtons[0].listeners.has("click"), true, "CPU mode should be interactive");
 assert.equal(modeButtons[2].listeners.has("click"), true, "Practice mode should be interactive");
-assert.equal(imageSources.length, 22, "All modular combat animation sheets should preload");
+assert.equal(imageSources.length, 30, "All modular combat animation sheets should preload");
 for (const movement of Object.values(animationManifest.strikes)) {
   assert(imageSources.includes(movement.file), `${movement.id} should preload its own sheet`);
 }

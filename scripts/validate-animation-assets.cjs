@@ -71,7 +71,7 @@ for (const movement of Object.values(manifest.strikes)) {
   assert.equal(png.height % sheet.rows, 0, `${movement.id} rows must divide evenly`);
 }
 
-assert.equal(Object.keys(manifest.outcomes).length, 10, "Catalog must expose six knockdowns and four knockouts");
+assert.equal(Object.keys(manifest.outcomes).length, 18, "Catalog must expose ten knockdowns and eight knockouts");
 for (const movement of Object.values(manifest.outcomes)) {
   assert.equal(movement.frameCount, manifest.frameLimitPerMovement, `${movement.id} must use 10 frames`);
   assert.equal(movement.frameLabels.length, movement.frameCount, `${movement.id} must label every frame`);
@@ -98,4 +98,4 @@ for (const [id, sheet] of Object.entries(manifest.sheets)) {
   assertIsolatedCells(id, sheet);
 }
 
-console.log("Animation catalog valid: 8 strikes and 10 outcomes, 10 labeled frames each, isolated cells and canonical right-facing source.");
+console.log("Animation catalog valid: 8 strikes and 18 outcomes, 10 labeled frames each, isolated cells and canonical right-facing source.");

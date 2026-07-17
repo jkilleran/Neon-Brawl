@@ -44,10 +44,10 @@ Los derribos y el control en el suelo están temporalmente desactivados. Su impl
 - Golpe crítico al atacar quieto a un rival en movimiento, con stun de un segundo
 - Separación mínima de 168 px para impedir que los modelos se superpongan
 - Contacto garantizado para los ocho strikes hasta 178 px; fuera de esa distancia el golpe falla
-- Probabilidad exacta de 1 entre 4 de knockdown cuando conecta un golpe crítico
+- Probabilidad exacta de 1 entre 2.2 de knockdown cuando conecta un golpe crítico
 - Knockdowns ilimitados: la cantidad acumulada nunca provoca un TKO automático
-- Tres variantes recuperables de knockdown para cabeza y tres para cuerpo
-- Dos animaciones independientes de knockout por cada zona, elegidas de forma uniforme
+- Cinco variantes recuperables de knockdown para cabeza y cinco para cuerpo
+- Cuatro animaciones independientes de knockout por cada zona, elegidas de forma uniforme
 - Presentación de KO en dos tiempos: primero se ve la caída y después aparece el resultado
 - Reacciones diferenciadas para bloqueo, golpe limpio y golpe crítico
 - Stamina que afecta velocidad, potencia y defensa
@@ -62,9 +62,11 @@ Los derribos y el control en el suelo están temporalmente desactivados. Su impl
 - Lógica de derribos y ground-and-pound preservada, pero desactivada
 - Knockdowns y finalizaciones por KO/TKO
 - Tres asaltos con puntuación 10-9 y decisión
-- Daño global de strikes reducido a `0.425 ×` y crítico de vulnerabilidad `1 / 3.5` cuando la barra impactada está por debajo de 45%
+- Daño normal reducido a `0.40375 ×`; los críticos conservan `0.425 ×` antes de su multiplicador
+- Crítico de vulnerabilidad `1 / 3.5` con umbral por round: 45%, 65% y 75%
+- Cada crítico tiene `1 / 2.2` de probabilidad de producir knockdown
 - Rival controlado por computadora
-- Dieciocho hojas independientes con diez frames etiquetados: ocho ataques y diez resultados
+- Veintiséis hojas independientes con diez frames etiquetados: ocho ataques y dieciocho resultados
 - Dirección canónica y espejo determinista para que ambos luchadores golpeen hacia el rival
 - Indicador de guardia reflejado correctamente para el peleador de la derecha
 - Jab izquierdo al cuerpo y cross derecho al cuerpo con siluetas y rotaciones diferenciadas

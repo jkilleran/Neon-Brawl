@@ -82,12 +82,20 @@ Todas las hojas de resultado usan una cuadrícula `5 × 2`, diez frames, fuente 
 | `bodyKnockdownKneel` | knockdown recuperable alterno | cuerpo | guardia, impacto al plexo, pliegue, rodilla, ambas rodillas, talones, manos, apoyo, rodilla, guardia | `body-knockdown-kneel-v2.png` |
 | `headKnockdownSeated` | knockdown recuperable rotacional | cabeza | guardia, impacto, giro, pérdida de balance, caída sentada, costado, stun, apoyo, rodilla, guardia | `head-knockdown-seated-v3.png` |
 | `bodyKnockdownSeated` | knockdown recuperable sentado | cuerpo | guardia, impacto, pérdida de aire, retroceso, caída sentada, reclinado, stun, apoyo, rodilla, guardia | `body-knockdown-seated-v3.png` |
+| `headKnockdownShoulderRoll` | knockdown recuperable en espiral | cabeza | guardia, impacto, giro, caída diagonal, hombro/cadera, rodamiento, apoyo, tres puntos, subida, guardia | `head-knockdown-shoulder-roll-v4.png` |
+| `headKnockdownKneeDrop` | knockdown recuperable retardado | cabeza | guardia, impacto, pausa inestable, rodilla, palma, tres puntos, rodilla, subida, guardia compacta, guardia | `head-knockdown-knee-drop-v5.png` |
+| `bodyKnockdownElbowFold` | knockdown recuperable compacto | cuerpo | guardia, impacto al hígado, pliegue, cadera, codo/suelo, stun, apoyo, rodilla, subida, guardia | `body-knockdown-elbow-fold-v4.png` |
+| `bodyKnockdownThreePoint` | knockdown recuperable a tres apoyos | cuerpo | guardia, plexo, pliegue, paso atrás, rodilla, rodilla/pie/palma, estabilización, subida, guardia corporal, guardia | `body-knockdown-three-point-v5.png` |
 | `headKnockout` | finalización | cabeza | guardia, impacto decisivo, pérdida de balance, colapso, suelo, asentamiento y cuatro poses inmóviles | `head-knockout-v1.png` |
 | `bodyKnockout` | finalización | cuerpo | guardia, impacto decisivo, pliegue, colapso, suelo, asentamiento y cuatro poses inmóviles | `body-knockout-v1.png` |
 | `headKnockoutProne` | finalización frontal | cabeza | guardia, impacto decisivo, caída frontal, manos/rodilla, pecho al suelo y cinco poses boca abajo inmóviles | `head-knockout-prone-v2.png` |
 | `bodyKnockoutProne` | finalización frontal plegada | cuerpo | guardia, impacto al cuerpo, rodillas, caída frontal, asentamiento y cinco poses plegadas inmóviles | `body-knockout-prone-v2.png` |
+| `headKnockoutSide` | finalización lateral con giro | cabeza | guardia, impacto, giro, caída diagonal, hombro/cadera, asentamiento y cuatro poses laterales inmóviles | `head-knockout-side-v3.png` |
+| `headKnockoutKneeCollapse` | finalización retardada desde rodillas | cabeza | guardia, impacto, pausa, caída vertical, ambas rodillas, vuelco y cuatro poses laterales inmóviles | `head-knockout-knee-collapse-v4.png` |
+| `bodyKnockoutSupine` | finalización corporal supina | cuerpo | guardia, plexo, retroceso, caída, asiento/espalda y cinco poses boca arriba inmóviles | `body-knockout-supine-v3.png` |
+| `bodyKnockoutSeatedSlump` | finalización corporal sentada/lateral | cuerpo | guardia, hígado, pliegue, cadera, sentado, desplome y cuatro poses laterales inmóviles | `body-knockout-seated-slump-v4.png` |
 
-Ruta común: `public/assets/animations/support/`. El manifiesto etiqueta cada frame mediante `frameLabels`, identifica `target` (`head`/`body`), `result` (`knockdown`/`knockout`) y un nombre estable de `variant`. Las diez hojas conservan el mismo peleador, vestuario, proporciones y dirección canónica de los modelos ofensivos. El motor elige uniformemente entre tres knockdowns por zona y dos knockouts por zona.
+Ruta común: `public/assets/animations/support/`. El manifiesto etiqueta cada frame mediante `frameLabels`, identifica `target` (`head`/`body`), `result` (`knockdown`/`knockout`) y un nombre estable de `variant`. Las dieciocho hojas conservan el mismo peleador, vestuario, proporciones y dirección canónica de los modelos ofensivos. El motor elige uniformemente entre cinco knockdowns por zona y cuatro knockouts por zona.
 
 ## Animaciones no ofensivas conservadas
 
@@ -102,10 +110,18 @@ Ruta común: `public/assets/animations/support/`. El manifiesto etiqueta cada fr
 | `bodyKnockdownKneel` | `animations/support/body-knockdown-kneel-v2.png` | caída de rodillas y recuperación por impacto corporal 0–9 |
 | `headKnockdownSeated` | `animations/support/head-knockdown-seated-v3.png` | caída rotacional sentada y recuperación por impacto de cabeza 0–9 |
 | `bodyKnockdownSeated` | `animations/support/body-knockdown-seated-v3.png` | caída sentada hacia atrás y recuperación por impacto corporal 0–9 |
+| `headKnockdownShoulderRoll` | `animations/support/head-knockdown-shoulder-roll-v4.png` | giro, caída sobre hombro/cadera y recuperación 0–9 |
+| `headKnockdownKneeDrop` | `animations/support/head-knockdown-knee-drop-v5.png` | caída retardada a una rodilla y recuperación 0–9 |
+| `bodyKnockdownElbowFold` | `animations/support/body-knockdown-elbow-fold-v4.png` | pliegue al hígado sobre codo/cadera y recuperación 0–9 |
+| `bodyKnockdownThreePoint` | `animations/support/body-knockdown-three-point-v5.png` | caída al plexo a tres apoyos y recuperación 0–9 |
 | `headKnockout` | `animations/support/head-knockout-v1.png` | finalización por cabeza 0–9 |
 | `bodyKnockout` | `animations/support/body-knockout-v1.png` | finalización por cuerpo 0–9 |
 | `headKnockoutProne` | `animations/support/head-knockout-prone-v2.png` | finalización frontal boca abajo por cabeza 0–9 |
 | `bodyKnockoutProne` | `animations/support/body-knockout-prone-v2.png` | finalización de rodillas y plegada por cuerpo 0–9 |
+| `headKnockoutSide` | `animations/support/head-knockout-side-v3.png` | finalización lateral con giro por cabeza 0–9 |
+| `headKnockoutKneeCollapse` | `animations/support/head-knockout-knee-collapse-v4.png` | finalización retardada desde ambas rodillas 0–9 |
+| `bodyKnockoutSupine` | `animations/support/body-knockout-supine-v3.png` | finalización corporal completamente boca arriba 0–9 |
+| `bodyKnockoutSeatedSlump` | `animations/support/body-knockout-seated-slump-v4.png` | finalización corporal sentada con desplome lateral 0–9 |
 | `legacy` | `fighter-mma-sprites.png` | lógica de derribos preservada y desactivada |
 
 ## Verificación

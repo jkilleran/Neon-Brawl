@@ -22,16 +22,17 @@
   const FLOOR = 604;
   const GAMEPLAY_RULES = Object.freeze({
     roundTimeSeconds: 3 * 60,
-    strikeDamageScale: 0.425,
+    strikeDamageScale: 0.40375,
+    criticalStrikeDamageScale: 0.425,
     bodyDamageScale: 0.85,
     strikeStaminaScale: 1,
     inefficientStrikeStaminaScale: 1.5,
     minimumFighterDistance: 168,
     guaranteedStrikeDistance: 178,
-    criticalKnockdownChance: 0.25,
+    criticalKnockdownChance: 1 / 2.2,
     criticalAttackerMaxSpeed: 38,
     criticalTargetMinSpeed: 70,
-    vulnerableCriticalHealthThreshold: 45,
+    vulnerableCriticalHealthThresholdByRound: Object.freeze([45, 65, 75]),
     vulnerableCriticalChance: 1 / 3.5,
     criticalDamageMultiplier: 1.75,
     criticalStunSeconds: 1,
@@ -62,12 +63,34 @@
   const ANIMATIONS = Object.fromEntries(Object.entries(ANIMATION_MANIFEST.sheets)
     .map(([id, definition]) => [id, animationSheet(definition)]));
   const KNOCKDOWN_VARIANTS = Object.freeze({
-    head: Object.freeze(["headKnockdown", "headKnockdownForward", "headKnockdownSeated"]),
-    body: Object.freeze(["bodyKnockdown", "bodyKnockdownKneel", "bodyKnockdownSeated"]),
+    head: Object.freeze([
+      "headKnockdown",
+      "headKnockdownForward",
+      "headKnockdownSeated",
+      "headKnockdownShoulderRoll",
+      "headKnockdownKneeDrop",
+    ]),
+    body: Object.freeze([
+      "bodyKnockdown",
+      "bodyKnockdownKneel",
+      "bodyKnockdownSeated",
+      "bodyKnockdownElbowFold",
+      "bodyKnockdownThreePoint",
+    ]),
   });
   const KNOCKOUT_VARIANTS = Object.freeze({
-    head: Object.freeze(["headKnockout", "headKnockoutProne"]),
-    body: Object.freeze(["bodyKnockout", "bodyKnockoutProne"]),
+    head: Object.freeze([
+      "headKnockout",
+      "headKnockoutProne",
+      "headKnockoutSide",
+      "headKnockoutKneeCollapse",
+    ]),
+    body: Object.freeze([
+      "bodyKnockout",
+      "bodyKnockoutProne",
+      "bodyKnockoutSupine",
+      "bodyKnockoutSeatedSlump",
+    ]),
   });
 
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -1208,9 +1231,12 @@
         && attacker.attack?.stationaryStart
         && Math.abs(target.velocityX) >= GAMEPLAY_RULES.criticalTargetMinSpeed;
       const targetedHealth = definition.target === "head" ? target.headHealth : target.bodyHealth;
+      const vulnerableThreshold = GAMEPLAY_RULES.vulnerableCriticalHealthThresholdByRound[
+        clamp(this.round, 1, MAX_ROUNDS) - 1
+      ];
       const vulnerableCritical = !matchingGuard
         && !movementCritical
-        && targetedHealth < GAMEPLAY_RULES.vulnerableCriticalHealthThreshold
+        && targetedHealth < vulnerableThreshold
         && Math.random() < GAMEPLAY_RULES.vulnerableCriticalChance;
       const critical = movementCritical || vulnerableCritical;
       const criticalKnockdown = this.mode !== "practice"
@@ -1220,8 +1246,11 @@
       const criticalMultiplier = critical ? GAMEPLAY_RULES.criticalDamageMultiplier : 1;
       const guardMultiplier = matchingGuard ? 0.26 : 1;
       const bodyMultiplier = definition.target === "body" ? GAMEPLAY_RULES.bodyDamageScale : 1;
+      const strikeDamageScale = critical
+        ? GAMEPLAY_RULES.criticalStrikeDamageScale
+        : GAMEPLAY_RULES.strikeDamageScale;
       const damage = definition.damage
-        * GAMEPLAY_RULES.strikeDamageScale
+        * strikeDamageScale
         * bodyMultiplier
         * rangeQuality
         * staminaQuality

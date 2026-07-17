@@ -42,6 +42,14 @@ const jobs = [
   { source: "public/assets/animations/support/body-knockdown-seated-v3.png", output: "public/assets/animations/support/body-knockdown-seated-v3.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
   { source: "public/assets/animations/support/head-knockout-prone-v2.png", output: "public/assets/animations/support/head-knockout-prone-v2.png", columns: 5, rows: 2, frames: 10, sourceHeight: 887, minComponentHeight: 80 },
   { source: "public/assets/animations/support/body-knockout-prone-v2.png", output: "public/assets/animations/support/body-knockout-prone-v2.png", columns: 5, rows: 2, frames: 10, sourceHeight: 887 },
+  { source: "public/assets/animations/support/head-knockdown-shoulder-roll-v4.png", output: "public/assets/animations/support/head-knockdown-shoulder-roll-v4.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
+  { source: "public/assets/animations/support/head-knockdown-knee-drop-v5.png", output: "public/assets/animations/support/head-knockdown-knee-drop-v5.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
+  { source: "public/assets/animations/support/body-knockdown-elbow-fold-v4.png", output: "public/assets/animations/support/body-knockdown-elbow-fold-v4.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
+  { source: "public/assets/animations/support/body-knockdown-three-point-v5.png", output: "public/assets/animations/support/body-knockdown-three-point-v5.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
+  { source: "public/assets/animations/support/head-knockout-side-v3.png", output: "public/assets/animations/support/head-knockout-side-v3.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682, minComponentHeight: 60 },
+  { source: "public/assets/animations/support/head-knockout-knee-collapse-v4.png", output: "public/assets/animations/support/head-knockout-knee-collapse-v4.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682, minComponentHeight: 60 },
+  { source: "public/assets/animations/support/body-knockout-supine-v3.png", output: "public/assets/animations/support/body-knockout-supine-v3.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682, minComponentHeight: 45 },
+  { source: "public/assets/animations/support/body-knockout-seated-slump-v4.png", output: "public/assets/animations/support/body-knockout-seated-slump-v4.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682, minComponentHeight: 60 },
 ];
 
 function findImageMagick() {
