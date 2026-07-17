@@ -78,10 +78,12 @@ Todas las hojas de resultado usan una cuadrícula `5 × 2`, diez frames, fuente 
 | --- | --- | --- | --- | --- |
 | `headKnockdown` | knockdown recuperable | cabeza | guardia, impacto, pérdida de balance, rodillas, caída, suelo, stun, apoyo, rodilla, guardia | `head-knockdown-v1.png` |
 | `bodyKnockdown` | knockdown recuperable | cuerpo | guardia, impacto corporal, pliegue, rodillas, caída, suelo, stun, apoyo, rodilla, guardia | `body-knockdown-v1.png` |
+| `headKnockdownForward` | knockdown recuperable alterno | cabeza | guardia, giro de cabeza, tropiezo, cruce, manos/rodilla, costado, stun, cuatro apoyos, rodilla, guardia | `head-knockdown-forward-v2.png` |
+| `bodyKnockdownKneel` | knockdown recuperable alterno | cuerpo | guardia, impacto al plexo, pliegue, rodilla, ambas rodillas, talones, manos, apoyo, rodilla, guardia | `body-knockdown-kneel-v2.png` |
 | `headKnockout` | finalización | cabeza | guardia, impacto decisivo, pérdida de balance, colapso, suelo, asentamiento y cuatro poses inmóviles | `head-knockout-v1.png` |
 | `bodyKnockout` | finalización | cuerpo | guardia, impacto decisivo, pliegue, colapso, suelo, asentamiento y cuatro poses inmóviles | `body-knockout-v1.png` |
 
-Ruta común: `public/assets/animations/support/`. El manifiesto etiqueta cada frame mediante `frameLabels`, identifica `target` (`head`/`body`) y `result` (`knockdown`/`knockout`). Las cuatro hojas conservan el mismo peleador, vestuario, proporciones y dirección canónica de los modelos ofensivos.
+Ruta común: `public/assets/animations/support/`. El manifiesto etiqueta cada frame mediante `frameLabels`, identifica `target` (`head`/`body`), `result` (`knockdown`/`knockout`) y un nombre estable de `variant`. Las seis hojas conservan el mismo peleador, vestuario, proporciones y dirección canónica de los modelos ofensivos.
 
 ## Animaciones no ofensivas conservadas
 
@@ -92,6 +94,8 @@ Ruta común: `public/assets/animations/support/`. El manifiesto etiqueta cada fr
 | `guards` | `animations/support/guards-v3.png` | alta 0–9, baja 10–19 |
 | `headKnockdown` | `animations/support/head-knockdown-v1.png` | caída y recuperación por impacto de cabeza 0–9 |
 | `bodyKnockdown` | `animations/support/body-knockdown-v1.png` | caída y recuperación por impacto corporal 0–9 |
+| `headKnockdownForward` | `animations/support/head-knockdown-forward-v2.png` | caída frontal y recuperación por impacto de cabeza 0–9 |
+| `bodyKnockdownKneel` | `animations/support/body-knockdown-kneel-v2.png` | caída de rodillas y recuperación por impacto corporal 0–9 |
 | `headKnockout` | `animations/support/head-knockout-v1.png` | finalización por cabeza 0–9 |
 | `bodyKnockout` | `animations/support/body-knockout-v1.png` | finalización por cuerpo 0–9 |
 | `legacy` | `fighter-mma-sprites.png` | lógica de derribos preservada y desactivada |

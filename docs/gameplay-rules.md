@@ -43,7 +43,9 @@ Un impacto es crítico cuando se cumplen todas estas condiciones:
 
 El crítico multiplica el daño resultante por `1.75`, aplica un stun de un segundo, aumenta el retroceso, las partículas, el hit-stop, el flash y el movimiento de cámara.
 
-Cada crítico no bloqueado realiza una sola tirada de knockdown con probabilidad `0.20`, equivalente a **1 entre 5**. La tirada aplica tanto a golpes de cabeza como de cuerpo y selecciona la animación correspondiente. En modo práctica no interrumpe la sesión con un knockdown.
+Cada crítico no bloqueado realiza una sola tirada de knockdown con probabilidad `0.25`, equivalente a **1 entre 4**. Si la tirada tiene éxito, una segunda selección reparte de forma uniforme las dos variantes disponibles para la zona impactada. En modo práctica no interrumpe la sesión con un knockdown.
+
+La cantidad de knockdowns se conserva únicamente como estadística y puntuación: no existe un límite y nunca produce un TKO automático. La pelea termina por daño cuando la salud de cabeza o cuerpo llega a cero.
 
 ## Distancia y contacto
 
@@ -55,7 +57,9 @@ Cada crítico no bloqueado realiza una sola tirada de knockdown con probabilidad
 ## Knockdown y knockout
 
 - `headKnockdown`: impacto de cabeza, pérdida de balance, caída, recuperación y vuelta a guardia.
+- `headKnockdownForward`: giro de cabeza, tropiezo hacia delante, manos/rodilla, recuperación y guardia.
 - `bodyKnockdown`: reacción a costillas/abdomen, caída protegiendo el cuerpo y recuperación.
+- `bodyKnockdownKneel`: impacto al plexo, caída sobre ambas rodillas, apoyo y recuperación.
 - `headKnockout`: colapso por golpe de cabeza y pose final inmóvil.
 - `bodyKnockout`: colapso plegado por golpe corporal, pose final inmóvil y resultado `BODY K.O.`.
 - El banner de resultado se retrasa `1.15 s` para dejar visible la caída; la pantalla final aparece después de completar la secuencia.

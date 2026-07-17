@@ -20,9 +20,11 @@ assert.match(
   "Guard indicator must mirror with the fighter facing",
 );
 assert.equal(Object.keys(animationManifest.strikes).length, 8, "Catalog should expose eight isolated strikes");
-assert.equal(Object.keys(animationManifest.outcomes).length, 4, "Catalog should expose four finish outcomes");
+assert.equal(Object.keys(animationManifest.outcomes).length, 6, "Catalog should expose four knockdowns and two knockouts");
 assert.equal(animationManifest.outcomes.headKnockdown.result, "knockdown");
 assert.equal(animationManifest.outcomes.bodyKnockdown.target, "body");
+assert.equal(animationManifest.outcomes.headKnockdownForward.variant, "forward-hands-and-knee");
+assert.equal(animationManifest.outcomes.bodyKnockdownKneel.variant, "double-knee-solar-plexus");
 assert.equal(animationManifest.outcomes.headKnockout.frameLabels[9], "final-ko-pose");
 assert.equal(animationManifest.outcomes.bodyKnockout.frameCount, 10);
 assert.equal(animationManifest.strikes.leftPunchBody.limb, "left-hand");
@@ -212,7 +214,7 @@ assert.deepEqual(globalThis.NEON_BRAWL_GAMEPLAY_RULES, {
   inefficientStrikeStaminaScale: 1.5,
   minimumFighterDistance: 168,
   guaranteedStrikeDistance: 178,
-  criticalKnockdownChance: 0.2,
+  criticalKnockdownChance: 0.25,
   criticalAttackerMaxSpeed: 38,
   criticalTargetMinSpeed: 70,
   criticalDamageMultiplier: 1.75,
@@ -227,6 +229,7 @@ assert.match(gameSource, /target\.blockReaction = \{/, "Blocked strikes should t
 assert.match(gameSource, /drawStaminaBar\(context, fighter/, "HUD should draw short and long-term stamina together");
 assert.match(gameSource, /this\.mode !== "practice"[\s\S]*this\.timer/, "Practice mode should not consume the timer");
 assert.match(gameSource, /spawnDamageNumber\(/, "Practice impacts should show numeric damage");
+assert.doesNotMatch(gameSource, /knockdownsSuffered\s*>=/, "Knockdown count must not trigger a TKO");
 
 const attacker = game.fighterOne;
 const defender = game.fighterTwo;
@@ -299,17 +302,46 @@ attacker.attack = {
   stationaryStart: true,
 };
 defender.velocityX = 70;
-Math.random = () => 0.19;
+const criticalRolls = [0.249, 0.9];
+Math.random = () => criticalRolls.shift() ?? 0.5;
 game.resolveAttack(attacker, defender, ATTACKS.leftPunchHead, { x: 480, y: 350 });
 Math.random = originalRandom;
-assert(defender.knockdownTimer > 0, "A critical roll below 0.20 should trigger a knockdown");
+assert(defender.knockdownTimer > 0, "A critical roll below 0.25 should trigger a knockdown");
 assert.equal(defender.knockdownTarget, "head");
-assert.equal(defender.getVisualFrame().animation, "headKnockdown");
+assert.equal(defender.getVisualFrame().animation, "headKnockdownForward");
+
+attacker.resetRound(400, 1);
+defender.resetRound(491, -1);
+attacker.attack = {
+  type: "leftPunchHead",
+  elapsed: 0,
+  connected: true,
+  inefficientPenaltyApplied: false,
+  facing: 1,
+  stationaryStart: true,
+};
+defender.velocityX = 70;
+Math.random = () => 0.25;
+game.resolveAttack(attacker, defender, ATTACKS.leftPunchHead, { x: 480, y: 350 });
+Math.random = originalRandom;
+assert.equal(defender.knockdownTimer, 0, "A critical roll at 0.25 should not trigger a knockdown");
 
 attacker.resetRound(400, 1);
 defender.resetRound(568, -1);
+Math.random = () => 0.99;
 game.knockDown(attacker, defender, "body");
-assert.equal(defender.getVisualFrame().animation, "bodyKnockdown");
+Math.random = originalRandom;
+assert.equal(defender.getVisualFrame().animation, "bodyKnockdownKneel");
+
+attacker.resetRound(400, 1);
+defender.resetRound(568, -1);
+defender.knockdownsSuffered = 12;
+game.state = "fighting";
+Math.random = () => 0;
+game.knockDown(attacker, defender, "head");
+Math.random = originalRandom;
+assert.equal(defender.knockdownsSuffered, 13, "Knockdown count should continue without a limit");
+assert.equal(game.state, "fighting", "Knockdown count must never trigger an automatic TKO");
 
 attacker.resetRound(400, 1);
 defender.resetRound(568, -1);
@@ -369,7 +401,7 @@ game.mode = "cpu";
 assert.equal(animationFrames.length, 1, "The game should schedule its animation loop");
 assert.equal(modeButtons[0].listeners.has("click"), true, "CPU mode should be interactive");
 assert.equal(modeButtons[2].listeners.has("click"), true, "Practice mode should be interactive");
-assert.equal(imageSources.length, 16, "All modular combat animation sheets should preload");
+assert.equal(imageSources.length, 18, "All modular combat animation sheets should preload");
 for (const movement of Object.values(animationManifest.strikes)) {
   assert(imageSources.includes(movement.file), `${movement.id} should preload its own sheet`);
 }

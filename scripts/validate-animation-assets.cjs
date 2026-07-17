@@ -71,7 +71,7 @@ for (const movement of Object.values(manifest.strikes)) {
   assert.equal(png.height % sheet.rows, 0, `${movement.id} rows must divide evenly`);
 }
 
-assert.equal(Object.keys(manifest.outcomes).length, 4, "Catalog must expose four knockdown/knockout outcomes");
+assert.equal(Object.keys(manifest.outcomes).length, 6, "Catalog must expose four knockdowns and two knockouts");
 for (const movement of Object.values(manifest.outcomes)) {
   assert.equal(movement.frameCount, manifest.frameLimitPerMovement, `${movement.id} must use 10 frames`);
   assert.equal(movement.frameLabels.length, movement.frameCount, `${movement.id} must label every frame`);
@@ -79,6 +79,8 @@ for (const movement of Object.values(manifest.outcomes)) {
   assert.equal(movement.mirrorForFacingLeft, true, `${movement.id} must support deterministic mirroring`);
   assert(["head", "body"].includes(movement.target), `${movement.id} has an invalid target`);
   assert(["knockdown", "knockout"].includes(movement.result), `${movement.id} has an invalid result`);
+  assert.equal(typeof movement.variant, "string", `${movement.id} must label its visual variant`);
+  assert(movement.variant.length > 0, `${movement.id} has an empty visual variant`);
 
   const sheet = manifest.sheets[movement.sheet];
   assert(sheet, `${movement.id} references a missing sheet`);
@@ -96,4 +98,4 @@ for (const [id, sheet] of Object.entries(manifest.sheets)) {
   assertIsolatedCells(id, sheet);
 }
 
-console.log("Animation catalog valid: 8 strikes and 4 outcomes, 10 labeled frames each, isolated cells and canonical right-facing source.");
+console.log("Animation catalog valid: 8 strikes and 6 outcomes, 10 labeled frames each, isolated cells and canonical right-facing source.");

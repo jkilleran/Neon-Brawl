@@ -36,6 +36,8 @@ const jobs = [
   { source: "public/assets/animations/support/body-knockdown-v1.png", output: "public/assets/animations/support/body-knockdown-v1.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
   { source: "public/assets/animations/support/head-knockout-v1.png", output: "public/assets/animations/support/head-knockout-v1.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
   { source: "public/assets/animations/support/body-knockout-v1.png", output: "public/assets/animations/support/body-knockout-v1.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
+  { source: "public/assets/animations/support/head-knockdown-forward-v2.png", output: "public/assets/animations/support/head-knockdown-forward-v2.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
+  { source: "public/assets/animations/support/body-knockdown-kneel-v2.png", output: "public/assets/animations/support/body-knockdown-kneel-v2.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
 ];
 
 function findImageMagick() {

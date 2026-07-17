@@ -28,7 +28,7 @@
     inefficientStrikeStaminaScale: 1.5,
     minimumFighterDistance: 168,
     guaranteedStrikeDistance: 178,
-    criticalKnockdownChance: 0.2,
+    criticalKnockdownChance: 0.25,
     criticalAttackerMaxSpeed: 38,
     criticalTargetMinSpeed: 70,
     criticalDamageMultiplier: 1.75,
@@ -59,6 +59,10 @@
 
   const ANIMATIONS = Object.fromEntries(Object.entries(ANIMATION_MANIFEST.sheets)
     .map(([id, definition]) => [id, animationSheet(definition)]));
+  const KNOCKDOWN_VARIANTS = Object.freeze({
+    head: Object.freeze(["headKnockdown", "headKnockdownForward"]),
+    body: Object.freeze(["bodyKnockdown", "bodyKnockdownKneel"]),
+  });
 
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const lerp = (from, to, amount) => from + (to - from) * amount;
@@ -400,6 +404,7 @@
       this.knockdownTimer = 0;
       this.knockdownDuration = 0;
       this.knockdownTarget = "head";
+      this.knockdownAnimation = "headKnockdown";
       this.finishAnimation = null;
       this.roundDamage = 0;
       this.takedowns = 0;
@@ -839,7 +844,7 @@
           0.999,
         );
         return {
-          animation: this.knockdownTarget === "body" ? "bodyKnockdown" : "headKnockdown",
+          animation: this.knockdownAnimation,
           frame: Math.min(9, 1 + Math.floor(progress * 9)),
         };
       }
@@ -1196,6 +1201,10 @@
       const critical = !matchingGuard
         && attacker.attack?.stationaryStart
         && Math.abs(target.velocityX) >= GAMEPLAY_RULES.criticalTargetMinSpeed;
+      const criticalKnockdown = this.mode !== "practice"
+        && critical
+        && Math.random() < GAMEPLAY_RULES.criticalKnockdownChance;
+      const knockdownVariantRoll = criticalKnockdown ? Math.random() : null;
       const criticalMultiplier = critical ? GAMEPLAY_RULES.criticalDamageMultiplier : 1;
       const guardMultiplier = matchingGuard ? 0.26 : 1;
       const bodyMultiplier = definition.target === "body" ? GAMEPLAY_RULES.bodyDamageScale : 1;
@@ -1298,26 +1307,25 @@
         this.finishFight(attacker, "K.O.");
       } else if (target.bodyHealth <= 0) {
         this.finishFight(attacker, "BODY K.O.", target, "body");
-      } else if (this.mode !== "practice"
-        && critical
-        && Math.random() < GAMEPLAY_RULES.criticalKnockdownChance) {
-        this.knockDown(attacker, target, definition.target);
+      } else if (criticalKnockdown) {
+        this.knockDown(attacker, target, definition.target, knockdownVariantRoll);
       }
     }
 
-    knockDown(attacker, target, targetZone = "head") {
+    knockDown(attacker, target, targetZone = "head", variantRoll = Math.random()) {
       target.knockdownsSuffered += 1;
       attacker.knockdownsScored += 1;
       attacker.matchScore += 18;
       target.knockdownDuration = 2;
       target.knockdownTimer = target.knockdownDuration;
       target.knockdownTarget = targetZone;
+      const variants = KNOCKDOWN_VARIANTS[targetZone] ?? KNOCKDOWN_VARIANTS.head;
+      target.knockdownAnimation = variants[Math.floor(variantRoll * variants.length)];
       target.velocityX = attacker.attackFacing * 150;
       target.attack = null;
       target.hitReaction = null;
       target.blockReaction = null;
       this.showCallout(targetZone === "body" ? "BODY KNOCKDOWN" : "HEAD KNOCKDOWN", attacker.color, 1);
-      if (target.knockdownsSuffered >= 3) this.finishFight(attacker, "TKO", target, targetZone);
     }
 
     startGround(attacker, target) {

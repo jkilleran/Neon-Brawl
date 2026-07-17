@@ -199,13 +199,14 @@
     }),
   ]));
 
-  const outcomeAnimation = ({ id, label, file, target, result, frameLabels }) => Object.freeze({
+  const outcomeAnimation = ({ id, label, file, target, result, variant, frameLabels }) => Object.freeze({
     id,
     label,
     file,
     sheet: id,
     target,
     result,
+    variant,
     frameCount: 10,
     frameLabels,
     sourceFacing: "right",
@@ -222,6 +223,7 @@
       file: "/assets/animations/support/head-knockdown-v1.png",
       target: "head",
       result: "knockdown",
+      variant: "backward-side-fall",
       frameLabels: KNOCKDOWN_PHASES,
     }),
     bodyKnockdown: outcomeAnimation({
@@ -230,6 +232,25 @@
       file: "/assets/animations/support/body-knockdown-v1.png",
       target: "body",
       result: "knockdown",
+      variant: "side-roll-recovery",
+      frameLabels: KNOCKDOWN_PHASES,
+    }),
+    headKnockdownForward: outcomeAnimation({
+      id: "headKnockdownForward",
+      label: "HEAD KNOCKDOWN // FORWARD",
+      file: "/assets/animations/support/head-knockdown-forward-v2.png",
+      target: "head",
+      result: "knockdown",
+      variant: "forward-hands-and-knee",
+      frameLabels: KNOCKDOWN_PHASES,
+    }),
+    bodyKnockdownKneel: outcomeAnimation({
+      id: "bodyKnockdownKneel",
+      label: "BODY KNOCKDOWN // KNEEL",
+      file: "/assets/animations/support/body-knockdown-kneel-v2.png",
+      target: "body",
+      result: "knockdown",
+      variant: "double-knee-solar-plexus",
       frameLabels: KNOCKDOWN_PHASES,
     }),
     headKnockout: outcomeAnimation({
@@ -238,6 +259,7 @@
       file: "/assets/animations/support/head-knockout-v1.png",
       target: "head",
       result: "knockout",
+      variant: "supine-finish",
       frameLabels: KNOCKOUT_PHASES,
     }),
     bodyKnockout: outcomeAnimation({
@@ -246,6 +268,7 @@
       file: "/assets/animations/support/body-knockout-v1.png",
       target: "body",
       result: "knockout",
+      variant: "curled-side-finish",
       frameLabels: KNOCKOUT_PHASES,
     }),
   });
@@ -308,7 +331,7 @@
   });
 
   const manifest = Object.freeze({
-    version: "6.0.0",
+    version: "6.1.0",
     frameLimitPerMovement: 10,
     canonicalSourceFacing: "right",
     strikes,
