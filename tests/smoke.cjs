@@ -1,12 +1,15 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const animationManifest = require("../animation-manifest.js");
 
 const markup = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 assert.match(markup, /pause-controls-grid/, "Pause menu should expose the complete controls");
 assert.match(markup, /WASD \+ UIJK/, "Pause menu should list Player 1 controls");
 assert.match(markup, /FLECHAS \+ NM,\./, "Pause menu should list Player 2 controls");
 assert.match(markup, /SPACE<\/kbd><span>mantener \+ cualquier golpe/, "Pause menu should explain the body modifier");
+assert.match(markup, /animation-manifest\.js[\s\S]*game\.js/, "Animation manifest must load before the game");
+assert.equal(Object.keys(animationManifest.strikes).length, 8, "Catalog should expose eight isolated strikes");
 
 class FakeClassList {
   constructor() {
@@ -150,11 +153,13 @@ global.Image = class FakeImage {
   }
 
   get naturalWidth() {
-    return this.source?.includes("fighter-mma") ? 1774 : 1400;
+    if (this.source?.includes("fighter-mma")) return 1774;
+    return this.source?.includes("/animations/strikes/") ? 1536 : 1400;
   }
 
   get naturalHeight() {
-    return this.source?.includes("fighter-mma") ? 887 : 1120;
+    if (this.source?.includes("fighter-mma")) return 887;
+    return this.source?.includes("/animations/strikes/") ? 1023 : 1120;
   }
 };
 
@@ -166,11 +171,10 @@ require("../game.js");
 
 assert.equal(animationFrames.length, 1, "The game should schedule its animation loop");
 assert.equal(modeButtons[0].listeners.has("click"), true, "CPU mode should be interactive");
-assert.equal(imageSources.length, 8, "All expanded combat animation sheets should preload");
-assert(imageSources.includes("/assets/anim-punches-head-v2.png"));
-assert(imageSources.includes("/assets/anim-punches-body-v2.png"));
-assert(imageSources.includes("/assets/anim-kicks-head-v2.png"));
-assert(imageSources.includes("/assets/anim-kicks-body-v2.png"));
+assert.equal(imageSources.length, 12, "All modular combat animation sheets should preload");
+for (const movement of Object.values(animationManifest.strikes)) {
+  assert(imageSources.includes(movement.file), `${movement.id} should preload its own sheet`);
+}
 assert(imageSources.includes("/assets/anim-hit-reactions-v2.png"));
 
 modeButtons[0].dispatch("click");

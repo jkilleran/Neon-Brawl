@@ -46,7 +46,9 @@ Los derribos y el control en el suelo están temporalmente desactivados. Su impl
 - Knockdowns y finalizaciones por KO/TKO
 - Tres asaltos con puntuación 10-9 y decisión
 - Rival controlado por computadora
-- Siete sprite sheets transparentes con 140 frames de animación
+- Ocho hojas de ataque independientes con diez frames etiquetados por movimiento
+- Dirección canónica y espejo determinista para que ambos luchadores golpeen hacia el rival
+- Catálogo modular en [`docs/animation-catalog.md`](docs/animation-catalog.md)
 
 ## Validación
 

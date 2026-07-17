@@ -28,26 +28,34 @@
     takedowns: false,
   });
 
-  function animationSheet(src, columns, rows, frames, fallbackWidth = 1400, fallbackHeight = 1120) {
+  const ANIMATION_MANIFEST = globalThis.NEON_BRAWL_ANIMATIONS;
+  if (!ANIMATION_MANIFEST) {
+    throw new Error("Animation manifest must load before game.js");
+  }
+
+  function animationSheet({ src, columns, rows, frames, fallbackWidth, fallbackHeight }) {
     const image = new Image();
     image.src = src;
     return { image, columns, rows, frames, fallbackWidth, fallbackHeight };
   }
 
-  const ANIMATIONS = {
-    punchesHead: animationSheet("/assets/anim-punches-head-v2.png", 5, 4, 20),
-    punchesBody: animationSheet("/assets/anim-punches-body-v2.png", 5, 4, 20),
-    kicksHead: animationSheet("/assets/anim-kicks-head-v2.png", 5, 4, 20),
-    kicksBody: animationSheet("/assets/anim-kicks-body-v2.png", 5, 4, 20),
-    hitReactions: animationSheet("/assets/anim-hit-reactions-v2.png", 5, 4, 20),
-    footwork: animationSheet("/assets/anim-footwork-v2.png", 5, 4, 20),
-    guards: animationSheet("/assets/anim-guards-v2.png", 5, 4, 20),
-    legacy: animationSheet("/assets/fighter-mma-sprites.png", 4, 2, 8, 1774, 887),
-  };
+  const ANIMATIONS = Object.fromEntries(Object.entries(ANIMATION_MANIFEST.sheets)
+    .map(([id, definition]) => [id, animationSheet(definition)]));
 
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const lerp = (from, to, amount) => from + (to - from) * amount;
   const random = (min, max) => Math.random() * (max - min) + min;
+
+  function strikeAnimation(id) {
+    const movement = ANIMATION_MANIFEST.strikes[id];
+    if (!movement) throw new Error(`Unknown strike animation: ${id}`);
+    return {
+      animation: movement.sheet,
+      frameOffset: 0,
+      frameCount: movement.frameCount,
+      contactFrame: movement.contactFrame - 1,
+    };
+  }
 
   function circleHitsEllipse(point, radius, zone) {
     const normalizedX = (point.x - zone.x) / (zone.radiusX + radius);
@@ -58,9 +66,7 @@
   const ATTACKS = {
     leftPunchHead: {
       label: "LEFT PUNCH // HEAD",
-      animation: "punchesHead",
-      frameOffset: 0,
-      frameCount: 10,
+      ...strikeAnimation("leftPunchHead"),
       target: "head",
       startup: 0.09,
       active: 0.07,
@@ -73,16 +79,14 @@
       knockback: 38,
       strikeRadius: 19,
       strikePath: [
-        { x: 23, y: -134 }, { x: 31, y: -135 }, { x: 45, y: -137 },
-        { x: 65, y: -139 }, { x: 92, y: -141 }, { x: 122, y: -142 },
-        { x: 116, y: -142 }, { x: 78, y: -139 }, { x: 44, y: -136 }, { x: 24, y: -134 },
+        { x: 23, y: -244 }, { x: 34, y: -246 }, { x: 50, y: -248 },
+        { x: 76, y: -250 }, { x: 105, y: -251 }, { x: 132, y: -252 },
+        { x: 125, y: -251 }, { x: 84, y: -248 }, { x: 48, y: -246 }, { x: 24, y: -244 },
       ],
     },
     rightPunchHead: {
       label: "RIGHT PUNCH // HEAD",
-      animation: "punchesHead",
-      frameOffset: 10,
-      frameCount: 10,
+      ...strikeAnimation("rightPunchHead"),
       target: "head",
       startup: 0.14,
       active: 0.08,
@@ -95,16 +99,14 @@
       knockback: 68,
       strikeRadius: 21,
       strikePath: [
-        { x: 20, y: -131 }, { x: 30, y: -132 }, { x: 49, y: -134 },
-        { x: 74, y: -137 }, { x: 107, y: -140 }, { x: 140, y: -142 },
-        { x: 132, y: -141 }, { x: 88, y: -137 }, { x: 48, y: -133 }, { x: 21, y: -131 },
+        { x: 20, y: -235 }, { x: 32, y: -236 }, { x: 52, y: -237 },
+        { x: 82, y: -239 }, { x: 122, y: -240 }, { x: 160, y: -241 },
+        { x: 150, y: -240 }, { x: 96, y: -238 }, { x: 51, y: -236 }, { x: 21, y: -235 },
       ],
     },
     leftPunchBody: {
       label: "LEFT PUNCH // BODY",
-      animation: "punchesBody",
-      frameOffset: 0,
-      frameCount: 10,
+      ...strikeAnimation("leftPunchBody"),
       target: "body",
       startup: 0.11,
       active: 0.08,
@@ -117,16 +119,14 @@
       knockback: 44,
       strikeRadius: 20,
       strikePath: [
-        { x: 20, y: -120 }, { x: 28, y: -113 }, { x: 42, y: -104 },
-        { x: 62, y: -96 }, { x: 88, y: -90 }, { x: 116, y: -87 },
-        { x: 110, y: -88 }, { x: 76, y: -98 }, { x: 42, y: -111 }, { x: 21, y: -120 },
+        { x: 20, y: -220 }, { x: 30, y: -202 }, { x: 48, y: -178 },
+        { x: 76, y: -154 }, { x: 116, y: -138 }, { x: 151, y: -131 },
+        { x: 141, y: -134 }, { x: 92, y: -157 }, { x: 48, y: -190 }, { x: 21, y: -220 },
       ],
     },
     rightPunchBody: {
       label: "RIGHT PUNCH // BODY",
-      animation: "punchesBody",
-      frameOffset: 10,
-      frameCount: 10,
+      ...strikeAnimation("rightPunchBody"),
       target: "body",
       startup: 0.16,
       active: 0.08,
@@ -139,16 +139,14 @@
       knockback: 70,
       strikeRadius: 22,
       strikePath: [
-        { x: 18, y: -121 }, { x: 28, y: -114 }, { x: 46, y: -104 },
-        { x: 70, y: -95 }, { x: 101, y: -88 }, { x: 132, y: -84 },
-        { x: 126, y: -85 }, { x: 83, y: -96 }, { x: 45, y: -111 }, { x: 19, y: -121 },
+        { x: 18, y: -218 }, { x: 29, y: -202 }, { x: 47, y: -181 },
+        { x: 70, y: -160 }, { x: 98, y: -147 }, { x: 122, y: -142 },
+        { x: 119, y: -143 }, { x: 82, y: -162 }, { x: 45, y: -192 }, { x: 19, y: -218 },
       ],
     },
     leftKickHead: {
       label: "LEFT KICK // HEAD",
-      animation: "kicksHead",
-      frameOffset: 0,
-      frameCount: 10,
+      ...strikeAnimation("leftKickHead"),
       target: "head",
       startup: 0.24,
       active: 0.1,
@@ -162,16 +160,14 @@
       heavy: true,
       strikeRadius: 28,
       strikePath: [
-        { x: 4, y: -28 }, { x: 15, y: -42 }, { x: 35, y: -69 },
-        { x: 64, y: -101 }, { x: 110, y: -132 }, { x: 176, y: -151 },
-        { x: 168, y: -149 }, { x: 102, y: -117 }, { x: 43, y: -66 }, { x: 7, y: -29 },
+        { x: 4, y: -40 }, { x: 28, y: -95 }, { x: 88, y: -184 },
+        { x: 161, y: -257 }, { x: 151, y: -250 }, { x: 124, y: -222 },
+        { x: 91, y: -178 }, { x: 55, y: -124 }, { x: 25, y: -70 }, { x: 7, y: -40 },
       ],
     },
     rightKickHead: {
       label: "RIGHT KICK // HEAD",
-      animation: "kicksHead",
-      frameOffset: 10,
-      frameCount: 10,
+      ...strikeAnimation("rightKickHead"),
       target: "head",
       startup: 0.29,
       active: 0.11,
@@ -185,16 +181,14 @@
       heavy: true,
       strikeRadius: 30,
       strikePath: [
-        { x: 3, y: -28 }, { x: 14, y: -43 }, { x: 37, y: -72 },
-        { x: 69, y: -106 }, { x: 119, y: -137 }, { x: 184, y: -153 },
-        { x: 176, y: -151 }, { x: 108, y: -120 }, { x: 46, y: -68 }, { x: 7, y: -29 },
+        { x: 3, y: -40 }, { x: 26, y: -94 }, { x: 82, y: -178 },
+        { x: 149, y: -245 }, { x: 142, y: -240 }, { x: 118, y: -216 },
+        { x: 87, y: -174 }, { x: 53, y: -121 }, { x: 24, y: -68 }, { x: 7, y: -40 },
       ],
     },
     leftKickBody: {
       label: "LEFT KICK // BODY",
-      animation: "kicksBody",
-      frameOffset: 0,
-      frameCount: 10,
+      ...strikeAnimation("leftKickBody"),
       target: "body",
       startup: 0.21,
       active: 0.1,
@@ -207,16 +201,14 @@
       knockback: 84,
       strikeRadius: 27,
       strikePath: [
-        { x: 5, y: -28 }, { x: 16, y: -40 }, { x: 38, y: -58 },
-        { x: 68, y: -74 }, { x: 112, y: -86 }, { x: 166, y: -91 },
-        { x: 158, y: -90 }, { x: 96, y: -77 }, { x: 39, y: -53 }, { x: 8, y: -28 },
+        { x: 5, y: -42 }, { x: 18, y: -70 }, { x: 42, y: -112 },
+        { x: 76, y: -150 }, { x: 116, y: -177 }, { x: 147, y: -187 },
+        { x: 139, y: -184 }, { x: 91, y: -154 }, { x: 40, y: -104 }, { x: 8, y: -42 },
       ],
     },
     rightKickBody: {
       label: "RIGHT KICK // BODY",
-      animation: "kicksBody",
-      frameOffset: 10,
-      frameCount: 10,
+      ...strikeAnimation("rightKickBody"),
       target: "body",
       startup: 0.25,
       active: 0.1,
@@ -230,9 +222,9 @@
       heavy: true,
       strikeRadius: 29,
       strikePath: [
-        { x: 4, y: -28 }, { x: 16, y: -41 }, { x: 40, y: -60 },
-        { x: 73, y: -77 }, { x: 120, y: -88 }, { x: 174, y: -92 },
-        { x: 166, y: -91 }, { x: 101, y: -79 }, { x: 42, y: -55 }, { x: 8, y: -28 },
+        { x: 4, y: -42 }, { x: 18, y: -72 }, { x: 44, y: -118 },
+        { x: 80, y: -160 }, { x: 124, y: -194 }, { x: 160, y: -205 },
+        { x: 151, y: -201 }, { x: 97, y: -165 }, { x: 42, y: -108 }, { x: 8, y: -42 },
       ],
     },
     takedown: {
@@ -396,16 +388,20 @@
 
     getHurtZone(target) {
       if (target === "head") {
-        return { x: this.x + this.facing * 2, y: FLOOR - 146, radiusX: 29, radiusY: 34 };
+        return { x: this.x + this.facing * 2, y: FLOOR - 255, radiusX: 29, radiusY: 36 };
       }
       if (target === "takedown") {
         return { x: this.x, y: FLOOR - 62, radiusX: 48, radiusY: 58 };
       }
-      return { x: this.x, y: FLOOR - 83, radiusX: 43, radiusY: 52 };
+      return { x: this.x, y: FLOOR - 170, radiusX: 43, radiusY: 60 };
     }
 
     get currentAttack() {
       return this.attack ? ATTACKS[this.attack.type] : null;
+    }
+
+    get attackFacing() {
+      return this.attack?.facing ?? this.facing;
     }
 
     get maxStamina() {
@@ -519,7 +515,12 @@
         return;
       }
       this.stamina -= definition.stamina;
-      this.attack = { type, elapsed: 0, connected: false };
+      this.attack = {
+        type,
+        elapsed: 0,
+        connected: false,
+        facing: this.facing,
+      };
       this.guard = null;
       this.moveFlash = 0.3;
     }
@@ -531,7 +532,7 @@
       const activeEnd = activeStart + definition.active;
 
       if (this.attack.type === "takedown" && this.attack.elapsed > 0.08 && this.attack.elapsed < activeEnd) {
-        this.x += this.facing * 190 * deltaTime;
+        this.x += this.attackFacing * 190 * deltaTime;
       }
 
       if (this.attack.elapsed >= activeStart
@@ -552,7 +553,8 @@
       const definition = this.currentAttack;
       if (!definition || !this.attack) return 0;
       const frameCount = definition.frameCount ?? definition.strikePath.length;
-      const contactFrame = Math.min(frameCount - 2, Math.max(1, Math.floor(frameCount * 0.56)));
+      const contactFrame = definition.contactFrame
+        ?? Math.min(frameCount - 2, Math.max(1, Math.floor(frameCount * 0.56)));
       const elapsed = this.attack.elapsed;
       if (elapsed < definition.startup) {
         return clamp(elapsed / definition.startup * contactFrame, 0, contactFrame);
@@ -578,7 +580,7 @@
       const localX = lerp(path[lowerIndex].x, path[upperIndex].x, fraction);
       const localY = lerp(path[lowerIndex].y, path[upperIndex].y, fraction);
       return {
-        x: this.x + this.facing * localX,
+        x: this.x + this.attackFacing * localX,
         y: FLOOR + localY,
       };
     }
@@ -593,7 +595,7 @@
       const drawY = options.y ?? FLOOR;
       const rotation = options.rotation ?? (this.knockdownTimer > 0 ? -this.facing * Math.PI / 2 : 0);
       const scale = options.scale ?? 1;
-      const facing = options.facing ?? this.facing;
+      const facing = options.facing ?? this.attackFacing;
       const sheetWidth = sheet.image.naturalWidth || sheet.fallbackWidth;
       const sheetHeight = sheet.image.naturalHeight || sheet.fallbackHeight;
       const frameWidth = sheetWidth / sheet.columns;
@@ -667,7 +669,7 @@
         context.shadowBlur = 15;
         context.lineWidth = 3;
         context.beginPath();
-        const guardY = this.guard === "high" ? FLOOR - 132 : FLOOR - 70;
+        const guardY = this.guard === "high" ? FLOOR - 250 : FLOOR - 165;
         context.arc(this.x + this.facing * 22, guardY, 48, -1.2, 1.2);
         context.stroke();
         context.restore();
@@ -727,7 +729,7 @@
       context.font = "700 10px Orbitron, sans-serif";
       context.shadowColor = this.color;
       context.shadowBlur = 10;
-      context.fillText(label, this.x, FLOOR - 214);
+      context.fillText(label, this.x, FLOOR - 342);
       context.restore();
     }
   }
@@ -1000,7 +1002,7 @@
       attacker.matchScore += damage;
       target.stamina = Math.max(0, target.stamina - (matchingGuard ? definition.damage * 0.42 : damage * 0.15));
       target.stun = matchingGuard ? 0.08 : definition.stun;
-      target.velocityX = attacker.facing * definition.knockback * (matchingGuard ? 0.28 : 1);
+      target.velocityX = attacker.attackFacing * definition.knockback * (matchingGuard ? 0.28 : 1);
       if (!matchingGuard) {
         target.attack = null;
         target.guard = null;
@@ -1047,7 +1049,7 @@
       attacker.knockdownsScored += 1;
       attacker.matchScore += 18;
       target.knockdownTimer = 1.75;
-      target.velocityX = attacker.facing * 150;
+      target.velocityX = attacker.attackFacing * 150;
       target.attack = null;
       target.hitReaction = null;
       this.showCallout("KNOCKDOWN", attacker.color, 1);
