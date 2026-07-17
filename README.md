@@ -34,6 +34,13 @@ Los derribos y el control en el suelo están temporalmente desactivados. Su impl
 ## Sistemas incluidos
 
 - Daño independiente de cabeza y cuerpo
+- Tres asaltos de 3 minutos
+- Daño de strikes reducido al 50% y coste de stamina aumentado al 150%
+- Stamina inmediata más límite de stamina a largo plazo en una sola barra
+- Fatiga acumulativa al lanzar golpes con la reserva baja; el límite mínimo es 35%
+- Recuperación parcial del límite de stamina entre asaltos
+- Golpe crítico al atacar quieto a un rival en movimiento, con stun de un segundo
+- Reacciones diferenciadas para bloqueo, golpe limpio y golpe crítico
 - Stamina que afecta velocidad, potencia y defensa
 - Guardia alta y baja contextual
 - Ocho variantes de ataque: puño/patada izquierda y derecha a cabeza o cuerpo
@@ -55,6 +62,7 @@ Los derribos y el control en el suelo están temporalmente desactivados. Su impl
 - Extremidad atacante bloqueada por movimiento para impedir cambios de mano o pierna entre frames
 - Celdas alfa aisladas para impedir pies, brazos o fragmentos flotantes entre frames
 - Catálogo modular en [`docs/animation-catalog.md`](docs/animation-catalog.md)
+- Reglas de balance en [`docs/gameplay-rules.md`](docs/gameplay-rules.md)
 
 ## Validación
 

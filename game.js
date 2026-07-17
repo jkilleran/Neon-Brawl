@@ -20,7 +20,20 @@
   const WIDTH = canvas.width;
   const HEIGHT = canvas.height;
   const FLOOR = 604;
-  const ROUND_TIME = 60;
+  const GAMEPLAY_RULES = Object.freeze({
+    roundTimeSeconds: 3 * 60,
+    strikeDamageScale: 0.5,
+    strikeStaminaScale: 1.5,
+    criticalAttackerMaxSpeed: 38,
+    criticalTargetMinSpeed: 70,
+    criticalDamageMultiplier: 1.75,
+    criticalStunSeconds: 1,
+    minLongTermStamina: 35,
+    cornerLongTermRecovery: 4,
+  });
+  globalThis.NEON_BRAWL_GAMEPLAY_RULES = GAMEPLAY_RULES;
+
+  const ROUND_TIME = GAMEPLAY_RULES.roundTimeSeconds;
   const MAX_ROUNDS = 3;
   const STAGE_LEFT = 105;
   const STAGE_RIGHT = WIDTH - 105;
@@ -356,6 +369,7 @@
       this.roundWins = 0;
       this.matchScore = 0;
       this.animationTime = 0;
+      this.longTermStamina = 100;
       this.resetRound(config.x, config.facing);
     }
 
@@ -367,7 +381,9 @@
       this.bodyHealth = 100;
       this.displayHead = 100;
       this.displayBody = 100;
-      this.stamina = 100;
+      this.stamina = this.maxStamina;
+      this.displayStamina = this.stamina;
+      this.displayStaminaCap = this.maxStamina;
       this.attack = null;
       this.guard = null;
       this.guardBlend = 0;
@@ -384,6 +400,7 @@
       this.moveFlash = 0;
       this.impactMarker = null;
       this.hitReaction = null;
+      this.blockReaction = null;
     }
 
     getHurtZone(target) {
@@ -405,7 +422,43 @@
     }
 
     get maxStamina() {
-      return 55 + this.bodyHealth * 0.45;
+      return Math.min(this.longTermStamina, 55 + this.bodyHealth * 0.45);
+    }
+
+    resetMatchStamina() {
+      this.longTermStamina = 100;
+      this.stamina = 100;
+      this.displayStamina = 100;
+      this.displayStaminaCap = 100;
+    }
+
+    recoverBetweenRounds() {
+      this.longTermStamina = clamp(
+        this.longTermStamina + GAMEPLAY_RULES.cornerLongTermRecovery,
+        GAMEPLAY_RULES.minLongTermStamina,
+        100,
+      );
+    }
+
+    spendStrikeStamina(baseCost) {
+      const cost = baseCost * GAMEPLAY_RULES.strikeStaminaScale;
+      this.stamina = Math.max(0, this.stamina - cost);
+
+      const reserveRatio = this.stamina / Math.max(1, this.maxStamina);
+      const fatiguePressure = reserveRatio < 0.35
+        ? (0.35 - reserveRatio) / 0.35
+        : 0;
+      let longTermLoss = cost * 0.035;
+      if (fatiguePressure > 0) longTermLoss += cost * (0.08 + fatiguePressure * 0.14);
+      if (this.stamina <= 0.5) longTermLoss += 2.5;
+
+      this.longTermStamina = clamp(
+        this.longTermStamina - longTermLoss,
+        GAMEPLAY_RULES.minLongTermStamina,
+        100,
+      );
+      this.stamina = Math.min(this.stamina, this.maxStamina);
+      return cost;
     }
 
     updateVisualState(deltaTime) {
@@ -414,6 +467,10 @@
       if (this.hitReaction) {
         this.hitReaction.elapsed += deltaTime;
         if (this.hitReaction.elapsed >= this.hitReaction.duration) this.hitReaction = null;
+      }
+      if (this.blockReaction) {
+        this.blockReaction.elapsed += deltaTime;
+        if (this.blockReaction.elapsed >= this.blockReaction.duration) this.blockReaction = null;
       }
       if (this.impactMarker) {
         this.impactMarker.life -= deltaTime;
@@ -429,6 +486,8 @@
       this.invulnerable = Math.max(0, this.invulnerable - deltaTime);
       this.displayHead = lerp(this.displayHead, this.headHealth, 1 - Math.pow(0.00003, deltaTime));
       this.displayBody = lerp(this.displayBody, this.bodyHealth, 1 - Math.pow(0.00003, deltaTime));
+      this.displayStamina = lerp(this.displayStamina, this.stamina, 1 - Math.pow(0.00008, deltaTime));
+      this.displayStaminaCap = lerp(this.displayStaminaCap, this.maxStamina, 1 - Math.pow(0.00008, deltaTime));
 
       if (this.knockdownTimer > 0) {
         this.knockdownTimer -= deltaTime;
@@ -462,7 +521,9 @@
         : clamp(this.guardBlend - deltaTime * 10, 0, 1);
 
       if (!this.attack && this.stun <= 0 && this.evadeTimer <= 0) {
-        const movementPenalty = 0.68 + (this.stamina / 100) * 0.32;
+        const shortTermRatio = this.stamina / Math.max(1, this.maxStamina);
+        const longTermRatio = this.maxStamina / 100;
+        const movementPenalty = 0.62 + shortTermRatio * 0.28 + longTermRatio * 0.1;
         const targetVelocity = this.guard ? input.move * 105 : input.move * 260 * movementPenalty;
         this.velocityX = lerp(this.velocityX, targetVelocity, 1 - Math.pow(0.001, deltaTime));
 
@@ -491,8 +552,9 @@
       this.x += this.velocityX * deltaTime;
       this.x = clamp(this.x, STAGE_LEFT, STAGE_RIGHT);
 
-      const regenRate = this.attack ? 2.5 : this.guard ? 6 : this.evadeTimer > 0 ? 1 : 17;
-      this.stamina = clamp(this.stamina + regenRate * deltaTime, 0, this.maxStamina);
+      const regenRate = this.attack ? 1.5 : this.guard ? 4 : this.evadeTimer > 0 ? 0.75 : 14;
+      const enduranceRecovery = 0.62 + (this.maxStamina / 100) * 0.38;
+      this.stamina = clamp(this.stamina + regenRate * enduranceRecovery * deltaTime, 0, this.maxStamina);
     }
 
     startEvade(opponent) {
@@ -509,17 +571,23 @@
     startAttack(type) {
       const definition = ATTACKS[type];
       if (this.attack || this.stun > 0 || this.evadeTimer > 0) return;
-      if (this.stamina < definition.stamina) {
+      const staminaCost = definition.target === "takedown"
+        ? definition.stamina
+        : definition.stamina * GAMEPLAY_RULES.strikeStaminaScale;
+      if (this.stamina < staminaCost) {
         this.game.showCallout("LOW STAMINA", "#ffb35c", 0.45);
         this.game.synth.tone(90, 0.07, "square", 0.012, 65);
         return;
       }
-      this.stamina -= definition.stamina;
+      const stationaryStart = Math.abs(this.velocityX) <= GAMEPLAY_RULES.criticalAttackerMaxSpeed;
+      if (definition.target === "takedown") this.stamina -= staminaCost;
+      else this.spendStrikeStamina(definition.stamina);
       this.attack = {
         type,
         elapsed: 0,
         connected: false,
         facing: this.facing,
+        stationaryStart,
       };
       this.guard = null;
       this.moveFlash = 0.3;
@@ -591,11 +659,17 @@
         : this.getVisualFrame();
       const sheet = ANIMATIONS[visual.animation];
       const frame = clamp(visual.frame, 0, sheet.frames - 1);
-      const drawX = options.x ?? this.x;
+      let drawX = options.x ?? this.x;
       const drawY = options.y ?? FLOOR;
-      const rotation = options.rotation ?? (this.knockdownTimer > 0 ? -this.facing * Math.PI / 2 : 0);
+      let rotation = options.rotation ?? (this.knockdownTimer > 0 ? -this.facing * Math.PI / 2 : 0);
       const scale = options.scale ?? 1;
       const facing = options.facing ?? this.attackFacing;
+      if (this.hitReaction?.severity === "critical" && options.x === undefined) {
+        const progress = clamp(this.hitReaction.elapsed / this.hitReaction.duration, 0, 1);
+        const impulse = Math.sin(progress * Math.PI);
+        drawX += this.hitReaction.direction * impulse * 10;
+        rotation += this.hitReaction.direction * impulse * 0.045;
+      }
       const sheetWidth = sheet.image.naturalWidth || sheet.fallbackWidth;
       const sheetHeight = sheet.image.naturalHeight || sheet.fallbackHeight;
       const frameWidth = sheetWidth / sheet.columns;
@@ -686,6 +760,15 @@
           animation: this.currentAttack.animation,
           frame: this.currentAttack.legacyFrame
             ?? (this.currentAttack.frameOffset ?? 0) + Math.floor(this.getAttackFrameFloat()),
+        };
+      }
+      if (this.blockReaction) {
+        const progress = clamp(this.blockReaction.elapsed / this.blockReaction.duration, 0, 0.999);
+        const blockFrames = [9, 8, 7, 8, 9];
+        const guardOffset = this.blockReaction.guard === "low" ? 10 : 0;
+        return {
+          animation: "guards",
+          frame: guardOffset + blockFrames[Math.floor(progress * blockFrames.length)],
         };
       }
       if (this.hitReaction) {
@@ -806,6 +889,8 @@
       this.fighterTwo.roundWins = 0;
       this.fighterOne.matchScore = 0;
       this.fighterTwo.matchScore = 0;
+      this.fighterOne.resetMatchStamina();
+      this.fighterTwo.resetMatchStamina();
       menuScreen.classList.add("is-hidden");
       pauseScreen.classList.add("is-hidden");
       resultScreen.classList.add("is-hidden");
@@ -815,6 +900,10 @@
     }
 
     startRound() {
+      if (this.round > 1) {
+        this.fighterOne.recoverBetweenRounds();
+        this.fighterTwo.recoverBetweenRounds();
+      }
       this.fighterOne.resetRound(380, 1);
       this.fighterTwo.resetRound(900, -1);
       this.timer = ROUND_TIME;
@@ -918,7 +1007,7 @@
           } else {
             this.aiIntent.guardLow = true;
           }
-        } else if (cpu.stamina < 24) {
+        } else if (cpu.stamina / Math.max(1, cpu.maxStamina) < 0.32) {
           this.aiIntent.move = -direction;
           this.aiIntent.guardHigh = Math.random() < 0.5;
         } else if (distance > 165) {
@@ -992,48 +1081,90 @@
 
       const matchingGuard = definition.target === "head" ? target.guard === "high" : target.guard === "low";
       const rangeQuality = clamp(1 - Math.abs(distance - definition.idealRange) / definition.idealRange * 0.34, 0.66, 1);
-      const staminaQuality = 0.68 + (attacker.stamina / 100) * 0.32;
+      const shortTermRatio = attacker.stamina / Math.max(1, attacker.maxStamina);
+      const longTermRatio = attacker.maxStamina / 100;
+      const staminaQuality = 0.62 + shortTermRatio * 0.28 + longTermRatio * 0.1;
       const counterBonus = target.attack ? 1.14 : 1;
+      const critical = !matchingGuard
+        && attacker.attack?.stationaryStart
+        && Math.abs(target.velocityX) >= GAMEPLAY_RULES.criticalTargetMinSpeed;
+      const criticalMultiplier = critical ? GAMEPLAY_RULES.criticalDamageMultiplier : 1;
       const guardMultiplier = matchingGuard ? 0.26 : 1;
-      const damage = definition.damage * rangeQuality * staminaQuality * counterBonus * guardMultiplier;
+      const damage = definition.damage
+        * GAMEPLAY_RULES.strikeDamageScale
+        * rangeQuality
+        * staminaQuality
+        * counterBonus
+        * criticalMultiplier
+        * guardMultiplier;
 
       if (definition.target === "head") target.headHealth = clamp(target.headHealth - damage, 0, 100);
       else target.bodyHealth = clamp(target.bodyHealth - damage, 0, 100);
 
       attacker.roundDamage += damage;
       attacker.matchScore += damage;
-      target.stamina = Math.max(0, target.stamina - (matchingGuard ? definition.damage * 0.42 : damage * 0.15));
-      target.stun = matchingGuard ? 0.08 : definition.stun;
-      target.velocityX = attacker.attackFacing * definition.knockback * (matchingGuard ? 0.28 : 1);
-      if (!matchingGuard) {
+      target.stamina = clamp(
+        target.stamina - (matchingGuard ? definition.damage * 0.42 : damage * 0.15),
+        0,
+        target.maxStamina,
+      );
+      target.stun = matchingGuard
+        ? 0.08
+        : critical
+          ? GAMEPLAY_RULES.criticalStunSeconds
+          : definition.stun;
+      target.velocityX = attacker.attackFacing
+        * definition.knockback
+        * (matchingGuard ? 0.28 : critical ? 1.32 : 1);
+      if (matchingGuard) {
+        target.hitReaction = null;
+        target.blockReaction = {
+          guard: definition.target === "head" ? "high" : "low",
+          elapsed: 0,
+          duration: 0.18,
+        };
+      } else {
+        target.blockReaction = null;
         target.attack = null;
         target.guard = null;
         target.guardBlend = 0;
         target.hitReaction = {
           target: definition.target,
+          severity: critical ? "critical" : "clean",
+          direction: attacker.attackFacing,
           elapsed: 0,
-          duration: definition.heavy ? 0.42 : definition.target === "body" ? 0.36 : 0.32,
+          duration: critical
+            ? 0.62
+            : definition.heavy
+              ? 0.42
+              : definition.target === "body"
+                ? 0.36
+                : 0.32,
         };
       }
 
+      const impactCount = matchingGuard ? 7 : critical ? 34 : definition.heavy ? 22 : 14;
       target.impactMarker = {
         x: contact.x,
         y: contact.y,
-        color: matchingGuard ? target.color : attacker.color,
-        life: definition.heavy ? 0.28 : 0.2,
-        maxLife: definition.heavy ? 0.28 : 0.2,
+        color: matchingGuard ? target.color : critical ? "#ffffff" : attacker.color,
+        life: critical ? 0.42 : definition.heavy ? 0.28 : 0.2,
+        maxLife: critical ? 0.42 : definition.heavy ? 0.28 : 0.2,
       };
-      this.spawnImpact(contact.x, contact.y, attacker.color, definition.heavy ? 22 : 14);
-      this.shake = definition.heavy && !matchingGuard ? 14 : matchingGuard ? 3 : 7;
-      this.hitStop = definition.heavy ? 0.065 : 0.035;
-      this.flash = definition.heavy && !matchingGuard ? 0.13 : 0.04;
-      this.synth.strike(matchingGuard, definition.heavy);
+      this.spawnImpact(contact.x, contact.y, critical ? "#ffffff" : attacker.color, impactCount);
+      if (critical) this.spawnImpact(contact.x, contact.y, attacker.color, 12);
+      this.shake = matchingGuard ? 2.5 : critical ? 18 : definition.heavy ? 12 : 7;
+      this.hitStop = matchingGuard ? 0.022 : critical ? 0.105 : definition.heavy ? 0.065 : 0.035;
+      this.flash = matchingGuard ? 0.018 : critical ? 0.22 : definition.heavy ? 0.13 : 0.05;
+      this.synth.strike(matchingGuard, critical || definition.heavy);
 
       if (matchingGuard) {
         this.showCallout("BLOCKED", target.color, 0.4);
+      } else if (critical) {
+        this.showCallout("CRITICAL HIT", "#ffffff", 0.72);
       } else if (counterBonus > 1) {
         this.showCallout("COUNTER", attacker.color, 0.55);
-      } else if (rangeQuality > 0.94) {
+      } else {
         this.showCallout("CLEAN HIT", attacker.color, 0.42);
       }
 
@@ -1041,7 +1172,10 @@
         this.finishFight(attacker, "K.O.");
       } else if (target.bodyHealth <= 0) {
         this.finishFight(attacker, "BODY TKO");
-      } else if (definition.heavy && !matchingGuard && target.headHealth < 34 && Math.random() < 0.48) {
+      } else if (definition.heavy
+        && !matchingGuard
+        && target.headHealth < 34
+        && Math.random() < (critical ? 0.68 : 0.48)) {
         this.knockDown(attacker, target);
       }
     }
@@ -1054,6 +1188,7 @@
       target.velocityX = attacker.attackFacing * 150;
       target.attack = null;
       target.hitReaction = null;
+      target.blockReaction = null;
       this.showCallout("KNOCKDOWN", attacker.color, 1);
       if (target.knockdownsSuffered >= 3) this.finishFight(attacker, "TKO");
     }
@@ -1473,7 +1608,10 @@
       context.font = "700 43px Orbitron, sans-serif";
       context.shadowColor = "rgba(255,255,255,0.24)";
       context.shadowBlur = 12;
-      context.fillText(String(Math.ceil(this.timer)).padStart(2, "0"), WIDTH / 2, 67);
+      const totalSeconds = Math.ceil(this.timer);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = String(totalSeconds % 60).padStart(2, "0");
+      context.fillText(`${minutes}:${seconds}`, WIDTH / 2, 67);
       context.shadowBlur = 0;
       context.fillStyle = "#77798e";
       context.font = "700 10px Chakra Petch, sans-serif";
@@ -1496,7 +1634,7 @@
 
       this.drawBar(context, x, 51, width, 20, fighter.displayHead / 100, fighter.color, reverse, "HEAD");
       this.drawBar(context, x, 76, width, 7, fighter.displayBody / 100, "#ffad57", reverse, "BODY");
-      this.drawBar(context, x, 88, width, 6, fighter.stamina / 100, "#d6ff7d", reverse, "STA");
+      this.drawStaminaBar(context, fighter, x, 88, width, 6, reverse);
 
       for (let index = 0; index < MAX_ROUNDS; index += 1) {
         const dotX = reverse ? x + width - index * 19 : x + index * 19;
@@ -1508,6 +1646,36 @@
         context.fill();
       }
       context.restore();
+    }
+
+    drawStaminaBar(context, fighter, x, y, width, height, reverse) {
+      context.fillStyle = "rgba(1, 1, 8, 0.82)";
+      context.strokeStyle = "rgba(255,255,255,0.14)";
+      context.lineWidth = 1;
+      context.fillRect(x, y, width, height);
+      context.strokeRect(x, y, width, height);
+
+      const capacityWidth = clamp(width * (fighter.displayStaminaCap / 100), 0, width);
+      const staminaWidth = clamp(width * (fighter.displayStamina / 100), 0, capacityWidth);
+      const capacityX = reverse ? x + width - capacityWidth : x;
+      const staminaX = reverse ? x + width - staminaWidth : x;
+
+      context.fillStyle = "rgba(214, 255, 125, 0.28)";
+      context.fillRect(capacityX, y, capacityWidth, height);
+      context.fillStyle = "#d6ff7d";
+      context.shadowColor = "#d6ff7d";
+      context.shadowBlur = 5;
+      context.fillRect(staminaX, y, staminaWidth, height);
+      context.shadowBlur = 0;
+
+      if (capacityWidth < width - 1) {
+        const capX = reverse ? x + width - capacityWidth : x + capacityWidth;
+        context.strokeStyle = "rgba(255, 179, 92, 0.9)";
+        context.beginPath();
+        context.moveTo(capX, y - 1);
+        context.lineTo(capX, y + height + 1);
+        context.stroke();
+      }
     }
 
     drawBar(context, x, y, width, height, ratio, color, reverse, label) {
@@ -1600,4 +1768,8 @@
       // Fullscreen can be disabled inside an embedded preview.
     }
   });
+
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = { game, Fighter, ATTACKS, GAMEPLAY_RULES };
+  }
 })();

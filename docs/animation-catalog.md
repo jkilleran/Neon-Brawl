@@ -8,7 +8,7 @@ Este catálogo es la referencia para arte, lógica y pruebas. Los metadatos cons
 - Todas las fuentes atacan hacia la **derecha de la pantalla**.
 - El motor refleja la hoja completa cuando el rival está a la izquierda; no se mantienen copias duplicadas para P1/P2.
 - La dirección se bloquea al iniciar el ataque, de modo que un cruce de posiciones no puede invertir el golpe a mitad de la animación.
-- Las hojas de ataque usan una cuadrícula `4 × 3`: frames 1–10 en orden de lectura y dos celdas transparentes reservadas.
+- Las hojas base usan una cuadrícula `4 × 3`; los modelos v5 aprobados usan `5 × 2`. En ambos casos hay exactamente diez frames en orden de lectura.
 - Cada celda conserva un margen alfa mínimo de 6 px; el validador rechaza piezas que invadan una celda vecina.
 - En patadas, la pierna de apoyo se fija en el manifiesto y debe permanecer plantada desde carga hasta retroceso.
 - Contacto: frame **6** para puños y para las dos patadas derechas corregidas; la patada alta izquierda conserva contacto en el frame **4**.
@@ -74,7 +74,7 @@ El arco de guardia se dibuja en coordenadas locales y usa `facing` como escala h
 
 | ID | Hoja | Segmentos |
 | --- | --- | --- |
-| `hitReactions` | `animations/support/hit-reactions-v3.png` | cabeza 0–9, cuerpo 10–19 |
+| `hitReactions` | `animations/support/hit-reactions-v4.png` | cabeza 0–9, cuerpo 10–19 |
 | `footwork` | `animations/support/footwork-v3.png` | avance 0–9, retroceso 10–19 |
 | `guards` | `animations/support/guards-v3.png` | alta 0–9, baja 10–19 |
 | `legacy` | `fighter-mma-sprites.png` | lógica de derribos preservada y desactivada |
