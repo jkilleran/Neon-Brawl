@@ -34,8 +34,10 @@ Los derribos y el control en el suelo están temporalmente desactivados. Su impl
 ## Sistemas incluidos
 
 - Daño independiente de cabeza y cuerpo
+- Modo `PRACTICE LAB` sin reloj, con cifras de daño y reinicio automático del dummy
 - Tres asaltos de 3 minutos
-- Daño de strikes reducido al 50% y coste de stamina aumentado al 150%
+- Daño de strikes reducido al 50%; los ataques al cuerpo reciben otro 15% de reducción
+- Coste de stamina al 100% al acertar limpio y al 150% al fallar, ser evadido o golpear la guardia
 - Stamina inmediata más límite de stamina a largo plazo en una sola barra
 - Fatiga acumulativa al lanzar golpes con la reserva baja; el límite mínimo es 35%
 - Recuperación parcial del límite de stamina entre asaltos

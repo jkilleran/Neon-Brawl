@@ -11,6 +11,8 @@ assert.match(markup, /FLECHAS \+ NM,\./, "Pause menu should list Player 2 contro
 assert.match(markup, /SPACE<\/kbd><span>mantener \+ cualquier golpe/, "Pause menu should explain the body modifier");
 assert.match(markup, /animation-manifest\.js[\s\S]*game\.js/, "Animation manifest must load before the game");
 assert.match(markup, /Tres asaltos de 3 minutos/, "Menu should explain round duration");
+assert.match(markup, /data-mode="practice"/, "Menu should expose practice mode");
+assert.match(markup, /Sin reloj · daño visible por golpe/, "Practice mode should explain its damage display");
 assert.match(markup, /brillante = stamina actual · tenue = límite recuperable/, "Pause menu should explain both stamina layers");
 assert.match(
   gameSource,
@@ -134,7 +136,11 @@ const make = (selector) => {
   ".brand",
 ].forEach(make);
 
-const modeButtons = [new FakeElement({ mode: "cpu" }), new FakeElement({ mode: "local" })];
+const modeButtons = [
+  new FakeElement({ mode: "cpu" }),
+  new FakeElement({ mode: "local" }),
+  new FakeElement({ mode: "practice" }),
+];
 const menuButtons = [new FakeElement(), new FakeElement()];
 const windowListeners = new Map();
 const animationFrames = [];
@@ -195,7 +201,9 @@ const { game, ATTACKS } = require("../game.js");
 assert.deepEqual(globalThis.NEON_BRAWL_GAMEPLAY_RULES, {
   roundTimeSeconds: 180,
   strikeDamageScale: 0.5,
-  strikeStaminaScale: 1.5,
+  bodyDamageScale: 0.85,
+  strikeStaminaScale: 1,
+  inefficientStrikeStaminaScale: 1.5,
   criticalAttackerMaxSpeed: 38,
   criticalTargetMinSpeed: 70,
   criticalDamageMultiplier: 1.75,
@@ -208,6 +216,8 @@ assert.match(gameSource, /attacker\.attack\?\.stationaryStart[\s\S]*Math\.abs\(t
 assert.match(gameSource, /severity: critical \? "critical" : "clean"/, "Clean and critical hits should use distinct reactions");
 assert.match(gameSource, /target\.blockReaction = \{/, "Blocked strikes should trigger a subtle guard reaction");
 assert.match(gameSource, /drawStaminaBar\(context, fighter/, "HUD should draw short and long-term stamina together");
+assert.match(gameSource, /this\.mode !== "practice"[\s\S]*this\.timer/, "Practice mode should not consume the timer");
+assert.match(gameSource, /spawnDamageNumber\(/, "Practice impacts should show numeric damage");
 
 const attacker = game.fighterOne;
 const defender = game.fighterTwo;
@@ -215,7 +225,7 @@ attacker.resetMatchStamina();
 attacker.resetRound(400, 1);
 const restedCapacity = attacker.longTermStamina;
 attacker.spendStrikeStamina(20);
-assert.equal(attacker.stamina, 70, "A 20-point strike should cost 30 short-term stamina");
+assert.equal(attacker.stamina, 80, "A clean 20-point strike should cost 20 short-term stamina");
 const restedCapacityLoss = restedCapacity - attacker.longTermStamina;
 attacker.stamina = 20;
 const fatiguedCapacity = attacker.longTermStamina;
@@ -224,6 +234,18 @@ assert(
   fatiguedCapacity - attacker.longTermStamina > restedCapacityLoss,
   "A strike thrown while fatigued should cause greater long-term loss",
 );
+
+attacker.resetMatchStamina();
+attacker.resetRound(400, 1);
+defender.resetMatchStamina();
+defender.resetRound(900, -1);
+attacker.startAttack("leftPunchHead");
+assert.equal(attacker.stamina, 95, "Starting a strike should spend 100% of its base stamina");
+attacker.attack.elapsed = ATTACKS.leftPunchHead.startup
+  + ATTACKS.leftPunchHead.active
+  + ATTACKS.leftPunchHead.recovery;
+attacker.updateAttack(1 / 60, defender);
+assert.equal(attacker.stamina, 92.5, "A missed strike should spend 150% stamina in total");
 
 attacker.resetMatchStamina();
 attacker.resetRound(400, 1);
@@ -244,21 +266,44 @@ assert.equal(defender.hitReaction.severity, "critical");
 
 attacker.resetRound(400, 1);
 defender.resetRound(491, -1);
-attacker.attack = {
-  type: "leftPunchHead",
-  elapsed: 0,
-  connected: true,
-  facing: 1,
-  stationaryStart: true,
-};
+attacker.resetMatchStamina();
+attacker.startAttack("leftPunchHead");
+attacker.attack.connected = true;
 defender.guard = "high";
 defender.velocityX = 90;
 game.resolveAttack(attacker, defender, ATTACKS.leftPunchHead, { x: 480, y: 350 });
 assert(defender.blockReaction, "Matching guard should trigger a block reaction");
 assert.equal(defender.hitReaction, null, "Blocked strike should not play a clean reaction");
+assert.equal(attacker.stamina, 92.5, "A blocked strike should spend 150% stamina in total");
+
+attacker.resetMatchStamina();
+attacker.resetRound(400, 1);
+defender.resetMatchStamina();
+defender.resetRound(484, -1);
+attacker.attack = {
+  type: "leftPunchBody",
+  elapsed: 0,
+  connected: true,
+  inefficientPenaltyApplied: false,
+  facing: 1,
+  stationaryStart: true,
+};
+game.mode = "practice";
+game.damageNumbers.length = 0;
+game.resolveAttack(attacker, defender, ATTACKS.leftPunchBody, { x: 475, y: 430 });
+assert(Math.abs(defender.bodyHealth - 96.6) < 0.0001, "Body strikes should receive the additional 0.85 damage scale");
+assert.equal(game.damageNumbers[0].text, "3.40", "Practice mode should show exact damage with two decimals");
+defender.bodyHealth = 1;
+game.resolveAttack(attacker, defender, ATTACKS.leftPunchBody, { x: 475, y: 430 });
+assert.equal(game.state, "menu", "Practice damage should not end the session");
+assert(defender.practiceResetTimer > 0, "A depleted practice dummy should schedule an automatic reset");
+defender.update(0.9, game.emptyInput(), attacker);
+assert.equal(defender.bodyHealth, 100, "The practice dummy should recover after the reset delay");
+game.mode = "cpu";
 
 assert.equal(animationFrames.length, 1, "The game should schedule its animation loop");
 assert.equal(modeButtons[0].listeners.has("click"), true, "CPU mode should be interactive");
+assert.equal(modeButtons[2].listeners.has("click"), true, "Practice mode should be interactive");
 assert.equal(imageSources.length, 12, "All modular combat animation sheets should preload");
 for (const movement of Object.values(animationManifest.strikes)) {
   assert(imageSources.includes(movement.file), `${movement.id} should preload its own sheet`);
@@ -266,6 +311,13 @@ for (const movement of Object.values(animationManifest.strikes)) {
 assert(imageSources.includes("/assets/animations/support/hit-reactions-v4.png"));
 assert(imageSources.includes("/assets/animations/support/footwork-v3.png"));
 assert(imageSources.includes("/assets/animations/support/guards-v3.png"));
+
+modeButtons[2].dispatch("click");
+game.state = "fighting";
+game.timer = 42;
+game.update(0.5);
+assert.equal(game.timer, 42, "Practice mode should keep an infinite timer");
+game.returnToMenu();
 
 modeButtons[0].dispatch("click");
 assert.equal(selectors.get("#menu-screen").classList.contains("is-hidden"), true);
@@ -310,4 +362,4 @@ assert.equal(selectors.get("#pause-screen").classList.contains("is-hidden"), fal
 selectors.get("#resume-button").dispatch("click");
 assert.equal(selectors.get("#pause-screen").classList.contains("is-hidden"), true);
 
-console.log("Smoke test passed: expanded sprites, movement, guards, four strikes, body modifier, CPU loop and pause.");
+console.log("Smoke test passed: practice lab, damage numbers, tactical stamina, combat controls, CPU loop and pause.");

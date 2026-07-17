@@ -1,7 +1,7 @@
 {
   "name": "neon-brawl",
   "private": true,
-  "version": "0.9.0",
+  "version": "0.10.0",
   "type": "commonjs",
   "description": "Juego MMA super light para uno o dos jugadores, creado con Canvas y JavaScript.",
   "scripts": {

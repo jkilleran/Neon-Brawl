@@ -8,10 +8,19 @@ Este documento registra el balance táctico de Neon Brawl. Los valores ejecutabl
 - Cada asalto dura 180 segundos (`3:00`).
 - La decisión mantiene el sistema 10-9 existente.
 
+## Modo práctica
+
+- `PRACTICE LAB` no tiene límite de tiempo ni termina por KO/TKO.
+- Cada impacto muestra su daño final con dos decimales sobre el punto de contacto.
+- Los números identifican también impactos `BLOCK` y `CRIT`.
+- Al agotarse la salud de cabeza o cuerpo, el dummy recupera automáticamente salud y stamina después de una pausa breve.
+
 ## Daño y coste de ataques
 
 - Todo strike de pie aplica `0.5 ×` su daño base.
-- Todo strike de pie consume `1.5 ×` su coste base de stamina.
+- Los strikes al cuerpo aplican además `0.85 ×`, un 15% menos que los strikes equivalentes a la cabeza.
+- Un strike que conecta limpio o crítico consume `1.0 ×` su coste base de stamina.
+- Un strike fallado, evadido o bloqueado consume `1.5 ×` en total: `1.0 ×` al lanzarlo y `0.5 ×` como penalización por ineficiencia.
 - El daño final todavía considera distancia, stamina actual, límite de stamina y situación de counter.
 
 ## Stamina en dos capas

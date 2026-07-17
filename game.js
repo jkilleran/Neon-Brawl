@@ -23,7 +23,9 @@
   const GAMEPLAY_RULES = Object.freeze({
     roundTimeSeconds: 3 * 60,
     strikeDamageScale: 0.5,
-    strikeStaminaScale: 1.5,
+    bodyDamageScale: 0.85,
+    strikeStaminaScale: 1,
+    inefficientStrikeStaminaScale: 1.5,
     criticalAttackerMaxSpeed: 38,
     criticalTargetMinSpeed: 70,
     criticalDamageMultiplier: 1.75,
@@ -401,6 +403,7 @@
       this.impactMarker = null;
       this.hitReaction = null;
       this.blockReaction = null;
+      this.practiceResetTimer = 0;
     }
 
     getHurtZone(target) {
@@ -440,8 +443,8 @@
       );
     }
 
-    spendStrikeStamina(baseCost) {
-      const cost = baseCost * GAMEPLAY_RULES.strikeStaminaScale;
+    spendStrikeStamina(baseCost, multiplier = GAMEPLAY_RULES.strikeStaminaScale) {
+      const cost = baseCost * multiplier;
       this.stamina = Math.max(0, this.stamina - cost);
 
       const reserveRatio = this.stamina / Math.max(1, this.maxStamina);
@@ -459,6 +462,34 @@
       );
       this.stamina = Math.min(this.stamina, this.maxStamina);
       return cost;
+    }
+
+    applyInefficientStrikePenalty(definition) {
+      if (definition.target === "takedown" || this.attack?.inefficientPenaltyApplied) return 0;
+      const penaltyMultiplier = Math.max(
+        0,
+        GAMEPLAY_RULES.inefficientStrikeStaminaScale - GAMEPLAY_RULES.strikeStaminaScale,
+      );
+      if (this.attack) this.attack.inefficientPenaltyApplied = true;
+      return this.spendStrikeStamina(definition.stamina, penaltyMultiplier);
+    }
+
+    resetPracticeVitals() {
+      this.headHealth = 100;
+      this.bodyHealth = 100;
+      this.displayHead = 100;
+      this.displayBody = 100;
+      this.resetMatchStamina();
+      this.attack = null;
+      this.guard = null;
+      this.guardBlend = 0;
+      this.guardVisual = null;
+      this.stun = 0;
+      this.velocityX = 0;
+      this.hitReaction = null;
+      this.blockReaction = null;
+      this.impactMarker = null;
+      this.practiceResetTimer = 0;
     }
 
     updateVisualState(deltaTime) {
@@ -480,6 +511,13 @@
 
     update(deltaTime, input, opponent) {
       this.updateVisualState(deltaTime);
+      if (this.practiceResetTimer > 0) {
+        this.practiceResetTimer = Math.max(0, this.practiceResetTimer - deltaTime);
+        this.velocityX *= Math.pow(0.02, deltaTime);
+        this.x = clamp(this.x + this.velocityX * deltaTime, STAGE_LEFT, STAGE_RIGHT);
+        if (this.practiceResetTimer <= 0) this.resetPracticeVitals();
+        return;
+      }
       this.stun = Math.max(0, this.stun - deltaTime);
       this.evadeTimer = Math.max(0, this.evadeTimer - deltaTime);
       this.evadeCooldown = Math.max(0, this.evadeCooldown - deltaTime);
@@ -586,6 +624,7 @@
         type,
         elapsed: 0,
         connected: false,
+        inefficientPenaltyApplied: false,
         facing: this.facing,
         stationaryStart,
       };
@@ -614,7 +653,10 @@
       }
 
       const totalDuration = definition.startup + definition.active + definition.recovery;
-      if (this.attack && this.attack.elapsed >= totalDuration) this.attack = null;
+      if (this.attack && this.attack.elapsed >= totalDuration) {
+        if (!this.attack.connected) this.applyInefficientStrikePenalty(definition);
+        this.attack = null;
+      }
     }
 
     getAttackFrameFloat() {
@@ -833,6 +875,7 @@
       this.matchMethod = "";
       this.ground = null;
       this.particles = [];
+      this.damageNumbers = [];
       this.shake = 0;
       this.hitStop = 0;
       this.flash = 0;
@@ -909,12 +952,16 @@
       this.timer = ROUND_TIME;
       this.ground = null;
       this.particles.length = 0;
+      this.damageNumbers.length = 0;
       this.state = "intro";
       this.introTimer = 1.8;
       this.introFightShown = false;
       this.aiTimer = 0;
       this.aiIntent = this.emptyInput();
-      this.showRoundMessage(`ROUND ${this.round} OF ${MAX_ROUNDS}`, "READY");
+      this.showRoundMessage(
+        this.mode === "practice" ? "PRACTICE MODE" : `ROUND ${this.round} OF ${MAX_ROUNDS}`,
+        "READY",
+      );
       this.synth.announce();
     }
 
@@ -1061,6 +1108,7 @@
 
     resolveAttack(attacker, target, definition, contact) {
       if (target.invulnerable > 0) {
+        attacker.applyInefficientStrikePenalty(definition);
         this.showCallout("CLEAN EVADE", target.color, 0.55);
         this.synth.tone(340, 0.08, "sine", 0.015, 620);
         return;
@@ -1090,13 +1138,17 @@
         && Math.abs(target.velocityX) >= GAMEPLAY_RULES.criticalTargetMinSpeed;
       const criticalMultiplier = critical ? GAMEPLAY_RULES.criticalDamageMultiplier : 1;
       const guardMultiplier = matchingGuard ? 0.26 : 1;
+      const bodyMultiplier = definition.target === "body" ? GAMEPLAY_RULES.bodyDamageScale : 1;
       const damage = definition.damage
         * GAMEPLAY_RULES.strikeDamageScale
+        * bodyMultiplier
         * rangeQuality
         * staminaQuality
         * counterBonus
         * criticalMultiplier
         * guardMultiplier;
+
+      if (matchingGuard) attacker.applyInefficientStrikePenalty(definition);
 
       if (definition.target === "head") target.headHealth = clamp(target.headHealth - damage, 0, 100);
       else target.bodyHealth = clamp(target.bodyHealth - damage, 0, 100);
@@ -1125,6 +1177,10 @@
         };
       } else {
         target.blockReaction = null;
+        const interruptedAttack = target.currentAttack;
+        if (interruptedAttack && !target.attack.connected) {
+          target.applyInefficientStrikePenalty(interruptedAttack);
+        }
         target.attack = null;
         target.guard = null;
         target.guardBlend = 0;
@@ -1157,6 +1213,12 @@
       this.hitStop = matchingGuard ? 0.022 : critical ? 0.105 : definition.heavy ? 0.065 : 0.035;
       this.flash = matchingGuard ? 0.018 : critical ? 0.22 : definition.heavy ? 0.13 : 0.05;
       this.synth.strike(matchingGuard, critical || definition.heavy);
+      this.spawnDamageNumber(
+        contact.x,
+        contact.y - 18,
+        damage,
+        matchingGuard ? "blocked" : critical ? "critical" : "clean",
+      );
 
       if (matchingGuard) {
         this.showCallout("BLOCKED", target.color, 0.4);
@@ -1168,11 +1230,16 @@
         this.showCallout("CLEAN HIT", attacker.color, 0.42);
       }
 
-      if (target.headHealth <= 0) {
+      if (this.mode === "practice" && (target.headHealth <= 0 || target.bodyHealth <= 0)) {
+        target.practiceResetTimer = 0.85;
+        target.stun = Math.max(target.stun, 0.85);
+        this.showCallout("DUMMY RESET", target.color, 0.7);
+      } else if (target.headHealth <= 0) {
         this.finishFight(attacker, "K.O.");
       } else if (target.bodyHealth <= 0) {
         this.finishFight(attacker, "BODY TKO");
-      } else if (definition.heavy
+      } else if (this.mode !== "practice"
+        && definition.heavy
         && !matchingGuard
         && target.headHealth < 34
         && Math.random() < (critical ? 0.68 : 0.48)) {
@@ -1364,7 +1431,10 @@
         this.fighterTwo.updateVisualState(deltaTime);
         if (this.introTimer < 0.72 && !this.introFightShown) {
           this.introFightShown = true;
-          this.showRoundMessage(`ROUND ${this.round} OF ${MAX_ROUNDS}`, "FIGHT");
+          this.showRoundMessage(
+            this.mode === "practice" ? "PRACTICE MODE" : `ROUND ${this.round} OF ${MAX_ROUNDS}`,
+            this.mode === "practice" ? "TRAIN" : "FIGHT",
+          );
           this.synth.announce();
         }
         if (this.introTimer <= 0) {
@@ -1372,14 +1442,14 @@
           roundMessage.classList.add("is-hidden");
         }
       } else if (this.state === "fighting") {
-        this.timer = Math.max(0, this.timer - deltaTime);
+        if (this.mode !== "practice") this.timer = Math.max(0, this.timer - deltaTime);
         this.fighterOne.update(deltaTime, this.getKeyboardInput(1), this.fighterTwo);
         if (this.state === "fighting") {
           const inputTwo = this.mode === "cpu" ? this.getCpuInput(deltaTime) : this.getKeyboardInput(2);
           this.fighterTwo.update(deltaTime, inputTwo, this.fighterOne);
         }
         if (this.state === "fighting") this.resolveFighterSpacing();
-        if (this.timer <= 0) this.finishRoundDecision();
+        if (this.mode !== "practice" && this.timer <= 0) this.finishRoundDecision();
       } else if (this.state === "ground") {
         this.timer = Math.max(0, this.timer - deltaTime);
         this.updateGround(deltaTime);
@@ -1402,6 +1472,24 @@
 
       for (const particle of this.particles) particle.update(deltaTime);
       this.particles = this.particles.filter((particle) => particle.life > 0);
+      for (const number of this.damageNumbers) {
+        number.life -= deltaTime;
+        number.y -= 30 * deltaTime;
+      }
+      this.damageNumbers = this.damageNumbers.filter((number) => number.life > 0);
+    }
+
+    spawnDamageNumber(x, y, damage, outcome) {
+      if (this.mode !== "practice") return;
+      const suffix = outcome === "critical" ? " CRIT" : outcome === "blocked" ? " BLOCK" : "";
+      this.damageNumbers.push({
+        x,
+        y,
+        text: `${damage.toFixed(2)}${suffix}`,
+        color: outcome === "critical" ? "#ffffff" : outcome === "blocked" ? "#8be9ff" : "#d6ff7d",
+        life: 0.9,
+        maxLife: 0.9,
+      });
     }
 
     spawnImpact(x, y, color, count) {
@@ -1458,6 +1546,7 @@
           this.fighterTwo.draw(ctx);
         }
         for (const particle of this.particles) particle.draw(ctx);
+        this.drawDamageNumbers(ctx);
         this.drawHud(ctx);
         this.drawCallout(ctx);
       }
@@ -1608,17 +1697,47 @@
       context.font = "700 43px Orbitron, sans-serif";
       context.shadowColor = "rgba(255,255,255,0.24)";
       context.shadowBlur = 12;
-      const totalSeconds = Math.ceil(this.timer);
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = String(totalSeconds % 60).padStart(2, "0");
-      context.fillText(`${minutes}:${seconds}`, WIDTH / 2, 67);
+      if (this.mode === "practice") {
+        context.fillText("∞", WIDTH / 2, 67);
+      } else {
+        const totalSeconds = Math.ceil(this.timer);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = String(totalSeconds % 60).padStart(2, "0");
+        context.fillText(`${minutes}:${seconds}`, WIDTH / 2, 67);
+      }
       context.shadowBlur = 0;
       context.fillStyle = "#77798e";
       context.font = "700 10px Chakra Petch, sans-serif";
-      context.fillText(`ROUND ${this.round} / ${MAX_ROUNDS}`, WIDTH / 2, 88);
+      context.fillText(
+        this.mode === "practice" ? "NO TIME LIMIT" : `ROUND ${this.round} / ${MAX_ROUNDS}`,
+        WIDTH / 2,
+        88,
+      );
       context.fillStyle = "#55576b";
-      context.fillText(this.mode === "cpu" ? "QUICK FIGHT" : "LOCAL SPARRING", WIDTH / 2, 104);
+      context.fillText(
+        this.mode === "cpu" ? "QUICK FIGHT" : this.mode === "practice" ? "DAMAGE DISPLAY" : "LOCAL SPARRING",
+        WIDTH / 2,
+        104,
+      );
       context.restore();
+    }
+
+    drawDamageNumbers(context) {
+      for (const number of this.damageNumbers) {
+        const alpha = clamp(number.life / number.maxLife, 0, 1);
+        context.save();
+        context.globalAlpha = Math.min(1, alpha * 1.8);
+        context.fillStyle = number.color;
+        context.strokeStyle = "rgba(4, 4, 14, 0.92)";
+        context.lineWidth = 5;
+        context.textAlign = "center";
+        context.font = "800 22px Orbitron, sans-serif";
+        context.shadowColor = number.color;
+        context.shadowBlur = 12;
+        context.strokeText(number.text, number.x, number.y);
+        context.fillText(number.text, number.x, number.y);
+        context.restore();
+      }
     }
 
     drawFighterHud(context, fighter, x, reverse, width) {
