@@ -500,6 +500,116 @@ h1 em {
   color: var(--muted);
 }
 
+.dialog-card--pause {
+  width: min(760px, 92%);
+  max-height: 94%;
+  padding: 20px 24px 22px;
+  overflow: auto;
+}
+
+.dialog-card--pause h2 {
+  margin-bottom: 12px;
+  font-size: clamp(30px, 4vw, 48px);
+}
+
+.pause-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  text-align: left;
+}
+
+.pause-control-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 12px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.025);
+  color: #aaaabd;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.pause-control-card header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #696a7f;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+
+.pause-control-card header b {
+  color: var(--cyan);
+  font: 700 13px "Orbitron", sans-serif;
+}
+
+.pause-control-card--p2 header b {
+  color: var(--pink);
+}
+
+.pause-control-card div {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.pause-control-card kbd,
+.body-modifier kbd {
+  display: inline-grid;
+  min-width: 27px;
+  min-height: 23px;
+  place-items: center;
+  padding: 2px 5px;
+  border: 1px solid rgba(53, 242, 229, 0.3);
+  border-radius: 2px;
+  background: rgba(53, 242, 229, 0.08);
+  color: var(--cyan);
+  font: 700 9px "Orbitron", sans-serif;
+}
+
+.pause-control-card--p2 kbd {
+  border-color: rgba(255, 59, 157, 0.3);
+  background: rgba(255, 59, 157, 0.08);
+  color: var(--pink);
+}
+
+.body-modifier {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 8px;
+  border: 1px solid rgba(214, 255, 125, 0.2);
+  background: rgba(214, 255, 125, 0.04);
+  color: #aebd8c;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.body-modifier kbd {
+  min-width: 58px;
+  border-color: rgba(214, 255, 125, 0.38);
+  background: rgba(214, 255, 125, 0.09);
+  color: #d6ff7d;
+}
+
+.pause-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
 .dialog-button {
   width: 100%;
   min-height: 46px;
@@ -672,6 +782,16 @@ h1 em {
   .footer-note p {
     display: none;
   }
+
+  .dialog-card--pause {
+    padding: 14px 16px 16px;
+  }
+
+  .pause-control-card {
+    gap: 3px 8px;
+    padding: 9px;
+    font-size: 8px;
+  }
 }
 
 @media (max-width: 520px) {
@@ -696,6 +816,14 @@ h1 em {
   .fighter-card {
     right: -20%;
     width: 72%;
+  }
+
+  .pause-controls-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dialog-card--pause {
+    max-height: 96%;
   }
 }
 
