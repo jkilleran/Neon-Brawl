@@ -4,11 +4,17 @@ const path = require("node:path");
 const animationManifest = require("../animation-manifest.js");
 
 const markup = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+const gameSource = fs.readFileSync(path.join(__dirname, "..", "game.js"), "utf8");
 assert.match(markup, /pause-controls-grid/, "Pause menu should expose the complete controls");
 assert.match(markup, /WASD \+ UIJK/, "Pause menu should list Player 1 controls");
 assert.match(markup, /FLECHAS \+ NM,\./, "Pause menu should list Player 2 controls");
 assert.match(markup, /SPACE<\/kbd><span>mantener \+ cualquier golpe/, "Pause menu should explain the body modifier");
 assert.match(markup, /animation-manifest\.js[\s\S]*game\.js/, "Animation manifest must load before the game");
+assert.match(
+  gameSource,
+  /context\.translate\(this\.x, guardY\);[\s\S]*context\.scale\(this\.facing, 1\);[\s\S]*context\.arc\(22, 0, 48/,
+  "Guard indicator must mirror with the fighter facing",
+);
 assert.equal(Object.keys(animationManifest.strikes).length, 8, "Catalog should expose eight isolated strikes");
 assert.equal(animationManifest.strikes.leftPunchBody.limb, "left-hand");
 assert.equal(animationManifest.strikes.leftPunchBody.target, "body");
@@ -190,7 +196,7 @@ assert.equal(imageSources.length, 12, "All modular combat animation sheets shoul
 for (const movement of Object.values(animationManifest.strikes)) {
   assert(imageSources.includes(movement.file), `${movement.id} should preload its own sheet`);
 }
-assert(imageSources.includes("/assets/animations/support/hit-reactions-v3.png"));
+assert(imageSources.includes("/assets/animations/support/hit-reactions-v4.png"));
 assert(imageSources.includes("/assets/animations/support/footwork-v3.png"));
 assert(imageSources.includes("/assets/animations/support/guards-v3.png"));
 

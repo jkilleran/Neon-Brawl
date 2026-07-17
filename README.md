@@ -40,6 +40,7 @@ Los derribos y el control en el suelo están temporalmente desactivados. Su impl
 - Diez frames por variante, con contacto, recuperación y retorno a guardia
 - Veinte frames de desplazamiento y veinte de guardias alta/baja
 - Diez frames de reacción al golpe para cabeza y diez para cuerpo
+- Reacción corporal con entrada y recuperación simétricas, sin cambios bruscos de escala
 - Colisiones anatómicas de cabeza y cuerpo con impacto en el punto exacto
 - Controles completos visibles desde el menú de pausa
 - Lógica de derribos y ground-and-pound preservada, pero desactivada
@@ -48,6 +49,7 @@ Los derribos y el control en el suelo están temporalmente desactivados. Su impl
 - Rival controlado por computadora
 - Ocho hojas de ataque independientes con diez frames etiquetados por movimiento
 - Dirección canónica y espejo determinista para que ambos luchadores golpeen hacia el rival
+- Indicador de guardia reflejado correctamente para el peleador de la derecha
 - Jab izquierdo al cuerpo y cross derecho al cuerpo con siluetas y rotaciones diferenciadas
 - Modelos v5 aprobados para patada derecha alta, patada derecha al cuerpo y puño izquierdo al cuerpo
 - Extremidad atacante bloqueada por movimiento para impedir cambios de mano o pierna entre frames

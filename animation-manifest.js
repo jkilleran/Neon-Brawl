@@ -176,7 +176,7 @@
   const sheets = Object.freeze({
     ...strikeSheets,
     hitReactions: Object.freeze({
-      src: "/assets/animations/support/hit-reactions-v3.png",
+      src: "/assets/animations/support/hit-reactions-v4.png",
       columns: 5,
       rows: 4,
       frames: 20,
@@ -216,7 +216,7 @@
   });
 
   const manifest = Object.freeze({
-    version: "5.0.0",
+    version: "5.1.0",
     frameLimitPerMovement: 10,
     canonicalSourceFacing: "right",
     strikes,

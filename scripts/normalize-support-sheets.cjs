@@ -16,6 +16,15 @@ const jobs = [
   { source: "public/assets/anim-guards-v2.png", output: "public/assets/animations/support/guards-v3.png", columns: 5, rows: 4, frames: 20, sourceHeight: 1120 },
   { source: "public/assets/anim-footwork-v2.png", output: "public/assets/animations/support/footwork-v3.png", columns: 5, rows: 4, frames: 20, sourceHeight: 1120 },
   { source: "public/assets/anim-hit-reactions-v2.png", output: "public/assets/animations/support/hit-reactions-v3.png", columns: 5, rows: 4, frames: 20, sourceHeight: 1120 },
+  {
+    source: "public/assets/animations/support/hit-reactions-v3.png",
+    output: "public/assets/animations/support/hit-reactions-v4.png",
+    columns: 5,
+    rows: 4,
+    frames: 20,
+    sourceHeight: 1364,
+    frameMap: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 14, 13, 12, 11, 10],
+  },
   { source: "public/assets/animations/strikes/left-punch-body-v4.png", output: "public/assets/animations/strikes/left-punch-body-v4.png", columns: 4, rows: 3, frames: 10, sourceHeight: 1023 },
   { source: "public/assets/animations/strikes/right-punch-body-v4.png", output: "public/assets/animations/strikes/right-punch-body-v4.png", columns: 4, rows: 3, frames: 10, sourceHeight: 1023 },
   { source: "public/assets/animations/strikes/right-kick-head-v4.png", output: "public/assets/animations/strikes/right-kick-head-v4.png", columns: 4, rows: 3, frames: 10, sourceHeight: 1023 },
@@ -80,7 +89,14 @@ function normalize(job) {
   try {
     const workingSource = source === output ? path.join(temporary, "source.png") : source;
     if (source === output) fs.copyFileSync(source, workingSource);
-    const components = componentsFor(workingSource, job);
+    const sourceComponents = componentsFor(workingSource, job);
+    if (job.frameMap) {
+      assert.equal(job.frameMap.length, job.frames, `${job.output} frame map must contain ${job.frames} entries`);
+      job.frameMap.forEach((frame) => assert(sourceComponents[frame], `${job.output} references missing source frame ${frame}`));
+    }
+    const components = job.frameMap
+      ? job.frameMap.map((frame) => sourceComponents[frame])
+      : sourceComponents;
     const scale = targetMaxHeight / Math.max(...components.map((component) => component.height));
     fs.mkdirSync(path.dirname(output), { recursive: true });
     run(["-size", `${job.columns * cellWidth}x${job.rows * cellHeight}`, "xc:none", output]);

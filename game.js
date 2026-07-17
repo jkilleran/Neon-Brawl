@@ -668,9 +668,11 @@
         context.shadowColor = context.strokeStyle;
         context.shadowBlur = 15;
         context.lineWidth = 3;
-        context.beginPath();
         const guardY = this.guard === "high" ? FLOOR - 250 : FLOOR - 165;
-        context.arc(this.x + this.facing * 22, guardY, 48, -1.2, 1.2);
+        context.translate(this.x, guardY);
+        context.scale(this.facing, 1);
+        context.beginPath();
+        context.arc(22, 0, 48, -1.2, 1.2);
         context.stroke();
         context.restore();
       }

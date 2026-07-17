@@ -64,6 +64,12 @@ En `rightKickHead` y `rightKickBody`, el frame 6 conserva explícitamente el pie
 
 Los tres modelos usan una cuadrícula `5 × 2`, exactamente diez celdas ocupadas y una sola extremidad atacante bloqueada mediante `lockedStrikingLimb` en el manifiesto. Las imágenes del juego son copias normalizadas con fondo transparente; las poses de las referencias aprobadas no se regeneran durante la integración.
 
+## Reacciones e indicadores
+
+`hit-reactions-v4.png` conserva los diez frames de reacción de cabeza y reconstruye los diez frames de cuerpo con la secuencia `10, 11, 12, 13, 14, 14, 13, 12, 11, 10`. La entrada y la recuperación son simétricas y se omiten los frames antiguos que reducían bruscamente la escala del peleador.
+
+El arco de guardia se dibuja en coordenadas locales y usa `facing` como escala horizontal. Por eso el peleador izquierdo lo muestra hacia la derecha y el peleador derecho lo muestra hacia la izquierda, siempre orientado hacia el rival.
+
 ## Animaciones no ofensivas conservadas
 
 | ID | Hoja | Segmentos |
