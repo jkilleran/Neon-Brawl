@@ -1019,7 +1019,6 @@
       menuScreen.classList.add("is-hidden");
       pauseScreen.classList.add("is-hidden");
       resultScreen.classList.add("is-hidden");
-      combatControls.classList.remove("is-hidden");
       this.startRound();
       canvas.focus();
     }
@@ -1092,27 +1091,27 @@
           move: (keys.has("KeyD") ? forward : 0) - (keys.has("KeyA") ? forward : 0),
           guardHigh: keys.has("KeyW"),
           guardLow: keys.has("KeyS"),
-          leftPunch: pressed.has("KeyU"),
-          rightPunch: pressed.has("KeyI"),
-          leftKick: pressed.has("KeyJ"),
-          rightKick: pressed.has("KeyK"),
+          leftPunch: pressed.has("KeyT"),
+          rightPunch: pressed.has("KeyY"),
+          leftKick: pressed.has("KeyG"),
+          rightKick: pressed.has("KeyH"),
           bodyModifier: keys.has("Space"),
           takedown: FEATURES.takedowns && pressed.has("KeyE"),
-          evade: false,
+          evade: keys.has("KeyE"),
         };
       }
       const forward = this.fighterTwo.facing;
       return {
-        move: (keys.has("ArrowRight") ? forward : 0) - (keys.has("ArrowLeft") ? forward : 0),
+        move: (keys.has("ArrowLeft") ? forward : 0) - (keys.has("ArrowRight") ? forward : 0),
         guardHigh: keys.has("ArrowUp"),
         guardLow: keys.has("ArrowDown"),
-        leftPunch: pressed.has("KeyN"),
-        rightPunch: pressed.has("KeyM"),
-        leftKick: pressed.has("Comma"),
-        rightKick: pressed.has("Period"),
-        bodyModifier: keys.has("Space"),
+        leftPunch: pressed.has("KeyI"),
+        rightPunch: pressed.has("KeyO"),
+        leftKick: pressed.has("KeyK"),
+        rightKick: pressed.has("KeyL"),
+        bodyModifier: keys.has("ShiftLeft") || keys.has("ShiftRight"),
         takedown: FEATURES.takedowns && pressed.has("Slash"),
-        evade: false,
+        evade: keys.has("KeyP"),
       };
     }
 
@@ -1722,7 +1721,7 @@
       context.font = "700 11px Orbitron, sans-serif";
       context.shadowColor = attacker.color;
       context.shadowBlur = 10;
-      context.fillText("GROUND CONTROL // U/I TO STRIKE", center, FLOOR - 235);
+      context.fillText("GROUND CONTROL // PUNCH TO STRIKE", center, FLOOR - 235);
       context.restore();
     }
 
