@@ -17,7 +17,7 @@ Este documento registra el balance táctico de Neon Brawl. Los valores ejecutabl
 
 ## Daño y coste de ataques
 
-- Todo strike de pie aplica `0.5 ×` su daño base.
+- Todo strike de pie aplica `0.425 ×` su daño base. Es una reducción adicional del 15% respecto al balance anterior de `0.5 ×`.
 - Los strikes al cuerpo aplican además `0.85 ×`, un 15% menos que los strikes equivalentes a la cabeza.
 - Un strike que conecta limpio o crítico consume `1.0 ×` su coste base de stamina.
 - Un strike fallado, evadido o bloqueado consume `1.5 ×` en total: `1.0 ×` al lanzarlo y `0.5 ×` como penalización por ineficiencia.
@@ -35,15 +35,25 @@ Cada strike reduce ligeramente el límite. Lanzar golpes por debajo del 35% de l
 
 ## Golpe crítico
 
-Un impacto es crítico cuando se cumplen todas estas condiciones:
+Un impacto puede convertirse en crítico por cualquiera de estas dos rutas, siempre que no choque con la guardia correcta.
+
+### Crítico por movimiento
+
+Se cumplen las dos condiciones:
 
 1. El atacante inicia el strike prácticamente quieto (`≤ 38 px/s`).
 2. El rival se mueve al recibirlo (`≥ 70 px/s`).
-3. El golpe no coincide con la guardia correcta.
+
+### Crítico por vulnerabilidad
+
+- Se consulta únicamente la barra correspondiente al objetivo del strike: cabeza para golpes a la cabeza y cuerpo para golpes al cuerpo.
+- Si esa barra ya estaba por debajo de `45%` antes del impacto, el golpe realiza una tirada de `1 / 3.5` (`2 / 7`, aproximadamente `28.57%`) aunque no se cumpla la condición de movimiento.
+- Una barra de cuerpo baja no vuelve crítico un golpe a la cabeza, ni viceversa.
+- El límite es estricto: una barra exactamente en `45%` todavía no activa esta tirada.
 
 El crítico multiplica el daño resultante por `1.75`, aplica un stun de un segundo, aumenta el retroceso, las partículas, el hit-stop, el flash y el movimiento de cámara.
 
-Cada crítico no bloqueado realiza una sola tirada de knockdown con probabilidad `0.25`, equivalente a **1 entre 4**. Si la tirada tiene éxito, una segunda selección reparte de forma uniforme las dos variantes disponibles para la zona impactada. En modo práctica no interrumpe la sesión con un knockdown.
+Cada crítico no bloqueado realiza después una sola tirada de knockdown con probabilidad `0.25`, equivalente a **1 entre 4**. Si la tirada tiene éxito, una segunda selección reparte de forma uniforme las tres variantes disponibles para la zona impactada. En modo práctica no interrumpe la sesión con un knockdown.
 
 La cantidad de knockdowns se conserva únicamente como estadística y puntuación: no existe un límite y nunca produce un TKO automático. La pelea termina por daño cuando la salud de cabeza o cuerpo llega a cero.
 
@@ -58,10 +68,15 @@ La cantidad de knockdowns se conserva únicamente como estadística y puntuació
 
 - `headKnockdown`: impacto de cabeza, pérdida de balance, caída, recuperación y vuelta a guardia.
 - `headKnockdownForward`: giro de cabeza, tropiezo hacia delante, manos/rodilla, recuperación y guardia.
+- `headKnockdownSeated`: rotación por impacto, caída sentada/lateral, apoyo, recuperación y guardia.
 - `bodyKnockdown`: reacción a costillas/abdomen, caída protegiendo el cuerpo y recuperación.
 - `bodyKnockdownKneel`: impacto al plexo, caída sobre ambas rodillas, apoyo y recuperación.
+- `bodyKnockdownSeated`: pérdida de aire, retroceso, caída sentada, apoyo y recuperación.
 - `headKnockout`: colapso por golpe de cabeza y pose final inmóvil.
+- `headKnockoutProne`: colapso frontal por golpe de cabeza y final boca abajo inmóvil.
 - `bodyKnockout`: colapso plegado por golpe corporal, pose final inmóvil y resultado `BODY K.O.`.
+- `bodyKnockoutProne`: caída de rodillas por golpe corporal, colapso frontal plegado y final inmóvil.
+- Cada knockdown selecciona uniformemente una de tres variantes de su zona. Cada knockout selecciona uniformemente una de dos variantes de su zona.
 - El banner de resultado se retrasa `1.15 s` para dejar visible la caída; la pantalla final aparece después de completar la secuencia.
 
 ## Lectura visual del impacto

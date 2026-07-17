@@ -199,7 +199,16 @@
     }),
   ]));
 
-  const outcomeAnimation = ({ id, label, file, target, result, variant, frameLabels }) => Object.freeze({
+  const outcomeAnimation = ({
+    id,
+    label,
+    file,
+    target,
+    result,
+    variant,
+    frameLabels,
+    provenance = "generated-v1-neon-mma-continuity",
+  }) => Object.freeze({
     id,
     label,
     file,
@@ -212,7 +221,7 @@
     sourceFacing: "right",
     mirrorForFacingLeft: true,
     continuityVerification: "frame-by-frame",
-    provenance: "generated-v1-neon-mma-continuity",
+    provenance,
     verification: "visual-and-runtime",
   });
 
@@ -253,6 +262,26 @@
       variant: "double-knee-solar-plexus",
       frameLabels: KNOCKDOWN_PHASES,
     }),
+    headKnockdownSeated: outcomeAnimation({
+      id: "headKnockdownSeated",
+      label: "HEAD KNOCKDOWN // ROTATIONAL SEATED",
+      file: "/assets/animations/support/head-knockdown-seated-v3.png",
+      target: "head",
+      result: "knockdown",
+      variant: "rotational-seated-recovery",
+      frameLabels: KNOCKDOWN_PHASES,
+      provenance: "generated-v3-rotational-seated-head-knockdown",
+    }),
+    bodyKnockdownSeated: outcomeAnimation({
+      id: "bodyKnockdownSeated",
+      label: "BODY KNOCKDOWN // BACKWARD SEATED",
+      file: "/assets/animations/support/body-knockdown-seated-v3.png",
+      target: "body",
+      result: "knockdown",
+      variant: "backward-seated-body-recovery",
+      frameLabels: KNOCKDOWN_PHASES,
+      provenance: "generated-v3-backward-seated-body-knockdown",
+    }),
     headKnockout: outcomeAnimation({
       id: "headKnockout",
       label: "HEAD KNOCKOUT",
@@ -270,6 +299,26 @@
       result: "knockout",
       variant: "curled-side-finish",
       frameLabels: KNOCKOUT_PHASES,
+    }),
+    headKnockoutProne: outcomeAnimation({
+      id: "headKnockoutProne",
+      label: "HEAD KNOCKOUT // FORWARD PRONE",
+      file: "/assets/animations/support/head-knockout-prone-v2.png",
+      target: "head",
+      result: "knockout",
+      variant: "forward-prone-finish",
+      frameLabels: KNOCKOUT_PHASES,
+      provenance: "generated-v2-forward-prone-head-knockout",
+    }),
+    bodyKnockoutProne: outcomeAnimation({
+      id: "bodyKnockoutProne",
+      label: "BODY KNOCKOUT // KNEELING PRONE",
+      file: "/assets/animations/support/body-knockout-prone-v2.png",
+      target: "body",
+      result: "knockout",
+      variant: "kneeling-prone-body-finish",
+      frameLabels: KNOCKOUT_PHASES,
+      provenance: "generated-v2-kneeling-prone-body-knockout",
     }),
   });
 
@@ -331,7 +380,7 @@
   });
 
   const manifest = Object.freeze({
-    version: "6.1.0",
+    version: "7.0.0",
     frameLimitPerMovement: 10,
     canonicalSourceFacing: "right",
     strikes,

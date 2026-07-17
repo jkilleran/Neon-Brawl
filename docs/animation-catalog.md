@@ -80,10 +80,14 @@ Todas las hojas de resultado usan una cuadrícula `5 × 2`, diez frames, fuente 
 | `bodyKnockdown` | knockdown recuperable | cuerpo | guardia, impacto corporal, pliegue, rodillas, caída, suelo, stun, apoyo, rodilla, guardia | `body-knockdown-v1.png` |
 | `headKnockdownForward` | knockdown recuperable alterno | cabeza | guardia, giro de cabeza, tropiezo, cruce, manos/rodilla, costado, stun, cuatro apoyos, rodilla, guardia | `head-knockdown-forward-v2.png` |
 | `bodyKnockdownKneel` | knockdown recuperable alterno | cuerpo | guardia, impacto al plexo, pliegue, rodilla, ambas rodillas, talones, manos, apoyo, rodilla, guardia | `body-knockdown-kneel-v2.png` |
+| `headKnockdownSeated` | knockdown recuperable rotacional | cabeza | guardia, impacto, giro, pérdida de balance, caída sentada, costado, stun, apoyo, rodilla, guardia | `head-knockdown-seated-v3.png` |
+| `bodyKnockdownSeated` | knockdown recuperable sentado | cuerpo | guardia, impacto, pérdida de aire, retroceso, caída sentada, reclinado, stun, apoyo, rodilla, guardia | `body-knockdown-seated-v3.png` |
 | `headKnockout` | finalización | cabeza | guardia, impacto decisivo, pérdida de balance, colapso, suelo, asentamiento y cuatro poses inmóviles | `head-knockout-v1.png` |
 | `bodyKnockout` | finalización | cuerpo | guardia, impacto decisivo, pliegue, colapso, suelo, asentamiento y cuatro poses inmóviles | `body-knockout-v1.png` |
+| `headKnockoutProne` | finalización frontal | cabeza | guardia, impacto decisivo, caída frontal, manos/rodilla, pecho al suelo y cinco poses boca abajo inmóviles | `head-knockout-prone-v2.png` |
+| `bodyKnockoutProne` | finalización frontal plegada | cuerpo | guardia, impacto al cuerpo, rodillas, caída frontal, asentamiento y cinco poses plegadas inmóviles | `body-knockout-prone-v2.png` |
 
-Ruta común: `public/assets/animations/support/`. El manifiesto etiqueta cada frame mediante `frameLabels`, identifica `target` (`head`/`body`), `result` (`knockdown`/`knockout`) y un nombre estable de `variant`. Las seis hojas conservan el mismo peleador, vestuario, proporciones y dirección canónica de los modelos ofensivos.
+Ruta común: `public/assets/animations/support/`. El manifiesto etiqueta cada frame mediante `frameLabels`, identifica `target` (`head`/`body`), `result` (`knockdown`/`knockout`) y un nombre estable de `variant`. Las diez hojas conservan el mismo peleador, vestuario, proporciones y dirección canónica de los modelos ofensivos. El motor elige uniformemente entre tres knockdowns por zona y dos knockouts por zona.
 
 ## Animaciones no ofensivas conservadas
 
@@ -96,8 +100,12 @@ Ruta común: `public/assets/animations/support/`. El manifiesto etiqueta cada fr
 | `bodyKnockdown` | `animations/support/body-knockdown-v1.png` | caída y recuperación por impacto corporal 0–9 |
 | `headKnockdownForward` | `animations/support/head-knockdown-forward-v2.png` | caída frontal y recuperación por impacto de cabeza 0–9 |
 | `bodyKnockdownKneel` | `animations/support/body-knockdown-kneel-v2.png` | caída de rodillas y recuperación por impacto corporal 0–9 |
+| `headKnockdownSeated` | `animations/support/head-knockdown-seated-v3.png` | caída rotacional sentada y recuperación por impacto de cabeza 0–9 |
+| `bodyKnockdownSeated` | `animations/support/body-knockdown-seated-v3.png` | caída sentada hacia atrás y recuperación por impacto corporal 0–9 |
 | `headKnockout` | `animations/support/head-knockout-v1.png` | finalización por cabeza 0–9 |
 | `bodyKnockout` | `animations/support/body-knockout-v1.png` | finalización por cuerpo 0–9 |
+| `headKnockoutProne` | `animations/support/head-knockout-prone-v2.png` | finalización frontal boca abajo por cabeza 0–9 |
+| `bodyKnockoutProne` | `animations/support/body-knockout-prone-v2.png` | finalización de rodillas y plegada por cuerpo 0–9 |
 | `legacy` | `fighter-mma-sprites.png` | lógica de derribos preservada y desactivada |
 
 ## Verificación

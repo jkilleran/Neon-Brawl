@@ -22,7 +22,7 @@
   const FLOOR = 604;
   const GAMEPLAY_RULES = Object.freeze({
     roundTimeSeconds: 3 * 60,
-    strikeDamageScale: 0.5,
+    strikeDamageScale: 0.425,
     bodyDamageScale: 0.85,
     strikeStaminaScale: 1,
     inefficientStrikeStaminaScale: 1.5,
@@ -31,6 +31,8 @@
     criticalKnockdownChance: 0.25,
     criticalAttackerMaxSpeed: 38,
     criticalTargetMinSpeed: 70,
+    vulnerableCriticalHealthThreshold: 45,
+    vulnerableCriticalChance: 1 / 3.5,
     criticalDamageMultiplier: 1.75,
     criticalStunSeconds: 1,
     minLongTermStamina: 35,
@@ -60,8 +62,12 @@
   const ANIMATIONS = Object.fromEntries(Object.entries(ANIMATION_MANIFEST.sheets)
     .map(([id, definition]) => [id, animationSheet(definition)]));
   const KNOCKDOWN_VARIANTS = Object.freeze({
-    head: Object.freeze(["headKnockdown", "headKnockdownForward"]),
-    body: Object.freeze(["bodyKnockdown", "bodyKnockdownKneel"]),
+    head: Object.freeze(["headKnockdown", "headKnockdownForward", "headKnockdownSeated"]),
+    body: Object.freeze(["bodyKnockdown", "bodyKnockdownKneel", "bodyKnockdownSeated"]),
+  });
+  const KNOCKOUT_VARIANTS = Object.freeze({
+    head: Object.freeze(["headKnockout", "headKnockoutProne"]),
+    body: Object.freeze(["bodyKnockout", "bodyKnockoutProne"]),
   });
 
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -833,7 +839,7 @@
           0.999,
         );
         return {
-          animation: this.finishAnimation.target === "body" ? "bodyKnockout" : "headKnockout",
+          animation: this.finishAnimation.animation,
           frame: Math.min(9, 1 + Math.floor(progress * 9)),
         };
       }
@@ -1198,9 +1204,15 @@
       const longTermRatio = attacker.maxStamina / 100;
       const staminaQuality = 0.62 + shortTermRatio * 0.28 + longTermRatio * 0.1;
       const counterBonus = target.attack ? 1.14 : 1;
-      const critical = !matchingGuard
+      const movementCritical = !matchingGuard
         && attacker.attack?.stationaryStart
         && Math.abs(target.velocityX) >= GAMEPLAY_RULES.criticalTargetMinSpeed;
+      const targetedHealth = definition.target === "head" ? target.headHealth : target.bodyHealth;
+      const vulnerableCritical = !matchingGuard
+        && !movementCritical
+        && targetedHealth < GAMEPLAY_RULES.vulnerableCriticalHealthThreshold
+        && Math.random() < GAMEPLAY_RULES.vulnerableCriticalChance;
+      const critical = movementCritical || vulnerableCritical;
       const criticalKnockdown = this.mode !== "practice"
         && critical
         && Math.random() < GAMEPLAY_RULES.criticalKnockdownChance;
@@ -1449,6 +1461,7 @@
       loser.velocityX = 0;
       loser.finishAnimation = {
         target,
+        animation: KNOCKOUT_VARIANTS[target][Math.floor(Math.random() * KNOCKOUT_VARIANTS[target].length)],
         elapsed: 0,
         duration: 1.65,
       };

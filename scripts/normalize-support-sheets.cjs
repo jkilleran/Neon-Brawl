@@ -38,6 +38,10 @@ const jobs = [
   { source: "public/assets/animations/support/body-knockout-v1.png", output: "public/assets/animations/support/body-knockout-v1.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
   { source: "public/assets/animations/support/head-knockdown-forward-v2.png", output: "public/assets/animations/support/head-knockdown-forward-v2.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
   { source: "public/assets/animations/support/body-knockdown-kneel-v2.png", output: "public/assets/animations/support/body-knockdown-kneel-v2.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
+  { source: "public/assets/animations/support/head-knockdown-seated-v3.png", output: "public/assets/animations/support/head-knockdown-seated-v3.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
+  { source: "public/assets/animations/support/body-knockdown-seated-v3.png", output: "public/assets/animations/support/body-knockdown-seated-v3.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
+  { source: "public/assets/animations/support/head-knockout-prone-v2.png", output: "public/assets/animations/support/head-knockout-prone-v2.png", columns: 5, rows: 2, frames: 10, sourceHeight: 887, minComponentHeight: 80 },
+  { source: "public/assets/animations/support/body-knockout-prone-v2.png", output: "public/assets/animations/support/body-knockout-prone-v2.png", columns: 5, rows: 2, frames: 10, sourceHeight: 887 },
 ];
 
 function findImageMagick() {
@@ -74,7 +78,7 @@ function componentsFor(source, job) {
     const match = line.match(pattern);
     if (!match) continue;
     const [, width, height, x, y, centerX, centerY, area] = match.map(Number);
-    if (area < 5000 || area > 200000 || width < 60 || height < 100) continue;
+    if (area < 5000 || area > 200000 || width < 60 || height < (job.minComponentHeight ?? 100)) continue;
     components.push({ width, height, x, y, centerX, centerY, area });
   }
 
