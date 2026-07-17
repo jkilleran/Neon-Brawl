@@ -71,9 +71,29 @@ for (const movement of Object.values(manifest.strikes)) {
   assert.equal(png.height % sheet.rows, 0, `${movement.id} rows must divide evenly`);
 }
 
+assert.equal(Object.keys(manifest.outcomes).length, 4, "Catalog must expose four knockdown/knockout outcomes");
+for (const movement of Object.values(manifest.outcomes)) {
+  assert.equal(movement.frameCount, manifest.frameLimitPerMovement, `${movement.id} must use 10 frames`);
+  assert.equal(movement.frameLabels.length, movement.frameCount, `${movement.id} must label every frame`);
+  assert.equal(movement.sourceFacing, manifest.canonicalSourceFacing, `${movement.id} must face right at source`);
+  assert.equal(movement.mirrorForFacingLeft, true, `${movement.id} must support deterministic mirroring`);
+  assert(["head", "body"].includes(movement.target), `${movement.id} has an invalid target`);
+  assert(["knockdown", "knockout"].includes(movement.result), `${movement.id} has an invalid result`);
+
+  const sheet = manifest.sheets[movement.sheet];
+  assert(sheet, `${movement.id} references a missing sheet`);
+  assert.equal(sheet.frames, movement.frameCount);
+  const file = assetFile(movement.file);
+  assert(fs.existsSync(file), `${movement.id} asset is missing: ${file}`);
+  const png = inspectPng(file);
+  assert.equal(png.width, sheet.fallbackWidth, `${movement.id} width differs from the manifest`);
+  assert.equal(png.height, sheet.fallbackHeight, `${movement.id} height differs from the manifest`);
+  assert([4, 6].includes(png.colorType), `${movement.id} must contain an alpha channel`);
+}
+
 for (const [id, sheet] of Object.entries(manifest.sheets)) {
   if (!sheet.isolatedCells) continue;
   assertIsolatedCells(id, sheet);
 }
 
-console.log("Animation catalog valid: 8 strikes, 10 labeled frames each, isolated cells and canonical right-facing source.");
+console.log("Animation catalog valid: 8 strikes and 4 outcomes, 10 labeled frames each, isolated cells and canonical right-facing source.");

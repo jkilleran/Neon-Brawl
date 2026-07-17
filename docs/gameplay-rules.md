@@ -43,6 +43,23 @@ Un impacto es crítico cuando se cumplen todas estas condiciones:
 
 El crítico multiplica el daño resultante por `1.75`, aplica un stun de un segundo, aumenta el retroceso, las partículas, el hit-stop, el flash y el movimiento de cámara.
 
+Cada crítico no bloqueado realiza una sola tirada de knockdown con probabilidad `0.20`, equivalente a **1 entre 5**. La tirada aplica tanto a golpes de cabeza como de cuerpo y selecciona la animación correspondiente. En modo práctica no interrumpe la sesión con un knockdown.
+
+## Distancia y contacto
+
+- La separación mínima entre los centros de los peleadores es `168 px`; el motor corrige cualquier acercamiento menor para evitar superposición visual.
+- Todos los strikes conectan con su zona anatómica si el rival está a `178 px` o menos durante los frames activos.
+- A partir de `179 px` el strike falla y recibe la penalización de stamina por ineficiencia.
+- La asistencia solo decide si existe contacto; el número y los efectos se colocan en la superficie exacta de cabeza o cuerpo.
+
+## Knockdown y knockout
+
+- `headKnockdown`: impacto de cabeza, pérdida de balance, caída, recuperación y vuelta a guardia.
+- `bodyKnockdown`: reacción a costillas/abdomen, caída protegiendo el cuerpo y recuperación.
+- `headKnockout`: colapso por golpe de cabeza y pose final inmóvil.
+- `bodyKnockout`: colapso plegado por golpe corporal, pose final inmóvil y resultado `BODY K.O.`.
+- El banner de resultado se retrasa `1.15 s` para dejar visible la caída; la pantalla final aparece después de completar la secuencia.
+
 ## Lectura visual del impacto
 
 - `BLOCKED`: retroceso corto dentro de la animación de guardia, partículas y cámara mínimas.

@@ -26,6 +26,9 @@
     bodyDamageScale: 0.85,
     strikeStaminaScale: 1,
     inefficientStrikeStaminaScale: 1.5,
+    minimumFighterDistance: 168,
+    guaranteedStrikeDistance: 178,
+    criticalKnockdownChance: 0.2,
     criticalAttackerMaxSpeed: 38,
     criticalTargetMinSpeed: 70,
     criticalDamageMultiplier: 1.75,
@@ -395,6 +398,9 @@
       this.evadeCooldown = 0;
       this.invulnerable = 0;
       this.knockdownTimer = 0;
+      this.knockdownDuration = 0;
+      this.knockdownTarget = "head";
+      this.finishAnimation = null;
       this.roundDamage = 0;
       this.takedowns = 0;
       this.knockdownsScored = 0;
@@ -489,6 +495,7 @@
       this.hitReaction = null;
       this.blockReaction = null;
       this.impactMarker = null;
+      this.finishAnimation = null;
       this.practiceResetTimer = 0;
     }
 
@@ -506,6 +513,12 @@
       if (this.impactMarker) {
         this.impactMarker.life -= deltaTime;
         if (this.impactMarker.life <= 0) this.impactMarker = null;
+      }
+      if (this.finishAnimation) {
+        this.finishAnimation.elapsed = Math.min(
+          this.finishAnimation.duration,
+          this.finishAnimation.elapsed + deltaTime,
+        );
       }
     }
 
@@ -535,6 +548,7 @@
           this.headHealth = Math.max(this.headHealth, 10);
           this.bodyHealth = Math.max(this.bodyHealth, 8);
           this.stun = 0.4;
+          this.knockdownDuration = 0;
           this.game.showCallout("BACK ON THE FEET", this.color, 0.8);
         }
         return;
@@ -567,6 +581,8 @@
 
         if (input.evade && this.evadeCooldown <= 0 && this.stamina >= 10) {
           this.startEvade(opponent);
+        } else if (opponent.knockdownTimer > 0) {
+          // Standing strikes pause until the knockdown recovery finishes.
         } else if (FEATURES.takedowns && input.takedown) {
           this.startAttack("takedown");
         } else if (input.rightKick) {
@@ -703,7 +719,7 @@
       const frame = clamp(visual.frame, 0, sheet.frames - 1);
       let drawX = options.x ?? this.x;
       const drawY = options.y ?? FLOOR;
-      let rotation = options.rotation ?? (this.knockdownTimer > 0 ? -this.facing * Math.PI / 2 : 0);
+      let rotation = options.rotation ?? 0;
       const scale = options.scale ?? 1;
       const facing = options.facing ?? this.attackFacing;
       if (this.hitReaction?.severity === "critical" && options.x === undefined) {
@@ -726,7 +742,15 @@
       context.fillStyle = "#020207";
       context.filter = "blur(7px)";
       context.beginPath();
-      context.ellipse(drawX, drawY + 4, this.knockdownTimer > 0 ? 105 : 64, 14, 0, 0, Math.PI * 2);
+      context.ellipse(
+        drawX,
+        drawY + 4,
+        this.knockdownTimer > 0 || this.finishAnimation ? 105 : 64,
+        14,
+        0,
+        0,
+        Math.PI * 2,
+      );
       context.fill();
       context.restore();
 
@@ -797,6 +821,28 @@
     }
 
     getVisualFrame() {
+      if (this.finishAnimation) {
+        const progress = clamp(
+          this.finishAnimation.elapsed / this.finishAnimation.duration,
+          0,
+          0.999,
+        );
+        return {
+          animation: this.finishAnimation.target === "body" ? "bodyKnockout" : "headKnockout",
+          frame: Math.min(9, 1 + Math.floor(progress * 9)),
+        };
+      }
+      if (this.knockdownTimer > 0) {
+        const progress = clamp(
+          1 - this.knockdownTimer / Math.max(0.01, this.knockdownDuration),
+          0,
+          0.999,
+        );
+        return {
+          animation: this.knockdownTarget === "body" ? "bodyKnockdown" : "headKnockdown",
+          frame: Math.min(9, 1 + Math.floor(progress * 9)),
+        };
+      }
       if (this.attack) {
         return {
           animation: this.currentAttack.animation,
@@ -881,6 +927,8 @@
       this.flash = 0;
       this.elapsed = 0;
       this.callout = null;
+      this.finishAnnouncement = null;
+      this.finishAnnouncementTimer = 0;
       this.aiTimer = 0;
       this.aiIntent = this.emptyInput();
       this.lastTime = performance.now();
@@ -956,6 +1004,8 @@
       this.state = "intro";
       this.introTimer = 1.8;
       this.introFightShown = false;
+      this.finishAnnouncement = null;
+      this.finishAnnouncementTimer = 0;
       this.aiTimer = 0;
       this.aiIntent = this.emptyInput();
       this.showRoundMessage(
@@ -1057,11 +1107,8 @@
         } else if (cpu.stamina / Math.max(1, cpu.maxStamina) < 0.32) {
           this.aiIntent.move = -direction;
           this.aiIntent.guardHigh = Math.random() < 0.5;
-        } else if (distance > 165) {
+        } else if (distance > GAMEPLAY_RULES.guaranteedStrikeDistance) {
           this.aiIntent.move = direction;
-        } else if (distance < 62) {
-          this.aiIntent.move = -direction;
-          if (FEATURES.takedowns && Math.random() < 0.2) this.aiIntent.takedown = true;
         } else {
           const choice = Math.random();
           if (FEATURES.takedowns && distance < 105 && choice < 0.13) this.aiIntent.takedown = true;
@@ -1086,9 +1133,18 @@
     }
 
     findAttackContact(attacker, target, definition) {
+      const distance = Math.abs(attacker.x - target.x);
+      const forwardDistance = (target.x - attacker.x) * attacker.attackFacing;
+      if (definition.target !== "takedown" && forwardDistance <= 0) return null;
+      if (definition.target !== "takedown" && distance > GAMEPLAY_RULES.guaranteedStrikeDistance) {
+        return null;
+      }
       const strikePoint = attacker.getStrikePoint(definition);
       const hurtZone = target.getHurtZone(definition.target);
-      if (!circleHitsEllipse(strikePoint, definition.strikeRadius, hurtZone)) return null;
+      const assistedContact = definition.target !== "takedown"
+        && distance <= GAMEPLAY_RULES.guaranteedStrikeDistance;
+      const directHit = circleHitsEllipse(strikePoint, definition.strikeRadius, hurtZone);
+      if (!assistedContact && !directHit) return null;
 
       const angle = Math.atan2(
         (strikePoint.y - hurtZone.y) * hurtZone.radiusX,
@@ -1098,9 +1154,13 @@
         x: hurtZone.x + Math.cos(angle) * hurtZone.radiusX,
         y: hurtZone.y + Math.sin(angle) * hurtZone.radiusY,
       };
+      if (!directHit) {
+        surfacePoint.x = hurtZone.x - attacker.attackFacing * hurtZone.radiusX;
+        surfacePoint.y = hurtZone.y;
+      }
       return {
-        x: lerp(strikePoint.x, surfacePoint.x, 0.48),
-        y: lerp(strikePoint.y, surfacePoint.y, 0.48),
+        x: directHit ? lerp(strikePoint.x, surfacePoint.x, 0.48) : surfacePoint.x,
+        y: directHit ? lerp(strikePoint.y, surfacePoint.y, 0.48) : surfacePoint.y,
         strikePoint,
         hurtZone,
       };
@@ -1237,27 +1297,27 @@
       } else if (target.headHealth <= 0) {
         this.finishFight(attacker, "K.O.");
       } else if (target.bodyHealth <= 0) {
-        this.finishFight(attacker, "BODY TKO");
+        this.finishFight(attacker, "BODY K.O.", target, "body");
       } else if (this.mode !== "practice"
-        && definition.heavy
-        && !matchingGuard
-        && target.headHealth < 34
-        && Math.random() < (critical ? 0.68 : 0.48)) {
-        this.knockDown(attacker, target);
+        && critical
+        && Math.random() < GAMEPLAY_RULES.criticalKnockdownChance) {
+        this.knockDown(attacker, target, definition.target);
       }
     }
 
-    knockDown(attacker, target) {
+    knockDown(attacker, target, targetZone = "head") {
       target.knockdownsSuffered += 1;
       attacker.knockdownsScored += 1;
       attacker.matchScore += 18;
-      target.knockdownTimer = 1.75;
+      target.knockdownDuration = 2;
+      target.knockdownTimer = target.knockdownDuration;
+      target.knockdownTarget = targetZone;
       target.velocityX = attacker.attackFacing * 150;
       target.attack = null;
       target.hitReaction = null;
       target.blockReaction = null;
-      this.showCallout("KNOCKDOWN", attacker.color, 1);
-      if (target.knockdownsSuffered >= 3) this.finishFight(attacker, "TKO");
+      this.showCallout(targetZone === "body" ? "BODY KNOCKDOWN" : "HEAD KNOCKDOWN", attacker.color, 1);
+      if (target.knockdownsSuffered >= 3) this.finishFight(attacker, "TKO", target, targetZone);
     }
 
     startGround(attacker, target) {
@@ -1349,7 +1409,7 @@
       const one = this.fighterOne;
       const two = this.fighterTwo;
       const distance = Math.abs(two.x - one.x);
-      const minimum = 78;
+      const minimum = GAMEPLAY_RULES.minimumFighterDistance;
       if (distance < minimum && distance > 0.01) {
         const direction = two.x > one.x ? 1 : -1;
         const correction = (minimum - distance) / 2;
@@ -1360,14 +1420,33 @@
       }
     }
 
-    finishFight(winner, method) {
+    finishFight(winner, method, defeated = null, finishTarget = null) {
       if (["roundOver", "matchOver"].includes(this.state)) return;
+      const loser = defeated ?? (winner === this.fighterOne ? this.fighterTwo : this.fighterOne);
+      const target = finishTarget ?? (method.includes("BODY") ? "body" : "head");
       this.matchWinner = winner;
       this.matchMethod = method;
       this.state = "roundOver";
       this.ground = null;
-      this.roundDelay = 2.3;
-      this.showRoundMessage(`${winner.name} // ${method}`, method);
+      this.roundDelay = 3.15;
+      winner.attack = null;
+      winner.guard = null;
+      winner.velocityX = 0;
+      loser.attack = null;
+      loser.guard = null;
+      loser.guardBlend = 0;
+      loser.hitReaction = null;
+      loser.blockReaction = null;
+      loser.knockdownTimer = 0;
+      loser.velocityX = 0;
+      loser.finishAnimation = {
+        target,
+        elapsed: 0,
+        duration: 1.65,
+      };
+      this.finishAnnouncement = { kicker: `${winner.name} // ${method}`, title: method };
+      this.finishAnnouncementTimer = 1.15;
+      roundMessage.classList.add("is-hidden");
       this.synth.tone(78, 0.52, "sawtooth", 0.05, 38);
     }
 
@@ -1461,6 +1540,13 @@
         this.roundDelay -= deltaTime;
         this.fighterOne.updateVisualState(deltaTime);
         this.fighterTwo.updateVisualState(deltaTime);
+        if (this.finishAnnouncement) {
+          this.finishAnnouncementTimer -= deltaTime;
+          if (this.finishAnnouncementTimer <= 0) {
+            this.showRoundMessage(this.finishAnnouncement.kicker, this.finishAnnouncement.title);
+            this.finishAnnouncement = null;
+          }
+        }
         if (this.roundDelay <= 0) {
           if (this.matchWinner) this.showResult();
           else {

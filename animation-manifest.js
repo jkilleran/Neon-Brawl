@@ -27,6 +27,32 @@
     "guard-return",
   ]);
 
+  const KNOCKDOWN_PHASES = Object.freeze([
+    "guard",
+    "impact",
+    "balance-break",
+    "legs-buckle",
+    "fall",
+    "mat-contact",
+    "stunned",
+    "brace",
+    "kneeling-rise",
+    "guard-return",
+  ]);
+
+  const KNOCKOUT_PHASES = Object.freeze([
+    "guard",
+    "decisive-impact",
+    "balance-lost",
+    "collapse",
+    "mat-contact",
+    "settle",
+    "motionless-1",
+    "motionless-2",
+    "motionless-3",
+    "final-ko-pose",
+  ]);
+
   const strike = ({
     id,
     label,
@@ -173,8 +199,74 @@
     }),
   ]));
 
+  const outcomeAnimation = ({ id, label, file, target, result, frameLabels }) => Object.freeze({
+    id,
+    label,
+    file,
+    sheet: id,
+    target,
+    result,
+    frameCount: 10,
+    frameLabels,
+    sourceFacing: "right",
+    mirrorForFacingLeft: true,
+    continuityVerification: "frame-by-frame",
+    provenance: "generated-v1-neon-mma-continuity",
+    verification: "visual-and-runtime",
+  });
+
+  const outcomes = Object.freeze({
+    headKnockdown: outcomeAnimation({
+      id: "headKnockdown",
+      label: "HEAD KNOCKDOWN",
+      file: "/assets/animations/support/head-knockdown-v1.png",
+      target: "head",
+      result: "knockdown",
+      frameLabels: KNOCKDOWN_PHASES,
+    }),
+    bodyKnockdown: outcomeAnimation({
+      id: "bodyKnockdown",
+      label: "BODY KNOCKDOWN",
+      file: "/assets/animations/support/body-knockdown-v1.png",
+      target: "body",
+      result: "knockdown",
+      frameLabels: KNOCKDOWN_PHASES,
+    }),
+    headKnockout: outcomeAnimation({
+      id: "headKnockout",
+      label: "HEAD KNOCKOUT",
+      file: "/assets/animations/support/head-knockout-v1.png",
+      target: "head",
+      result: "knockout",
+      frameLabels: KNOCKOUT_PHASES,
+    }),
+    bodyKnockout: outcomeAnimation({
+      id: "bodyKnockout",
+      label: "BODY KNOCKOUT",
+      file: "/assets/animations/support/body-knockout-v1.png",
+      target: "body",
+      result: "knockout",
+      frameLabels: KNOCKOUT_PHASES,
+    }),
+  });
+
+  const outcomeSheets = Object.fromEntries(Object.values(outcomes).map((movement) => [
+    movement.sheet,
+    Object.freeze({
+      src: movement.file,
+      columns: 5,
+      rows: 2,
+      frames: movement.frameCount,
+      fallbackWidth: 1920,
+      fallbackHeight: 682,
+      isolatedCells: true,
+      minCellPadding: 6,
+    }),
+  ]));
+
   const sheets = Object.freeze({
     ...strikeSheets,
+    ...outcomeSheets,
     hitReactions: Object.freeze({
       src: "/assets/animations/support/hit-reactions-v4.png",
       columns: 5,
@@ -216,10 +308,11 @@
   });
 
   const manifest = Object.freeze({
-    version: "5.1.0",
+    version: "6.0.0",
     frameLimitPerMovement: 10,
     canonicalSourceFacing: "right",
     strikes,
+    outcomes,
     sheets,
   });
 

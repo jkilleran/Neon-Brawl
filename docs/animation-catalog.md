@@ -70,6 +70,19 @@ Los tres modelos usan una cuadrícula `5 × 2`, exactamente diez celdas ocupadas
 
 El arco de guardia se dibuja en coordenadas locales y usa `facing` como escala horizontal. Por eso el peleador izquierdo lo muestra hacia la derecha y el peleador derecho lo muestra hacia la izquierda, siempre orientado hacia el rival.
 
+## Resultados de impacto registrados
+
+Todas las hojas de resultado usan una cuadrícula `5 × 2`, diez frames, fuente orientada a la derecha y espejo determinista para el peleador del lado opuesto.
+
+| ID de lógica | Resultado | Zona | Frames 1–10 | Archivo |
+| --- | --- | --- | --- | --- |
+| `headKnockdown` | knockdown recuperable | cabeza | guardia, impacto, pérdida de balance, rodillas, caída, suelo, stun, apoyo, rodilla, guardia | `head-knockdown-v1.png` |
+| `bodyKnockdown` | knockdown recuperable | cuerpo | guardia, impacto corporal, pliegue, rodillas, caída, suelo, stun, apoyo, rodilla, guardia | `body-knockdown-v1.png` |
+| `headKnockout` | finalización | cabeza | guardia, impacto decisivo, pérdida de balance, colapso, suelo, asentamiento y cuatro poses inmóviles | `head-knockout-v1.png` |
+| `bodyKnockout` | finalización | cuerpo | guardia, impacto decisivo, pliegue, colapso, suelo, asentamiento y cuatro poses inmóviles | `body-knockout-v1.png` |
+
+Ruta común: `public/assets/animations/support/`. El manifiesto etiqueta cada frame mediante `frameLabels`, identifica `target` (`head`/`body`) y `result` (`knockdown`/`knockout`). Las cuatro hojas conservan el mismo peleador, vestuario, proporciones y dirección canónica de los modelos ofensivos.
+
 ## Animaciones no ofensivas conservadas
 
 | ID | Hoja | Segmentos |
@@ -77,6 +90,10 @@ El arco de guardia se dibuja en coordenadas locales y usa `facing` como escala h
 | `hitReactions` | `animations/support/hit-reactions-v4.png` | cabeza 0–9, cuerpo 10–19 |
 | `footwork` | `animations/support/footwork-v3.png` | avance 0–9, retroceso 10–19 |
 | `guards` | `animations/support/guards-v3.png` | alta 0–9, baja 10–19 |
+| `headKnockdown` | `animations/support/head-knockdown-v1.png` | caída y recuperación por impacto de cabeza 0–9 |
+| `bodyKnockdown` | `animations/support/body-knockdown-v1.png` | caída y recuperación por impacto corporal 0–9 |
+| `headKnockout` | `animations/support/head-knockout-v1.png` | finalización por cabeza 0–9 |
+| `bodyKnockout` | `animations/support/body-knockout-v1.png` | finalización por cuerpo 0–9 |
 | `legacy` | `fighter-mma-sprites.png` | lógica de derribos preservada y desactivada |
 
 ## Verificación

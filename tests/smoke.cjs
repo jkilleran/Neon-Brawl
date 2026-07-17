@@ -20,6 +20,11 @@ assert.match(
   "Guard indicator must mirror with the fighter facing",
 );
 assert.equal(Object.keys(animationManifest.strikes).length, 8, "Catalog should expose eight isolated strikes");
+assert.equal(Object.keys(animationManifest.outcomes).length, 4, "Catalog should expose four finish outcomes");
+assert.equal(animationManifest.outcomes.headKnockdown.result, "knockdown");
+assert.equal(animationManifest.outcomes.bodyKnockdown.target, "body");
+assert.equal(animationManifest.outcomes.headKnockout.frameLabels[9], "final-ko-pose");
+assert.equal(animationManifest.outcomes.bodyKnockout.frameCount, 10);
 assert.equal(animationManifest.strikes.leftPunchBody.limb, "left-hand");
 assert.equal(animationManifest.strikes.leftPunchBody.target, "body");
 assert.match(animationManifest.strikes.leftPunchBody.file, /left-punch-body-v5\.png$/);
@@ -187,6 +192,7 @@ global.Image = class FakeImage {
 
   get naturalHeight() {
     if (this.source?.includes("fighter-mma")) return 887;
+    if (this.source?.includes("-knock")) return 682;
     if (this.source?.includes("-v5.png")) return 682;
     return this.source?.includes("/animations/strikes/") ? 1023 : 1364;
   }
@@ -204,6 +210,9 @@ assert.deepEqual(globalThis.NEON_BRAWL_GAMEPLAY_RULES, {
   bodyDamageScale: 0.85,
   strikeStaminaScale: 1,
   inefficientStrikeStaminaScale: 1.5,
+  minimumFighterDistance: 168,
+  guaranteedStrikeDistance: 178,
+  criticalKnockdownChance: 0.2,
   criticalAttackerMaxSpeed: 38,
   criticalTargetMinSpeed: 70,
   criticalDamageMultiplier: 1.75,
@@ -259,7 +268,10 @@ attacker.attack = {
   stationaryStart: true,
 };
 defender.velocityX = 70;
+const originalRandom = Math.random;
+Math.random = () => 0.9;
 game.resolveAttack(attacker, defender, ATTACKS.leftPunchHead, { x: 480, y: 350 });
+Math.random = originalRandom;
 assert(Math.abs(defender.headHealth - 94.75) < 0.0001, "Critical strike should use half base damage times 1.75");
 assert.equal(defender.stun, 1, "Critical strike should apply a one-second stun");
 assert.equal(defender.hitReaction.severity, "critical");
@@ -275,6 +287,59 @@ game.resolveAttack(attacker, defender, ATTACKS.leftPunchHead, { x: 480, y: 350 }
 assert(defender.blockReaction, "Matching guard should trigger a block reaction");
 assert.equal(defender.hitReaction, null, "Blocked strike should not play a clean reaction");
 assert.equal(attacker.stamina, 92.5, "A blocked strike should spend 150% stamina in total");
+
+attacker.resetRound(400, 1);
+defender.resetRound(491, -1);
+attacker.attack = {
+  type: "leftPunchHead",
+  elapsed: 0,
+  connected: true,
+  inefficientPenaltyApplied: false,
+  facing: 1,
+  stationaryStart: true,
+};
+defender.velocityX = 70;
+Math.random = () => 0.19;
+game.resolveAttack(attacker, defender, ATTACKS.leftPunchHead, { x: 480, y: 350 });
+Math.random = originalRandom;
+assert(defender.knockdownTimer > 0, "A critical roll below 0.20 should trigger a knockdown");
+assert.equal(defender.knockdownTarget, "head");
+assert.equal(defender.getVisualFrame().animation, "headKnockdown");
+
+attacker.resetRound(400, 1);
+defender.resetRound(568, -1);
+game.knockDown(attacker, defender, "body");
+assert.equal(defender.getVisualFrame().animation, "bodyKnockdown");
+
+attacker.resetRound(400, 1);
+defender.resetRound(568, -1);
+game.state = "fighting";
+game.finishFight(attacker, "BODY K.O.", defender, "body");
+assert.equal(game.state, "roundOver");
+assert.equal(defender.getVisualFrame().animation, "bodyKnockout");
+assert.equal(selectors.get("#round-message").classList.contains("is-hidden"), true, "KO banner should wait for the fall");
+game.update(1.2);
+assert.equal(selectors.get("#round-title").textContent, "BODY K.O.", "KO banner should appear after the finish animation begins");
+game.returnToMenu();
+
+attacker.resetRound(400, 1);
+defender.resetRound(450, -1);
+game.resolveFighterSpacing();
+assert.equal(Math.abs(defender.x - attacker.x), 168, "Fighters should never overlap closer than the visual contact distance");
+for (const [type, definition] of Object.entries(ATTACKS).filter(([, attack]) => attack.target !== "takedown")) {
+  attacker.attack = {
+    type,
+    elapsed: definition.startup + definition.active / 2,
+    connected: false,
+    inefficientPenaltyApplied: false,
+    facing: 1,
+    stationaryStart: true,
+  };
+  defender.x = attacker.x + 178;
+  assert(game.findAttackContact(attacker, defender, definition), `${type} should connect at 178px`);
+  defender.x = attacker.x + 179;
+  assert.equal(game.findAttackContact(attacker, defender, definition), null, `${type} should miss beyond 178px`);
+}
 
 attacker.resetMatchStamina();
 attacker.resetRound(400, 1);
@@ -304,8 +369,11 @@ game.mode = "cpu";
 assert.equal(animationFrames.length, 1, "The game should schedule its animation loop");
 assert.equal(modeButtons[0].listeners.has("click"), true, "CPU mode should be interactive");
 assert.equal(modeButtons[2].listeners.has("click"), true, "Practice mode should be interactive");
-assert.equal(imageSources.length, 12, "All modular combat animation sheets should preload");
+assert.equal(imageSources.length, 16, "All modular combat animation sheets should preload");
 for (const movement of Object.values(animationManifest.strikes)) {
+  assert(imageSources.includes(movement.file), `${movement.id} should preload its own sheet`);
+}
+for (const movement of Object.values(animationManifest.outcomes)) {
   assert(imageSources.includes(movement.file), `${movement.id} should preload its own sheet`);
 }
 assert(imageSources.includes("/assets/animations/support/hit-reactions-v4.png"));
@@ -362,4 +430,4 @@ assert.equal(selectors.get("#pause-screen").classList.contains("is-hidden"), fal
 selectors.get("#resume-button").dispatch("click");
 assert.equal(selectors.get("#pause-screen").classList.contains("is-hidden"), true);
 
-console.log("Smoke test passed: practice lab, damage numbers, tactical stamina, combat controls, CPU loop and pause.");
+console.log("Smoke test passed: spacing, guaranteed contact, critical knockdowns, finish animations, practice lab and controls.");

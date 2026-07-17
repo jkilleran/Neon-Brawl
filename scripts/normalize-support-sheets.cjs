@@ -32,6 +32,10 @@ const jobs = [
   { source: "public/assets/animations/strikes/left-punch-body-v5.png", output: "public/assets/animations/strikes/left-punch-body-v5.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
   { source: "public/assets/animations/strikes/right-kick-head-v5.png", output: "public/assets/animations/strikes/right-kick-head-v5.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
   { source: "public/assets/animations/strikes/right-kick-body-v5.png", output: "public/assets/animations/strikes/right-kick-body-v5.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
+  { source: "public/assets/animations/support/head-knockdown-v1.png", output: "public/assets/animations/support/head-knockdown-v1.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
+  { source: "public/assets/animations/support/body-knockdown-v1.png", output: "public/assets/animations/support/body-knockdown-v1.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
+  { source: "public/assets/animations/support/head-knockout-v1.png", output: "public/assets/animations/support/head-knockout-v1.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
+  { source: "public/assets/animations/support/body-knockout-v1.png", output: "public/assets/animations/support/body-knockout-v1.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
 ];
 
 function findImageMagick() {
