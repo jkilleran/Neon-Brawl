@@ -10,6 +10,19 @@ assert.match(markup, /FLECHAS \+ NM,\./, "Pause menu should list Player 2 contro
 assert.match(markup, /SPACE<\/kbd><span>mantener \+ cualquier golpe/, "Pause menu should explain the body modifier");
 assert.match(markup, /animation-manifest\.js[\s\S]*game\.js/, "Animation manifest must load before the game");
 assert.equal(Object.keys(animationManifest.strikes).length, 8, "Catalog should expose eight isolated strikes");
+assert.equal(animationManifest.strikes.leftPunchBody.limb, "left-hand");
+assert.equal(animationManifest.strikes.leftPunchBody.target, "body");
+assert.match(animationManifest.strikes.leftPunchBody.file, /left-punch-body-v5\.png$/);
+assert.match(animationManifest.strikes.rightKickHead.file, /right-kick-head-v5\.png$/);
+assert.match(animationManifest.strikes.rightKickBody.file, /right-kick-body-v5\.png$/);
+for (const id of ["leftPunchBody", "rightKickHead", "rightKickBody"]) {
+  assert.deepEqual(animationManifest.strikes[id].grid, {
+    columns: 5,
+    rows: 2,
+    fallbackWidth: 1920,
+    fallbackHeight: 682,
+  });
+}
 
 class FakeClassList {
   constructor() {
@@ -154,11 +167,13 @@ global.Image = class FakeImage {
 
   get naturalWidth() {
     if (this.source?.includes("fighter-mma")) return 1774;
+    if (this.source?.includes("-v5.png")) return 1920;
     return this.source?.includes("/animations/strikes/") ? 1536 : 1920;
   }
 
   get naturalHeight() {
     if (this.source?.includes("fighter-mma")) return 887;
+    if (this.source?.includes("-v5.png")) return 682;
     return this.source?.includes("/animations/strikes/") ? 1023 : 1364;
   }
 };

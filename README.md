@@ -49,6 +49,8 @@ Los derribos y el control en el suelo están temporalmente desactivados. Su impl
 - Ocho hojas de ataque independientes con diez frames etiquetados por movimiento
 - Dirección canónica y espejo determinista para que ambos luchadores golpeen hacia el rival
 - Jab izquierdo al cuerpo y cross derecho al cuerpo con siluetas y rotaciones diferenciadas
+- Modelos v5 aprobados para patada derecha alta, patada derecha al cuerpo y puño izquierdo al cuerpo
+- Extremidad atacante bloqueada por movimiento para impedir cambios de mano o pierna entre frames
 - Celdas alfa aisladas para impedir pies, brazos o fragmentos flotantes entre frames
 - Catálogo modular en [`docs/animation-catalog.md`](docs/animation-catalog.md)
 
@@ -62,7 +64,7 @@ npm run build
 
 ## Actualizaciones por ZIP
 
-Las entregas locales se distribuyen como un ZIP que contiene un parche Git. Después de descargarlo, se descomprime en `~/Downloads`, se aplica sobre `agent/mma-light-gameplay-v2` con `git am --3way`, se ejecutan las pruebas y se sube la misma rama. Este flujo no crea pull requests ni modifica `main`.
+Las entregas locales se distribuyen como un ZIP que contiene uno o más parches Git numerados. Después de descargarlo, se descomprime en `~/Downloads`, se aplican en orden sobre `agent/mma-light-gameplay-v2` con `git am --3way`, se ejecutan las pruebas y se sube la misma rama. Este flujo no crea pull requests ni modifica `main`.
 
 ## Tecnología
 

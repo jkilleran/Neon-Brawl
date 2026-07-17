@@ -43,6 +43,7 @@ function assertIsolatedCells(id, sheet) {
 
 for (const movement of Object.values(manifest.strikes)) {
   assert.equal(movement.frameCount, manifest.frameLimitPerMovement, `${movement.id} must use 10 frames`);
+  assert.equal(movement.lockedStrikingLimb, movement.limb, `${movement.id} must lock one striking limb for all frames`);
   assert.equal(movement.sourceFacing, manifest.canonicalSourceFacing, `${movement.id} must face right at source`);
   assert.equal(movement.mirrorForFacingLeft, true, `${movement.id} must support deterministic mirroring`);
   assert.equal(movement.continuityVerification, "frame-by-frame", `${movement.id} must track continuity review`);

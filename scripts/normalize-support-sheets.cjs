@@ -20,6 +20,9 @@ const jobs = [
   { source: "public/assets/animations/strikes/right-punch-body-v4.png", output: "public/assets/animations/strikes/right-punch-body-v4.png", columns: 4, rows: 3, frames: 10, sourceHeight: 1023 },
   { source: "public/assets/animations/strikes/right-kick-head-v4.png", output: "public/assets/animations/strikes/right-kick-head-v4.png", columns: 4, rows: 3, frames: 10, sourceHeight: 1023 },
   { source: "public/assets/animations/strikes/right-kick-body-v4.png", output: "public/assets/animations/strikes/right-kick-body-v4.png", columns: 4, rows: 3, frames: 10, sourceHeight: 1023 },
+  { source: "public/assets/animations/strikes/left-punch-body-v5.png", output: "public/assets/animations/strikes/left-punch-body-v5.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
+  { source: "public/assets/animations/strikes/right-kick-head-v5.png", output: "public/assets/animations/strikes/right-kick-head-v5.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
+  { source: "public/assets/animations/strikes/right-kick-body-v5.png", output: "public/assets/animations/strikes/right-kick-body-v5.png", columns: 5, rows: 2, frames: 10, sourceHeight: 682 },
 ];
 
 function findImageMagick() {

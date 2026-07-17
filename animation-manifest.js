@@ -38,6 +38,10 @@
     p2,
     contactFrame = 6,
     provenance = "generated-v3",
+    columns = 4,
+    rows = 3,
+    fallbackWidth = 1536,
+    fallbackHeight = 1023,
   }) => Object.freeze({
     id,
     label,
@@ -52,9 +56,11 @@
     frameLabels: contactFrame === 6 ? TEN_FRAME_PHASES : EARLY_CONTACT_PHASES,
     sourceFacing: "right",
     mirrorForFacingLeft: true,
+    lockedStrikingLimb: limb,
     continuityVerification: "frame-by-frame",
     provenance,
     verification: "visual-and-runtime",
+    grid: Object.freeze({ columns, rows, fallbackWidth, fallbackHeight }),
   });
 
   const strikes = Object.freeze({
@@ -79,12 +85,16 @@
     leftPunchBody: strike({
       id: "leftPunchBody",
       label: "LEFT PUNCH // BODY",
-      file: "/assets/animations/strikes/left-punch-body-v4.png",
+      file: "/assets/animations/strikes/left-punch-body-v5.png",
       limb: "left-hand",
       target: "body",
       p1: "Space + U",
       p2: "Space + N",
-      provenance: "generated-v4-distinct-lead-body-jab",
+      provenance: "user-approved-v5-left-lead-body-jab",
+      columns: 5,
+      rows: 2,
+      fallbackWidth: 1920,
+      fallbackHeight: 682,
     }),
     rightPunchBody: strike({
       id: "rightPunchBody",
@@ -110,13 +120,17 @@
     rightKickHead: strike({
       id: "rightKickHead",
       label: "RIGHT KICK // HEAD",
-      file: "/assets/animations/strikes/right-kick-head-v4.png",
+      file: "/assets/animations/strikes/right-kick-head-v5.png",
       limb: "right-leg",
       supportLimb: "left-leg",
       target: "head",
       p1: "K",
       p2: ".",
-      provenance: "generated-v4-continuous-right-high-kick",
+      provenance: "user-approved-v5-continuous-right-high-kick",
+      columns: 5,
+      rows: 2,
+      fallbackWidth: 1920,
+      fallbackHeight: 682,
     }),
     leftKickBody: strike({
       id: "leftKickBody",
@@ -131,13 +145,17 @@
     rightKickBody: strike({
       id: "rightKickBody",
       label: "RIGHT KICK // BODY",
-      file: "/assets/animations/strikes/right-kick-body-v4.png",
+      file: "/assets/animations/strikes/right-kick-body-v5.png",
       limb: "right-leg",
       supportLimb: "left-leg",
       target: "body",
       p1: "Space + K",
       p2: "Space + .",
-      provenance: "generated-v4-continuous-right-body-kick",
+      provenance: "user-approved-v5-continuous-right-body-kick",
+      columns: 5,
+      rows: 2,
+      fallbackWidth: 1920,
+      fallbackHeight: 682,
     }),
   });
 
@@ -145,11 +163,11 @@
     movement.sheet,
     Object.freeze({
       src: movement.file,
-      columns: 4,
-      rows: 3,
+      columns: movement.grid.columns,
+      rows: movement.grid.rows,
       frames: movement.frameCount,
-      fallbackWidth: 1536,
-      fallbackHeight: 1023,
+      fallbackWidth: movement.grid.fallbackWidth,
+      fallbackHeight: movement.grid.fallbackHeight,
       isolatedCells: true,
       minCellPadding: 6,
     }),
@@ -198,7 +216,7 @@
   });
 
   const manifest = Object.freeze({
-    version: "4.0.0",
+    version: "5.0.0",
     frameLimitPerMovement: 10,
     canonicalSourceFacing: "right",
     strikes,

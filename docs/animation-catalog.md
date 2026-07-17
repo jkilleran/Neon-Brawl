@@ -34,12 +34,12 @@ Este catálogo es la referencia para arte, lógica y pruebas. Los metadatos cons
 | --- | --- | --- | --- | ---: | --- | --- | --- |
 | `leftPunchHead` | LEFT PUNCH // HEAD | mano izquierda | cabeza | 6 | `U` | `N` | `left-punch-head-v3.png` |
 | `rightPunchHead` | RIGHT PUNCH // HEAD | mano derecha | cabeza | 6 | `I` | `M` | `right-punch-head-v3.png` |
-| `leftPunchBody` | LEFT PUNCH // BODY | mano izquierda | cuerpo | 6 | `Space + U` | `Space + N` | `left-punch-body-v4.png` |
+| `leftPunchBody` | LEFT PUNCH // BODY | mano izquierda | cuerpo | 6 | `Space + U` | `Space + N` | `left-punch-body-v5.png` |
 | `rightPunchBody` | RIGHT PUNCH // BODY | mano derecha | cuerpo | 6 | `Space + I` | `Space + M` | `right-punch-body-v4.png` |
 | `leftKickHead` | LEFT KICK // HEAD | pierna izquierda | cabeza | 4 | `J` | `,` | `left-kick-head-v3.png` |
-| `rightKickHead` | RIGHT KICK // HEAD | pierna derecha | cabeza | 6 | `K` | `.` | `right-kick-head-v4.png` |
+| `rightKickHead` | RIGHT KICK // HEAD | pierna derecha | cabeza | 6 | `K` | `.` | `right-kick-head-v5.png` |
 | `leftKickBody` | LEFT KICK // BODY | pierna izquierda | cuerpo | 6 | `Space + J` | `Space + ,` | `left-kick-body-v3.png` |
-| `rightKickBody` | RIGHT KICK // BODY | pierna derecha | cuerpo | 6 | `Space + K` | `Space + .` | `right-kick-body-v4.png` |
+| `rightKickBody` | RIGHT KICK // BODY | pierna derecha | cuerpo | 6 | `Space + K` | `Space + .` | `right-kick-body-v5.png` |
 
 Ruta común: `public/assets/animations/strikes/`.
 
@@ -53,6 +53,16 @@ Ruta común: `public/assets/animations/strikes/`.
 | `rightKickBody` | derecha | izquierda | 3–8 |
 
 En `rightKickHead` y `rightKickBody`, el frame 6 conserva explícitamente el pie izquierdo plantado. La pierna derecha sale de la cámara de los frames 3–4, impacta en 6 y vuelve a cámara en 7–8; no puede intercambiarse con la pierna de apoyo.
+
+## Modelos v5 aprobados
+
+| Movimiento | Modelo aprobado | Referencia de revisión | Invariante visual |
+|---|---|---|---|
+| `leftPunchBody` | puño izquierdo al cuerpo v5 | `image-edit-target-94684e6fb053fec6.png` | La mano izquierda recorre los frames 2–8; la derecha permanece en la mejilla. El contacto del frame 6 queda a la altura del abdomen. |
+| `rightKickHead` | patada derecha alta v5 | `exec-cb602f47-cd16-49f6-912e-094d223fac85.png` | La pierna izquierda permanece plantada; la derecha alcanza la cabeza en el frame 6. |
+| `rightKickBody` | patada derecha al cuerpo v5 | `exec-fc01a764-b8d7-4ec1-bda1-b5acd7714fc5.png` | La pierna izquierda permanece plantada; la derecha alcanza las costillas en el frame 6. |
+
+Los tres modelos usan una cuadrícula `5 × 2`, exactamente diez celdas ocupadas y una sola extremidad atacante bloqueada mediante `lockedStrikingLimb` en el manifiesto. Las imágenes del juego son copias normalizadas con fondo transparente; las poses de las referencias aprobadas no se regeneran durante la integración.
 
 ## Animaciones no ofensivas conservadas
 
