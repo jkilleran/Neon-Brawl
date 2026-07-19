@@ -63,9 +63,13 @@
 
   const ROUND_TIME = GAMEPLAY_RULES.roundTimeSeconds;
   const MAX_ROUNDS = 3;
-  const ONLINE_SNAPSHOT_INTERVAL = 1 / 30;
+  const ONLINE_SNAPSHOT_INTERVAL = 1 / 45;
   const ONLINE_INPUT_INTERVAL = 1 / 60;
-  const ONLINE_BACKGROUND_TICK_INTERVAL_MS = 1000 / 30;
+  const ONLINE_BACKGROUND_TICK_INTERVAL_MS = 1000 / 45;
+  const ONLINE_MAX_EXTRAPOLATION_SECONDS = 0.2;
+  const ONLINE_MAX_ANIMATION_FAST_FORWARD_SECONDS = 0.08;
+  const ONLINE_REMOTE_SMOOTHING_RATE = 24;
+  const ONLINE_LOCAL_RECONCILIATION_RATE = 7;
   const STAGE_LEFT = 105;
   const STAGE_RIGHT = WIDTH - 105;
   const FEATURES = Object.freeze({
@@ -1082,10 +1086,16 @@
       this.onlineRemoteInput = this.emptyInput();
       this.onlineRemoteActions = this.emptyInput();
       this.onlineInputSequence = 0;
+      this.onlineProcessedInputSequence = 0;
+      this.onlineLastControlSignature = "";
+      this.onlineLastControlChangeSequence = 0;
       this.onlineSnapshotSequence = 0;
       this.onlineSnapshotTimer = 0;
       this.onlineInputTimer = 0;
       this.onlineLastSnapshot = -1;
+      this.onlineLastAcknowledgedInput = 0;
+      this.onlinePredictedAttack = null;
+      this.onlinePositionTargets = { fighterOne: null, fighterTwo: null };
       this.onlineBackgroundLastTime = performance.now();
       this.stopOnlineBackgroundTicker = null;
       this.onlineLobby = { players: [], searchingCount: 0 };
@@ -1286,6 +1296,12 @@
       this.onlineRemoteInput = this.emptyInput();
       this.onlineRemoteActions = this.emptyInput();
       this.onlineLastSnapshot = -1;
+      this.onlineProcessedInputSequence = 0;
+      this.onlineLastControlSignature = "";
+      this.onlineLastControlChangeSequence = 0;
+      this.onlineLastAcknowledgedInput = 0;
+      this.onlinePredictedAttack = null;
+      this.onlinePositionTargets = { fighterOne: null, fighterTwo: null };
       this.hideOnlineChallenge();
       this.hideOutgoingChallenge();
       onlineScreen.classList.add("is-hidden");
@@ -1340,6 +1356,7 @@
 
     consumeOnlineRemoteInput() {
       const input = { ...this.onlineRemoteInput };
+      this.onlineProcessedInputSequence = this.onlineInputSequence;
       // Online WASD uses screen directions. For the right-side fighter,
       // A (-1) advances left toward the opponent and D (+1) retreats right.
       input.move = clamp(Number(input.move) || 0, -1, 1);
@@ -1394,6 +1411,9 @@
       this.onlineSnapshotSequence = 0;
       this.onlineSnapshotTimer = 0;
       this.onlineInputSequence = 0;
+      this.onlineProcessedInputSequence = 0;
+      this.onlineLastControlSignature = "";
+      this.onlineLastControlChangeSequence = 0;
       this.onlineInputTimer = 0;
       this.fighterOne.roundWins = 0;
       this.fighterTwo.roundWins = 0;
@@ -2050,6 +2070,7 @@
         callout: this.callout,
         flash: this.flash,
         shake: this.shake,
+        guestInputSequence: this.onlineProcessedInputSequence,
         fighterOne: this.serializeFighter(this.fighterOne),
         fighterTwo: this.serializeFighter(this.fighterTwo),
         particles: this.particles.map((particle) => ({
@@ -2156,7 +2177,17 @@
         || typeof snapshot !== "object"
         || !Number.isFinite(sequence)
         || sequence <= this.onlineLastSnapshot) return;
+      const hadSnapshot = this.onlineLastSnapshot >= 0;
+      const previousOneX = this.fighterOne.x;
+      const previousTwoX = this.fighterTwo.x;
+      const previousTwoVelocity = this.fighterTwo.velocityX;
       this.onlineLastSnapshot = sequence;
+      if (Number.isSafeInteger(snapshot.guestInputSequence)) {
+        this.onlineLastAcknowledgedInput = Math.max(
+          this.onlineLastAcknowledgedInput,
+          snapshot.guestInputSequence,
+        );
+      }
       const previousState = this.state;
       const onlineStates = new Set(["intro", "fighting", "ground", "roundOver", "matchOver"]);
       if (onlineStates.has(snapshot.state)) this.state = snapshot.state;
@@ -2178,6 +2209,46 @@
       if (Number.isFinite(snapshot.shake)) this.shake = Math.max(0, snapshot.shake);
       this.applyFighterSnapshot(this.fighterOne, snapshot.fighterOne);
       this.applyFighterSnapshot(this.fighterTwo, snapshot.fighterTwo);
+      const oneWaySeconds = clamp(
+        ((Number(this.online?.latencyMs) || 0) + (Number(this.online?.jitterMs) || 0)) / 2000
+          + ONLINE_SNAPSHOT_INTERVAL / 2,
+        ONLINE_SNAPSHOT_INTERVAL / 2,
+        ONLINE_MAX_EXTRAPOLATION_SECONDS,
+      );
+      const makeTarget = (fighter) => ({
+        x: clamp(fighter.x + fighter.velocityX * oneWaySeconds, STAGE_LEFT, STAGE_RIGHT),
+        velocityX: fighter.velocityX,
+        age: 0,
+      });
+      this.onlinePositionTargets.fighterOne = makeTarget(this.fighterOne);
+      this.onlinePositionTargets.fighterTwo = makeTarget(this.fighterTwo);
+      for (const fighter of [this.fighterOne, this.fighterTwo]) {
+        if (fighter.attack) {
+          const definition = fighter.currentAttack;
+          const totalDuration = definition
+            ? definition.startup + definition.active + definition.recovery
+            : fighter.attack.elapsed;
+          fighter.attack.elapsed = Math.min(
+            totalDuration,
+            fighter.attack.elapsed + Math.min(
+              oneWaySeconds,
+              ONLINE_MAX_ANIMATION_FAST_FORWARD_SECONDS,
+            ),
+          );
+        }
+      }
+
+      const guestCanPredict = this.state === "fighting"
+        && this.fighterTwo.knockdownTimer <= 0
+        && !this.fighterTwo.finishAnimation;
+      if (hadSnapshot) {
+        this.fighterOne.x = previousOneX;
+        if (guestCanPredict) {
+          this.fighterTwo.x = previousTwoX;
+          this.fighterTwo.velocityX = previousTwoVelocity;
+        }
+      }
+      this.reconcilePredictedAttack(snapshot.fighterTwo?.attack ?? null);
       this.matchWinner = snapshot.matchWinner === 1
         ? this.fighterOne
         : snapshot.matchWinner === 2
@@ -2225,16 +2296,210 @@
       };
     }
 
+    getPredictedStrikeType(input) {
+      if (input.rightKick) return input.bodyModifier ? "rightKickBody" : "rightKickHead";
+      if (input.leftKick) return input.bodyModifier ? "leftKickBody" : "leftKickHead";
+      if (input.rightPunch) return input.bodyModifier ? "rightPunchBody" : "rightPunchHead";
+      if (input.leftPunch) return input.bodyModifier ? "leftPunchBody" : "leftPunchHead";
+      return null;
+    }
+
+    predictOnlineGuestInput(input, sequence) {
+      if (this.onlineRole !== "guest" || this.state !== "fighting") return;
+      const type = this.getPredictedStrikeType(input);
+      const fighter = this.fighterTwo;
+      if (!type
+        || this.onlinePredictedAttack
+        || fighter.attack
+        || fighter.stun > 0
+        || fighter.evadeTimer > 0
+        || fighter.knockdownTimer > 0
+        || fighter.finishAnimation
+        || this.fighterOne.knockdownTimer > 0) return;
+      const definition = ATTACKS[type];
+      const staminaCost = definition.stamina * GAMEPLAY_RULES.strikeStaminaScale;
+      if (fighter.stamina < staminaCost) return;
+      const attack = {
+        type,
+        elapsed: 0,
+        connected: false,
+        inefficientPenaltyApplied: false,
+        facing: fighter.facing,
+        stationaryStart: Math.abs(fighter.velocityX) <= GAMEPLAY_RULES.criticalAttackerMaxSpeed,
+      };
+      this.onlinePredictedAttack = {
+        sequence,
+        type,
+        attack,
+        elapsed: 0,
+        totalDuration: definition.startup + definition.active + definition.recovery,
+        completed: false,
+        acknowledged: false,
+        acknowledgedElapsed: null,
+        hostSeen: false,
+      };
+      fighter.attack = { ...attack };
+      fighter.guard = null;
+      fighter.moveFlash = Math.max(fighter.moveFlash, 0.3);
+    }
+
+    reconcilePredictedAttack(authoritativeAttack) {
+      const prediction = this.onlinePredictedAttack;
+      if (!prediction) return;
+      const predictionCancelled = this.state !== "fighting"
+        || this.fighterTwo.stun > 0
+        || this.fighterTwo.knockdownTimer > 0
+        || Boolean(this.fighterTwo.finishAnimation);
+      if (predictionCancelled) {
+        if (!authoritativeAttack && this.fighterTwo.attack?.type === prediction.type) {
+          this.fighterTwo.attack = null;
+        }
+        this.onlinePredictedAttack = null;
+        return;
+      }
+      prediction.acknowledged = this.onlineLastAcknowledgedInput >= prediction.sequence;
+      if (prediction.acknowledged && prediction.acknowledgedElapsed === null) {
+        prediction.acknowledgedElapsed = prediction.elapsed;
+      }
+      if (authoritativeAttack?.type === prediction.type) prediction.hostSeen = true;
+
+      if (prediction.acknowledged && prediction.hostSeen && !authoritativeAttack) {
+        if (this.fighterTwo.attack?.type === prediction.type) this.fighterTwo.attack = null;
+        this.onlinePredictedAttack = null;
+        return;
+      }
+
+      const rejectionGrace = Math.max(
+        0.12,
+        (Number(this.online?.jitterMs) || 0) / 1000 + ONLINE_SNAPSHOT_INTERVAL * 2,
+      );
+      if (prediction.acknowledged
+        && !prediction.hostSeen
+        && !authoritativeAttack
+        && prediction.elapsed - prediction.acknowledgedElapsed > rejectionGrace) {
+        if (this.fighterTwo.attack?.type === prediction.type) this.fighterTwo.attack = null;
+        this.onlinePredictedAttack = null;
+        return;
+      }
+
+      if (!prediction.completed) {
+        const authoritativeElapsed = authoritativeAttack?.type === prediction.type
+          && Number.isFinite(authoritativeAttack.elapsed)
+          ? authoritativeAttack.elapsed
+          : 0;
+        prediction.elapsed = Math.max(prediction.elapsed, authoritativeElapsed);
+        this.fighterTwo.attack = {
+          ...prediction.attack,
+          ...(authoritativeAttack?.type === prediction.type ? authoritativeAttack : {}),
+          elapsed: prediction.elapsed,
+        };
+      } else if (!prediction.hostSeen || authoritativeAttack?.type === prediction.type) {
+        this.fighterTwo.attack = null;
+      }
+
+    }
+
     sendOnlineInputNow(includeActions = true) {
       if (this.mode !== "online" || this.onlineRole !== "guest" || !this.online?.connected) return false;
       if (["menu", "matchOver"].includes(this.state)) return false;
       this.onlineInputSequence += 1;
+      const input = this.getOnlineKeyboardInput(includeActions);
       const sent = this.online.sendInput(
-        this.getOnlineKeyboardInput(includeActions),
+        input,
         this.onlineInputSequence,
       );
-      if (sent) this.onlineInputTimer = ONLINE_INPUT_INTERVAL;
+      if (sent) {
+        this.onlineInputTimer = ONLINE_INPUT_INTERVAL;
+        const controlSignature = [
+          input.move,
+          input.guardHigh,
+          input.guardLow,
+          input.bodyModifier,
+          input.evade,
+        ].join(":");
+        if (controlSignature !== this.onlineLastControlSignature) {
+          this.onlineLastControlSignature = controlSignature;
+          this.onlineLastControlChangeSequence = this.onlineInputSequence;
+        }
+        this.predictOnlineGuestInput(input, this.onlineInputSequence);
+      }
       return sent;
+    }
+
+    updateOnlinePositionTarget(target, deltaTime) {
+      if (!target) return;
+      target.age += deltaTime;
+      if (target.age > 0.16) target.velocityX *= Math.pow(0.08, deltaTime);
+      target.x = clamp(target.x + target.velocityX * deltaTime, STAGE_LEFT, STAGE_RIGHT);
+    }
+
+    updateOnlineGuestPrediction(deltaTime) {
+      const fighter = this.fighterTwo;
+      const opponent = this.fighterOne;
+      const input = this.getOnlineKeyboardInput(false);
+      const canControl = this.state === "fighting"
+        && fighter.stun <= 0
+        && fighter.knockdownTimer <= 0
+        && !fighter.finishAnimation;
+
+      if (canControl && !fighter.attack && fighter.evadeTimer <= 0) {
+        const nextGuard = input.guardHigh ? "high" : input.guardLow ? "low" : null;
+        if (nextGuard && nextGuard !== fighter.guard) {
+          fighter.guardBlend = 0;
+          fighter.guardVisual = nextGuard;
+        }
+        fighter.guard = nextGuard;
+        fighter.guardBlend = nextGuard
+          ? clamp(fighter.guardBlend + deltaTime * 9, 0, 1)
+          : clamp(fighter.guardBlend - deltaTime * 10, 0, 1);
+
+        const shortTermRatio = fighter.stamina / Math.max(1, fighter.maxStamina);
+        const longTermRatio = fighter.maxStamina / 100;
+        const movementPenalty = 0.62 + shortTermRatio * 0.28 + longTermRatio * 0.1;
+        const targetVelocity = fighter.guard
+          ? input.move * 105
+          : input.move * 260 * movementPenalty;
+        fighter.velocityX = lerp(
+          fighter.velocityX,
+          targetVelocity,
+          1 - Math.pow(0.001, deltaTime),
+        );
+        fighter.x = clamp(fighter.x + fighter.velocityX * deltaTime, STAGE_LEFT, STAGE_RIGHT);
+      } else if (fighter.attack) {
+        fighter.velocityX *= Math.pow(0.008, deltaTime);
+        fighter.x = clamp(fighter.x + fighter.velocityX * deltaTime, STAGE_LEFT, STAGE_RIGHT);
+      }
+
+      const ownTarget = this.onlinePositionTargets.fighterTwo;
+      const targetIncludesLatestControl = this.onlineLastAcknowledgedInput
+        >= this.onlineLastControlChangeSequence;
+      if (ownTarget && canControl && targetIncludesLatestControl) {
+        const error = ownTarget.x - fighter.x;
+        if (Math.abs(error) > 150) fighter.x = ownTarget.x;
+        else {
+          fighter.x += error * (1 - Math.exp(-ONLINE_LOCAL_RECONCILIATION_RATE * deltaTime));
+        }
+      }
+
+      const minimum = GAMEPLAY_RULES.minimumFighterDistance;
+      if (fighter.x > opponent.x && fighter.x - opponent.x < minimum) {
+        fighter.x = clamp(opponent.x + minimum, STAGE_LEFT, STAGE_RIGHT);
+      }
+
+      const prediction = this.onlinePredictedAttack;
+      if (prediction) {
+        prediction.elapsed += deltaTime;
+        if (!prediction.completed && prediction.elapsed >= prediction.totalDuration) {
+          prediction.completed = true;
+          if (fighter.attack?.type === prediction.type) fighter.attack = null;
+        } else if (!prediction.completed && fighter.attack?.type === prediction.type) {
+          fighter.attack.elapsed = prediction.elapsed;
+        }
+        const retention = Math.max(1, (Number(this.online?.latencyMs) || 0) / 500);
+        if (prediction.elapsed > prediction.totalDuration + retention) {
+          this.onlinePredictedAttack = null;
+        }
+      }
     }
 
     updateOnlineReplica(deltaTime) {
@@ -2242,9 +2507,22 @@
       this.onlineInputTimer -= deltaTime;
       if (this.onlineInputTimer <= 0) this.sendOnlineInputNow();
       if (this.state === "fighting") this.timer = Math.max(0, this.timer - deltaTime);
+      this.updateOnlinePositionTarget(this.onlinePositionTargets.fighterOne, deltaTime);
+      this.updateOnlinePositionTarget(this.onlinePositionTargets.fighterTwo, deltaTime);
+      const opponentTarget = this.onlinePositionTargets.fighterOne;
+      if (opponentTarget) {
+        this.fighterOne.x = lerp(
+          this.fighterOne.x,
+          opponentTarget.x,
+          1 - Math.exp(-ONLINE_REMOTE_SMOOTHING_RATE * deltaTime),
+        );
+      }
+      this.updateOnlineGuestPrediction(deltaTime);
       for (const fighter of [this.fighterOne, this.fighterTwo]) {
         fighter.updateVisualState(deltaTime);
-        if (fighter.attack) fighter.attack.elapsed += deltaTime;
+        if (fighter.attack && (fighter !== this.fighterTwo || !this.onlinePredictedAttack)) {
+          fighter.attack.elapsed += deltaTime;
+        }
       }
       for (const particle of this.particles) particle.update(deltaTime);
       this.particles = this.particles.filter((particle) => particle.life > 0);

@@ -5,6 +5,8 @@ const animationManifest = require("../animation-manifest.js");
 
 const markup = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 const gameSource = fs.readFileSync(path.join(__dirname, "..", "game.js"), "utf8");
+const onlineClientSource = fs.readFileSync(path.join(__dirname, "..", "online-client.js"), "utf8");
+const onlineServerSource = fs.readFileSync(path.join(__dirname, "..", "server.cjs"), "utf8");
 assert.match(markup, /pause-controls-grid/, "Pause menu should expose the complete controls");
 assert.match(markup, /WASD \+ TYGH/, "Pause menu should list Player 1 controls");
 assert.match(markup, /FLECHAS \+ IOKL/, "Pause menu should list Player 2 controls");
@@ -21,8 +23,13 @@ assert.match(markup, /id="result-scorecard"/, "Result screen should expose the p
 assert.match(markup, /online-client\.js[\s\S]*game\.js/, "Online client must load before the game");
 assert.match(markup, /Sin reloj · daño visible por golpe/, "Practice mode should explain its damage display");
 assert.match(markup, /brillante = stamina actual · tenue = límite recuperable/, "Pause menu should explain both stamina layers");
-assert.match(gameSource, /ONLINE_SNAPSHOT_INTERVAL = 1 \/ 30/, "Online snapshots should run at 30 Hz");
+assert.match(gameSource, /ONLINE_SNAPSHOT_INTERVAL = 1 \/ 45/, "Online snapshots should run at 45 Hz");
+assert.match(gameSource, /guestInputSequence: this\.onlineProcessedInputSequence/, "Snapshots should acknowledge processed guest inputs");
+assert.match(gameSource, /predictOnlineGuestInput/, "Guests should predict their own controls locally");
+assert.match(gameSource, /ONLINE_MAX_EXTRAPOLATION_SECONDS = 0\.2/, "Remote motion extrapolation should be bounded");
 assert.match(gameSource, /sendOnlineInputNow/, "Guest controls should support immediate input delivery");
+assert.match(onlineClientSource, /MAX_REALTIME_BUFFER_BYTES = 24 \* 1024/, "The client should shed stale snapshots early");
+assert.match(onlineServerSource, /MAX_REALTIME_BUFFER_BYTES = 24 \* 1024/, "The relay should shed stale snapshots early");
 assert.match(
   gameSource,
   /context\.translate\(this\.x, guardY\);[\s\S]*context\.scale\(this\.facing, 1\);[\s\S]*context\.arc\(22, 0, 48/,
@@ -270,6 +277,74 @@ dispatchWindowKey("keyup", "KeyA");
 dispatchWindowKey("keydown", "KeyD");
 assert.equal(game.getOnlineKeyboardInput().move, 1, "Online D must always send screen-right movement");
 dispatchWindowKey("keyup", "KeyD");
+
+game.fighterOne.resetRound(380, 1);
+game.fighterTwo.resetRound(900, -1);
+game.online = { latencyMs: 160, jitterMs: 18, sendSnapshot() { return true; } };
+game.state = "fighting";
+game.onlineInputSequence = 42;
+game.onlineProcessedInputSequence = 42;
+assert.equal(
+  game.createOnlineSnapshot().guestInputSequence,
+  42,
+  "The host snapshot must acknowledge the newest guest input sequence",
+);
+
+game.predictOnlineGuestInput({
+  ...game.emptyInput(),
+  leftPunch: true,
+}, 43);
+assert.equal(game.fighterTwo.attack.type, "leftPunchHead", "A guest strike should animate immediately");
+assert.equal(game.onlinePredictedAttack.sequence, 43, "Predicted strikes must retain their input sequence");
+game.onlinePredictedAttack.elapsed = 0.18;
+game.onlineLastAcknowledgedInput = 43;
+game.reconcilePredictedAttack({
+  ...game.onlinePredictedAttack.attack,
+  elapsed: 0.04,
+});
+assert(
+  game.fighterTwo.attack.elapsed >= 0.18,
+  "An authoritative snapshot must not rewind a predicted strike animation",
+);
+game.reconcilePredictedAttack(null);
+assert.equal(game.onlinePredictedAttack, null, "A completed host strike should clear its prediction");
+assert.equal(game.fighterTwo.attack, null, "Host completion should not leave a phantom strike");
+
+game.predictOnlineGuestInput({
+  ...game.emptyInput(),
+  rightPunch: true,
+}, 44);
+game.fighterTwo.stun = 0.2;
+game.reconcilePredictedAttack(null);
+assert.equal(game.onlinePredictedAttack, null, "Authoritative stun should cancel an invalid prediction");
+assert.equal(game.fighterTwo.attack, null, "A cancelled prediction should not leave a phantom strike");
+game.fighterTwo.stun = 0;
+
+game.fighterTwo.x = 900;
+game.fighterTwo.velocityX = 0;
+game.onlinePositionTargets.fighterTwo = null;
+dispatchWindowKey("keydown", "KeyA");
+game.updateOnlineGuestPrediction(1 / 60);
+dispatchWindowKey("keyup", "KeyA");
+assert(game.fighterTwo.x < 900, "The challenged player should see advancing movement immediately");
+
+game.fighterTwo.x = 900;
+game.fighterTwo.velocityX = 0;
+game.onlinePositionTargets.fighterTwo = { x: 850, velocityX: 0, age: 0 };
+game.onlineLastControlChangeSequence = 50;
+game.onlineLastAcknowledgedInput = 49;
+game.updateOnlineGuestPrediction(1 / 60);
+assert.equal(
+  game.fighterTwo.x,
+  900,
+  "A stale snapshot must not pull against a newer local direction change",
+);
+game.onlineLastAcknowledgedInput = 50;
+game.updateOnlineGuestPrediction(1 / 60);
+assert(
+  game.fighterTwo.x < 900 && game.fighterTwo.x > 850,
+  "Guest reconciliation should correct position smoothly instead of teleporting",
+);
 
 game.onlineRole = "host";
 game.state = "intro";

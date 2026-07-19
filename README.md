@@ -53,7 +53,9 @@ The first online version includes:
 - host-authoritative gameplay to keep damage, criticals, knockdowns, and scoring synchronized;
 - visible server round-trip latency with connection-quality grading;
 - explicit connected and outgoing-challenge states in the lobby;
-- immediate guest action delivery and 30 Hz authoritative state snapshots;
+- immediate guest action delivery and 45 Hz authoritative state snapshots;
+- guest-side prediction for movement, guard changes, and strike animation startup;
+- input acknowledgements, bounded motion extrapolation, and smooth authoritative reconciliation;
 - screen-direction WASD online movement (`A` left, `D` right), including the right-side fighter;
 - defensive snapshot validation and visual fallbacks so malformed remote state cannot hide a fighter;
 - an explicit guest-ready handshake and background host clock for reliable two-tab testing;
@@ -126,7 +128,7 @@ Exact balance values are documented in [Gameplay Rules](docs/gameplay-rules.md).
 
 ## Local ZIP updates
 
-Local releases may be delivered as a ZIP containing numbered Git patches. Extract the package, apply the patches in order with `git am --3way` on `agent/mma-light-gameplay-v2`, run validation, and push that same branch. This workflow does not require a pull request or a change to `main`.
+Local releases are delivered as cumulative ZIP installers containing a Git bundle. Extract the ZIP and run its `install.sh` against the local repository. The installer imports the release commit, applies it to the current working branch, and runs validation. This workflow does not require a pull request or a change to `main`.
 
 ## Technology
 

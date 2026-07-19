@@ -140,7 +140,12 @@ function testClient(url) {
     assert.equal(remoteInput.input.bodyModifier, true);
     assert.equal(remoteInput.input.takedown, false);
 
-    const sampleSnapshot = { state: "fighting", round: 1, timer: 179.5 };
+    const sampleSnapshot = {
+      state: "fighting",
+      round: 1,
+      timer: 179.5,
+      guestInputSequence: 7,
+    };
     rook.send({ type: "snapshot", sequence: 11, snapshot: sampleSnapshot });
     const snapshot = await vex.waitFor((message) => message.type === "snapshot" && message.sequence === 11);
     assert.deepEqual(snapshot.snapshot, sampleSnapshot);

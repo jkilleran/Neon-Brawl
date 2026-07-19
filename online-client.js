@@ -2,7 +2,7 @@
   "use strict";
 
   const LATENCY_PROBE_INTERVAL_MS = 1_000;
-  const MAX_REALTIME_BUFFER_BYTES = 64 * 1024;
+  const MAX_REALTIME_BUFFER_BYTES = 24 * 1024;
 
   function latencyQuality(latencyMs) {
     if (!Number.isFinite(latencyMs)) return "unknown";

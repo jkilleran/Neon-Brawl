@@ -9,7 +9,7 @@ const { WebSocket, WebSocketServer } = require("ws");
 
 const MAX_NAME_LENGTH = 18;
 const MAX_MESSAGE_BYTES = 128 * 1024;
-const MAX_REALTIME_BUFFER_BYTES = 64 * 1024;
+const MAX_REALTIME_BUFFER_BYTES = 24 * 1024;
 const HEARTBEAT_INTERVAL_MS = 25_000;
 
 function sanitizeName(value) {
