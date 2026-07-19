@@ -43,7 +43,7 @@
           Tu navegador no soporta Canvas.
         </canvas>
 
-        <div id="menu-screen" class="screen screen--menu">
+        <div id="menu-screen" class="screen screen--menu" data-menu-section="root">
           <div class="menu-copy">
             <p class="eyebrow"><span></span> MMA PROTOCOL // ALPHA</p>
             <h1>NEON<br /><em>BRAWL</em></h1>
@@ -51,27 +51,79 @@
               Tres asaltos de 3 minutos. Lee la distancia, protege cabeza y cuerpo y administra tu stamina inmediata y de largo plazo.
             </p>
 
-            <div class="menu-actions">
-              <button class="mode-button mode-button--primary" data-mode="cpu" type="button">
-                <span class="mode-button__number">01</span>
-                <span><strong>QUICK FIGHT</strong><small>Combate MMA contra la CPU</small></span>
-                <span class="mode-button__arrow">→</span>
-              </button>
-              <button class="mode-button" data-mode="local" type="button">
-                <span class="mode-button__number">02</span>
-                <span><strong>LOCAL SPARRING</strong><small>Dos jugadores, un teclado</small></span>
-                <span class="mode-button__arrow">→</span>
-              </button>
-              <button class="mode-button" data-mode="practice" type="button">
-                <span class="mode-button__number">03</span>
-                <span><strong>PRACTICE LAB</strong><small>Sin reloj · daño visible por golpe</small></span>
-                <span class="mode-button__arrow">→</span>
-              </button>
-              <button class="mode-button mode-button--online" data-mode="online" type="button">
-                <span class="mode-button__number">04</span>
-                <span><strong>ONLINE ARENA</strong><small>Busca jugadores y reta a un amigo</small></span>
-                <span class="mode-button__arrow">⌁</span>
-              </button>
+            <div class="menu-navigation">
+              <section class="menu-panel" data-menu-panel="root" aria-label="Seleccionar categoría de juego">
+                <div class="menu-panel__intro">
+                  <small>SELECT FIGHT PROTOCOL</small>
+                  <span>Elige dónde comienza el combate</span>
+                </div>
+                <div class="menu-categories">
+                  <button class="category-button category-button--local" data-menu-target="local" type="button">
+                    <span class="category-button__index">01</span>
+                    <span class="category-button__icon" aria-hidden="true">⌂</span>
+                    <span class="category-button__copy">
+                      <strong>LOCAL</strong>
+                      <small>CPU · dos jugadores · práctica</small>
+                    </span>
+                    <span class="category-button__meta"><b>3</b> MODOS</span>
+                    <span class="category-button__arrow" aria-hidden="true">→</span>
+                  </button>
+                  <button class="category-button category-button--online" data-menu-target="online" type="button">
+                    <span class="category-button__index">02</span>
+                    <span class="category-button__icon" aria-hidden="true">⌁</span>
+                    <span class="category-button__copy">
+                      <strong>ONLINE</strong>
+                      <small>Lobby en vivo · retos directos</small>
+                    </span>
+                    <span class="category-button__meta category-button__meta--live"><i></i> LIVE</span>
+                    <span class="category-button__arrow" aria-hidden="true">→</span>
+                  </button>
+                </div>
+              </section>
+
+              <section class="menu-panel is-hidden" data-menu-panel="local" aria-label="Modos de juego local">
+                <header class="menu-panel__header">
+                  <button class="menu-back" data-menu-back type="button" aria-label="Volver a las categorías">←</button>
+                  <span><small>LOCAL PROTOCOL</small><strong>ELIGE UN MODO</strong></span>
+                  <b>03</b>
+                </header>
+                <div class="menu-actions">
+                  <button class="mode-button mode-button--primary" data-mode="cpu" type="button">
+                    <span class="mode-button__number">01</span>
+                    <span><strong>QUICK FIGHT</strong><small>Combate MMA contra la CPU</small></span>
+                    <span class="mode-button__arrow">→</span>
+                  </button>
+                  <button class="mode-button" data-mode="local" type="button">
+                    <span class="mode-button__number">02</span>
+                    <span><strong>LOCAL SPARRING</strong><small>Dos jugadores, un teclado</small></span>
+                    <span class="mode-button__arrow">→</span>
+                  </button>
+                  <button class="mode-button" data-mode="practice" type="button">
+                    <span class="mode-button__number">03</span>
+                    <span><strong>PRACTICE LAB</strong><small>Sin reloj · daño visible por golpe</small></span>
+                    <span class="mode-button__arrow">→</span>
+                  </button>
+                </div>
+              </section>
+
+              <section class="menu-panel is-hidden" data-menu-panel="online" aria-label="Modos de juego online">
+                <header class="menu-panel__header menu-panel__header--online">
+                  <button class="menu-back" data-menu-back type="button" aria-label="Volver a las categorías">←</button>
+                  <span><small>NEON NETWORK</small><strong>ELIGE UN MODO</strong></span>
+                  <b>01</b>
+                </header>
+                <div class="menu-actions">
+                  <button class="mode-button mode-button--online" data-mode="online" type="button">
+                    <span class="mode-button__number">01</span>
+                    <span><strong>ONLINE ARENA</strong><small>Busca jugadores y reta a un amigo</small></span>
+                    <span class="mode-button__arrow">⌁</span>
+                  </button>
+                </div>
+                <div class="online-mode-note">
+                  <span><i></i> MATCHMAKING LIVE</span>
+                  <small>Servidor neutral · latencia visible · puntuación por ronda</small>
+                </div>
+              </section>
             </div>
           </div>
 
@@ -217,7 +269,7 @@
       <footer class="footer-note">
         <span><i></i> SYSTEM ONLINE</span>
         <p>ESC para pausar · Cada crítico tiene 1 de 2.2 de probabilidad de knockdown</p>
-        <span>BUILD 0.18.2 // STABLE STRIKE RECOVERY</span>
+        <span>BUILD 0.19.0 // MODE SELECT REDESIGN</span>
       </footer>
     </main>
 

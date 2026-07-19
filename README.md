@@ -114,6 +114,7 @@ npm run build
 
 ## Gameplay highlights
 
+- Two-level mode selection that cleanly separates Local and Online play
 - Quick Fight, Local Sparring, and infinite-time Practice Lab
 - Three 3-minute rounds with 10-9 scoring
 - Separate head and body damage

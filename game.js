@@ -36,6 +36,7 @@
   const onlineAccept = document.querySelector("#online-accept");
   const onlineDecline = document.querySelector("#online-decline");
   const onlineBack = document.querySelector("#online-back");
+  const menuPanels = [...document.querySelectorAll("[data-menu-panel]")];
 
   const WIDTH = canvas.width;
   const HEIGHT = canvas.height;
@@ -1135,6 +1136,16 @@
       };
     }
 
+    showMenuSection(section = "root") {
+      const requestedSection = menuPanels.some((panel) => panel.dataset.menuPanel === section)
+        ? section
+        : "root";
+      menuPanels.forEach((panel) => {
+        panel.classList.toggle("is-hidden", panel.dataset.menuPanel !== requestedSection);
+      });
+      menuScreen.dataset.menuSection = requestedSection;
+    }
+
     openOnlineLobby() {
       menuScreen.classList.add("is-hidden");
       resultScreen.classList.add("is-hidden");
@@ -1363,7 +1374,7 @@
       this.synth.announce();
     }
 
-    returnToMenu() {
+    returnToMenu(menuSection = "root") {
       if (this.mode === "online") {
         this.online?.leaveMatch();
         this.online?.disconnect();
@@ -1382,6 +1393,7 @@
       resultScreen.classList.add("is-hidden");
       roundMessage.classList.add("is-hidden");
       combatControls.classList.add("is-hidden");
+      this.showMenuSection(menuSection);
     }
 
     togglePause() {
@@ -2981,10 +2993,19 @@
     if (!event.repeat && onlineControlCodes.has(event.code) && game.sendOnlineInputNow()) {
       if (onlineActionCodes.has(event.code)) pressed.delete(event.code);
     }
-    if (event.code === "Escape" && !event.repeat) game.togglePause();
+    if (event.code === "Escape" && !event.repeat) {
+      if (game.state === "menu"
+        && !menuScreen.classList.contains("is-hidden")
+        && menuScreen.dataset.menuSection !== "root") {
+        game.showMenuSection("root");
+      } else {
+        game.togglePause();
+      }
+    }
     if (event.code === "Enter"
       && game.state === "menu"
       && !menuScreen.classList.contains("is-hidden")
+      && menuScreen.dataset.menuSection === "root"
       && !event.repeat) game.start("cpu");
   });
 
@@ -3005,6 +3026,12 @@
       if (button.dataset.mode === "online") game.openOnlineLobby();
       else game.start(button.dataset.mode);
     });
+  });
+  document.querySelectorAll("[data-menu-target]").forEach((button) => {
+    button.addEventListener("click", () => game.showMenuSection(button.dataset.menuTarget));
+  });
+  document.querySelectorAll("[data-menu-back]").forEach((button) => {
+    button.addEventListener("click", () => game.showMenuSection("root"));
   });
   onlineConnectForm.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -3027,7 +3054,7 @@
     game.hideOutgoingChallenge();
     game.setOnlineConnectionState(false);
     game.mode = "cpu";
-    game.returnToMenu();
+    game.returnToMenu("online");
   });
   document.querySelector("#resume-button").addEventListener("click", () => game.togglePause());
   rematchButton.addEventListener("click", () => {

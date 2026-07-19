@@ -14,6 +14,10 @@ assert.match(markup, /FLECHAS \+ IOKL/, "Pause menu should list Player 2 control
 assert.match(markup, /SPACE \/ SHIFT<\/kbd><span>mantener \+ cualquier golpe/, "Pause menu should explain the body modifier");
 assert.match(markup, /combat-config\.js[\s\S]*animation-manifest\.js[\s\S]*game\.js/, "Shared combat config and animation manifest must load before the game");
 assert.match(markup, /Tres asaltos de 3 minutos/, "Menu should explain round duration");
+assert.match(markup, /data-menu-target="local"/, "Main menu should expose the local category");
+assert.match(markup, /data-menu-target="online"/, "Main menu should expose the online category");
+assert.match(markup, /data-menu-panel="local"[\s\S]*data-mode="cpu"[\s\S]*data-mode="practice"/, "Local category should contain local game modes");
+assert.match(markup, /data-menu-panel="online"[\s\S]*data-mode="online"/, "Online category should contain online game modes");
 assert.match(markup, /data-mode="practice"/, "Menu should expose practice mode");
 assert.match(markup, /data-mode="online"/, "Menu should expose online mode");
 assert.match(markup, /BUSCANDO PARTIDA AHORA MISMO/, "Online lobby should show live matchmaking presence");
@@ -204,7 +208,20 @@ const modeButtons = [
   new FakeElement({ mode: "practice" }),
   new FakeElement({ mode: "online" }),
 ];
+const menuPanels = [
+  new FakeElement({ menuPanel: "root" }),
+  new FakeElement({ menuPanel: "local" }),
+  new FakeElement({ menuPanel: "online" }),
+];
+menuPanels[1].classList.add("is-hidden");
+menuPanels[2].classList.add("is-hidden");
+const menuCategoryButtons = [
+  new FakeElement({ menuTarget: "local" }),
+  new FakeElement({ menuTarget: "online" }),
+];
+const menuBackButtons = [new FakeElement(), new FakeElement()];
 const menuButtons = [new FakeElement(), new FakeElement()];
+selectors.get("#menu-screen").dataset.menuSection = "root";
 const windowListeners = new Map();
 const animationFrames = [];
 const imageSources = [];
@@ -223,6 +240,9 @@ global.document = {
   },
   querySelectorAll(selector) {
     if (selector === "[data-mode]") return modeButtons;
+    if (selector === "[data-menu-panel]") return menuPanels;
+    if (selector === "[data-menu-target]") return menuCategoryButtons;
+    if (selector === "[data-menu-back]") return menuBackButtons;
     if (selector === ".menu-button") return menuButtons;
     return [];
   },
@@ -833,6 +853,14 @@ assert.match(selectors.get("#result-scorecard").innerHTML, /10/);
 assert.match(selectors.get("#result-scorecard").innerHTML, /9/);
 
 assert.equal(animationFrames.length, 1, "The game should schedule its animation loop");
+assert.equal(menuCategoryButtons[0].listeners.has("click"), true, "Local category should be interactive");
+assert.equal(menuCategoryButtons[1].listeners.has("click"), true, "Online category should be interactive");
+menuCategoryButtons[0].dispatch("click");
+assert.equal(selectors.get("#menu-screen").dataset.menuSection, "local");
+assert.equal(menuPanels[0].classList.contains("is-hidden"), true, "Opening Local should hide category selection");
+assert.equal(menuPanels[1].classList.contains("is-hidden"), false, "Opening Local should show local modes");
+menuBackButtons[0].dispatch("click");
+assert.equal(selectors.get("#menu-screen").dataset.menuSection, "root");
 assert.equal(modeButtons[0].listeners.has("click"), true, "CPU mode should be interactive");
 assert.equal(modeButtons[2].listeners.has("click"), true, "Practice mode should be interactive");
 assert.equal(imageSources.length, 66, "All 33 movements for both fighters should preload");
