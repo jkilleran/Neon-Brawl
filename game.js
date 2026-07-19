@@ -65,6 +65,7 @@
   const MAX_ROUNDS = 3;
   const ONLINE_SNAPSHOT_INTERVAL = 1 / 30;
   const ONLINE_INPUT_INTERVAL = 1 / 60;
+  const ONLINE_BACKGROUND_TICK_INTERVAL_MS = 1000 / 30;
   const STAGE_LEFT = 105;
   const STAGE_RIGHT = WIDTH - 105;
   const FEATURES = Object.freeze({
@@ -140,9 +141,23 @@
   const lerp = (from, to, amount) => from + (to - from) * amount;
   const random = (min, max) => Math.random() * (max - min) + min;
   const isFacing = (value) => value === -1 || value === 1;
-  const resolveForwardMovement = (intent, facing) => (
-    clamp(Number(intent) || 0, -1, 1) * (facing === -1 ? -1 : 1)
-  );
+
+  function createOnlineBackgroundTicker(callback) {
+    if (typeof Worker === "function" && typeof Blob === "function" && globalThis.URL?.createObjectURL) {
+      try {
+        const workerSource = `setInterval(() => postMessage(performance.now()), ${ONLINE_BACKGROUND_TICK_INTERVAL_MS});`;
+        const workerUrl = URL.createObjectURL(new Blob([workerSource], { type: "text/javascript" }));
+        const worker = new Worker(workerUrl);
+        URL.revokeObjectURL(workerUrl);
+        worker.addEventListener("message", ({ data }) => callback(Number(data)));
+        return () => worker.terminate();
+      } catch {
+        // Fall back to a normal timer when a host blocks blob workers.
+      }
+    }
+    const timer = setInterval(() => callback(performance.now()), ONLINE_BACKGROUND_TICK_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }
 
   const emptyRoundStats = () => ({
     thrown: 0,
@@ -1071,6 +1086,8 @@
       this.onlineSnapshotTimer = 0;
       this.onlineInputTimer = 0;
       this.onlineLastSnapshot = -1;
+      this.onlineBackgroundLastTime = performance.now();
+      this.stopOnlineBackgroundTicker = null;
       this.onlineLobby = { players: [], searchingCount: 0 };
       this.pendingChallenger = null;
       this.lastTime = performance.now();
@@ -1107,6 +1124,7 @@
         match: (match) => this.startOnlineMatch(match),
         remoteInput: (message) => this.receiveOnlineInput(message),
         snapshot: (message) => this.applyOnlineSnapshot(message),
+        remoteReady: () => this.sendOnlineSnapshot(0, true),
         latency: (metrics) => this.updateOnlineLatency(metrics),
         opponentLeft: (message) => this.handleOnlineOpponentLeft(message),
         error: (message) => {
@@ -1272,7 +1290,41 @@
       this.hideOutgoingChallenge();
       onlineScreen.classList.add("is-hidden");
       this.start("online");
+      this.syncOnlineBackgroundTicker();
       this.showCallout(`${match.opponent.name} CONNECTED`, "#d6ff7d", 1.1);
+    }
+
+    syncOnlineBackgroundTicker() {
+      const shouldRun = Boolean(document.hidden)
+        && this.mode === "online"
+        && this.onlineRole === "host"
+        && !["menu", "matchOver"].includes(this.state);
+      if (shouldRun && !this.stopOnlineBackgroundTicker) {
+        this.onlineBackgroundLastTime = performance.now();
+        this.stopOnlineBackgroundTicker = createOnlineBackgroundTicker(
+          (time) => this.backgroundOnlineTick(time),
+        );
+      } else if (!shouldRun && this.stopOnlineBackgroundTicker) {
+        this.stopOnlineBackgroundTicker();
+        this.stopOnlineBackgroundTicker = null;
+        this.lastTime = performance.now();
+      }
+    }
+
+    backgroundOnlineTick(time = performance.now()) {
+      if (!document.hidden
+        || this.mode !== "online"
+        || this.onlineRole !== "host"
+        || ["menu", "matchOver", "paused"].includes(this.state)) return;
+      const deltaTime = Math.min(
+        Math.max(0, (time - this.onlineBackgroundLastTime) / 1000) || ONLINE_SNAPSHOT_INTERVAL,
+        1 / 15,
+      );
+      this.onlineBackgroundLastTime = time;
+      if (this.hitStop > 0) this.hitStop -= deltaTime;
+      else this.update(deltaTime);
+      pressed.clear();
+      if (["menu", "matchOver"].includes(this.state)) this.syncOnlineBackgroundTicker();
     }
 
     receiveOnlineInput({ input, sequence }) {
@@ -1288,9 +1340,9 @@
 
     consumeOnlineRemoteInput() {
       const input = { ...this.onlineRemoteInput };
-      // Remote clients send semantic movement: +1 is forward and -1 is backward.
-      // The authoritative host resolves it against the current right-side facing.
-      input.move = resolveForwardMovement(input.move, this.fighterTwo.facing);
+      // Online WASD uses screen directions. For the right-side fighter,
+      // A (-1) advances left toward the opponent and D (+1) retreats right.
+      input.move = clamp(Number(input.move) || 0, -1, 1);
       for (const action of ["leftPunch", "rightPunch", "leftKick", "rightKick", "evade"]) {
         input[action] = this.onlineRemoteActions[action];
         this.onlineRemoteActions[action] = false;
@@ -1314,6 +1366,7 @@
       menuScreen.classList.add("is-hidden");
       onlineScreen.classList.remove("is-hidden");
       this.hideOutgoingChallenge();
+      this.syncOnlineBackgroundTicker();
       this.setOnlineStatus({ state: "online", message: "CONECTADO // BUSCANDO PELEADORES" });
     }
 
@@ -1326,6 +1379,7 @@
       roundMessage.classList.add("is-hidden");
       menuScreen.classList.add("is-hidden");
       onlineScreen.classList.remove("is-hidden");
+      this.syncOnlineBackgroundTicker();
       this.setOnlineStatus({ state: "error", message: reason.toUpperCase() });
     }
 
@@ -1391,6 +1445,7 @@
         this.onlineRole = null;
         this.onlineOpponent = null;
       }
+      this.syncOnlineBackgroundTicker();
       this.state = "menu";
       this.ground = null;
       this.matchWinner = null;
@@ -2156,12 +2211,8 @@
     }
 
     getOnlineKeyboardInput(includeActions = true) {
-      const movementIntent = (keys.has("KeyD") ? 1 : 0) - (keys.has("KeyA") ? 1 : 0);
-      const move = this.onlineRole === "guest"
-        ? movementIntent
-        : resolveForwardMovement(movementIntent, this.fighterOne.facing);
       return {
-        move,
+        move: (keys.has("KeyD") ? 1 : 0) - (keys.has("KeyA") ? 1 : 0),
         guardHigh: keys.has("KeyW"),
         guardLow: keys.has("KeyS"),
         leftPunch: includeActions && pressed.has("KeyT"),
@@ -2328,12 +2379,18 @@
     loop(time) {
       const deltaTime = Math.min((time - this.lastTime) / 1000 || 0, 1 / 30);
       this.lastTime = time;
-      if (this.hitStop > 0) this.hitStop -= deltaTime;
-      else if (this.mode === "online" && this.onlineRole === "guest" && !["menu", "matchOver"].includes(this.state)) {
-        this.updateOnlineReplica(deltaTime);
-      } else if (!["paused", "menu", "matchOver"].includes(this.state)) this.update(deltaTime);
-      else if (this.state === "menu") this.elapsed += deltaTime;
-      this.draw();
+      const backgroundHostOwnsSimulation = Boolean(document.hidden)
+        && this.mode === "online"
+        && this.onlineRole === "host"
+        && Boolean(this.stopOnlineBackgroundTicker);
+      if (!backgroundHostOwnsSimulation) {
+        if (this.hitStop > 0) this.hitStop -= deltaTime;
+        else if (this.mode === "online" && this.onlineRole === "guest" && !["menu", "matchOver"].includes(this.state)) {
+          this.updateOnlineReplica(deltaTime);
+        } else if (!["paused", "menu", "matchOver"].includes(this.state)) this.update(deltaTime);
+        else if (this.state === "menu") this.elapsed += deltaTime;
+      }
+      if (!document.hidden) this.draw();
       pressed.clear();
       requestAnimationFrame((nextTime) => this.loop(nextTime));
     }
@@ -2686,6 +2743,7 @@
     game.sendOnlineInputNow(false);
     if (["fighting", "ground"].includes(game.state)) game.togglePause();
   });
+  document.addEventListener?.("visibilitychange", () => game.syncOnlineBackgroundTicker());
 
   document.querySelectorAll("[data-mode]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -2747,6 +2805,6 @@
   });
 
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { game, Fighter, ATTACKS, GAMEPLAY_RULES, resolveForwardMovement };
+    module.exports = { game, Fighter, ATTACKS, GAMEPLAY_RULES };
   }
 })();

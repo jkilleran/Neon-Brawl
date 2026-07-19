@@ -136,12 +136,16 @@
           this.matchId = message.matchId;
           this.opponent = message.opponent;
           this.emit("match", message);
+          if (message.role === "guest") this.send({ type: "matchReady" });
           break;
         case "remoteInput":
           this.emit("remoteInput", message);
           break;
         case "snapshot":
           this.emit("snapshot", message);
+          break;
+        case "remoteReady":
+          this.emit("remoteReady", message);
           break;
         case "latencyPong":
           this.receiveLatencyPong(message);

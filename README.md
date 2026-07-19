@@ -54,8 +54,9 @@ The first online version includes:
 - visible server round-trip latency with connection-quality grading;
 - explicit connected and outgoing-challenge states in the lobby;
 - immediate guest action delivery and 30 Hz authoritative state snapshots;
-- authoritative forward/back movement for the right-side online fighter;
+- screen-direction WASD online movement (`A` left, `D` right), including the right-side fighter;
 - defensive snapshot validation and visual fallbacks so malformed remote state cannot hide a fighter;
+- an explicit guest-ready handshake and background host clock for reliable two-tab testing;
 - stale-snapshot shedding when a slow connection starts buffering;
 - automatic WebSocket keepalive and reconnect attempts;
 - automatic return to the lobby when an opponent leaves;

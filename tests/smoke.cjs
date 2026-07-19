@@ -204,6 +204,7 @@ const animationSheetsBySource = new Map(
 
 global.document = {
   fullscreenElement: null,
+  hidden: false,
   querySelector(selector) {
     assert(selectors.has(selector), `Missing fake element for ${selector}`);
     return selectors.get(selector);
@@ -248,17 +249,39 @@ global.requestAnimationFrame = (callback) => {
   animationFrames.push(callback);
 };
 
-const { game, ATTACKS, resolveForwardMovement } = require("../game.js");
+const { game, ATTACKS } = require("../game.js");
 
-assert.equal(resolveForwardMovement(1, 1), 1, "Forward intent should move a left-side fighter right");
-assert.equal(resolveForwardMovement(1, -1), -1, "Forward intent should move a right-side fighter left");
-assert.equal(resolveForwardMovement(-1, -1), 1, "Backward intent should move a right-side fighter right");
-
-game.onlineRemoteInput = { ...game.emptyInput(), move: 1 };
+game.onlineRemoteInput = { ...game.emptyInput(), move: -1 };
 game.fighterTwo.facing = -1;
-assert.equal(game.consumeOnlineRemoteInput().move, -1, "The host must resolve guest D against authoritative facing");
-game.onlineRemoteInput.move = -1;
-assert.equal(game.consumeOnlineRemoteInput().move, 1, "The host must resolve guest A as retreat");
+assert.equal(game.consumeOnlineRemoteInput().move, -1, "Guest A must advance the right-side fighter toward the left");
+game.onlineRemoteInput.move = 1;
+assert.equal(game.consumeOnlineRemoteInput().move, 1, "Guest D must retreat the right-side fighter toward the right");
+
+const dispatchWindowKey = (type, code) => {
+  for (const listener of windowListeners.get(type) || []) {
+    listener({ code, repeat: false, preventDefault() {} });
+  }
+};
+game.mode = "online";
+game.onlineRole = "guest";
+dispatchWindowKey("keydown", "KeyA");
+assert.equal(game.getOnlineKeyboardInput().move, -1, "Online A must always send screen-left movement");
+dispatchWindowKey("keyup", "KeyA");
+dispatchWindowKey("keydown", "KeyD");
+assert.equal(game.getOnlineKeyboardInput().move, 1, "Online D must always send screen-right movement");
+dispatchWindowKey("keyup", "KeyD");
+
+game.onlineRole = "host";
+game.state = "intro";
+game.introTimer = 1;
+game.onlineBackgroundLastTime = 0;
+document.hidden = true;
+game.backgroundOnlineTick(1000 / 30);
+assert(game.introTimer < 1, "A hidden authoritative host must continue advancing the match clock");
+document.hidden = false;
+game.onlineRole = null;
+game.mode = "cpu";
+game.state = "menu";
 
 const safeReplicaX = game.fighterTwo.x;
 game.applyFighterSnapshot(game.fighterTwo, {
@@ -658,11 +681,7 @@ game.returnToMenu();
 modeButtons[0].dispatch("click");
 assert.equal(selectors.get("#menu-screen").classList.contains("is-hidden"), true);
 
-const sendKey = (type, code) => {
-  for (const listener of windowListeners.get(type) || []) {
-    listener({ code, repeat: false, preventDefault() {} });
-  }
-};
+const sendKey = dispatchWindowKey;
 
 const tapFrames = new Map([
   [130, "KeyT"],

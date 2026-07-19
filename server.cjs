@@ -260,6 +260,11 @@ function createNeonBrawlServer({
         return;
       }
 
+      if (message.type === "matchReady") {
+        relayMatchMessage(player, { type: "remoteReady" }, "guest", "host");
+        return;
+      }
+
       if (message.type === "snapshot") {
         if (!message.snapshot || typeof message.snapshot !== "object") return;
         relayMatchMessage(player, {

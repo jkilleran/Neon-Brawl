@@ -2,6 +2,7 @@
 
 const assert = require("node:assert/strict");
 const WebSocket = require("ws");
+global.WebSocket = WebSocket;
 const { createNeonBrawlServer, sanitizeInput, sanitizeName } = require("../server.cjs");
 const { NeonBrawlOnlineClient, latencyQuality } = require("../online-client.js");
 
@@ -13,13 +14,27 @@ assert.equal(latencyQuality(95), "fair");
 assert.equal(latencyQuality(180), "high");
 assert.equal(latencyQuality(null), "unknown");
 const clientEvents = [];
+const protocolMessages = [];
 const protocolClient = new NeonBrawlOnlineClient({
   challengeSent: (opponent) => clientEvents.push(["sent", opponent.name]),
   challengeDeclined: (opponent) => clientEvents.push(["declined", opponent.name]),
+  remoteReady: () => clientEvents.push(["ready"]),
 });
+protocolClient.socket = {
+  readyState: WebSocket.OPEN,
+  send: (raw) => protocolMessages.push(JSON.parse(raw)),
+};
 protocolClient.receive({ type: "challengeSent", to: { id: "vex", name: "Friend" } });
 protocolClient.receive({ type: "challengeDeclined", by: { id: "vex", name: "Friend" } });
-assert.deepEqual(clientEvents, [["sent", "Friend"], ["declined", "Friend"]]);
+protocolClient.receive({
+  type: "matchStart",
+  role: "guest",
+  matchId: "match-1",
+  opponent: { id: "rook", name: "Johan" },
+});
+protocolClient.receive({ type: "remoteReady" });
+assert.deepEqual(clientEvents, [["sent", "Friend"], ["declined", "Friend"], ["ready"]]);
+assert.deepEqual(protocolMessages, [{ type: "matchReady" }], "A guest should request a fresh initial snapshot");
 assert.deepEqual(sanitizeInput({ move: 5, leftPunch: 1, takedown: true }), {
   move: 1,
   guardHigh: false,
@@ -110,6 +125,9 @@ function testClient(url) {
     assert.equal(hostMatch.role, "host");
     assert.equal(guestMatch.role, "guest");
     assert.equal(hostMatch.matchId, guestMatch.matchId);
+
+    vex.send({ type: "matchReady" });
+    await rook.waitFor(({ type }) => type === "remoteReady");
 
     vex.send({
       type: "input",
