@@ -2,7 +2,6 @@
   "use strict";
 
   const LATENCY_PROBE_INTERVAL_MS = 1_000;
-  const MAX_REALTIME_BUFFER_BYTES = 24 * 1024;
 
   function latencyQuality(latencyMs) {
     if (!Number.isFinite(latencyMs)) return "unknown";
@@ -136,16 +135,10 @@
           this.matchId = message.matchId;
           this.opponent = message.opponent;
           this.emit("match", message);
-          if (message.role === "guest") this.send({ type: "matchReady" });
-          break;
-        case "remoteInput":
-          this.emit("remoteInput", message);
+          this.send({ type: "matchReady" });
           break;
         case "snapshot":
           this.emit("snapshot", message);
-          break;
-        case "remoteReady":
-          this.emit("remoteReady", message);
           break;
         case "latencyPong":
           this.receiveLatencyPong(message);
@@ -237,11 +230,6 @@
 
     sendInput(input, sequence) {
       return this.send({ type: "input", input, sequence });
-    }
-
-    sendSnapshot(snapshot, sequence) {
-      if ((this.socket?.bufferedAmount ?? 0) > MAX_REALTIME_BUFFER_BYTES) return false;
-      return this.send({ type: "snapshot", snapshot, sequence });
     }
 
     leaveMatch() {

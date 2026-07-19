@@ -1,17 +1,18 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const combatConfig = require("../combat-config.js");
 const animationManifest = require("../animation-manifest.js");
+const { OnlineMatchSimulation } = require("../online-simulation.cjs");
 
 const markup = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 const gameSource = fs.readFileSync(path.join(__dirname, "..", "game.js"), "utf8");
-const onlineClientSource = fs.readFileSync(path.join(__dirname, "..", "online-client.js"), "utf8");
 const onlineServerSource = fs.readFileSync(path.join(__dirname, "..", "server.cjs"), "utf8");
 assert.match(markup, /pause-controls-grid/, "Pause menu should expose the complete controls");
 assert.match(markup, /WASD \+ TYGH/, "Pause menu should list Player 1 controls");
 assert.match(markup, /FLECHAS \+ IOKL/, "Pause menu should list Player 2 controls");
 assert.match(markup, /SPACE \/ SHIFT<\/kbd><span>mantener \+ cualquier golpe/, "Pause menu should explain the body modifier");
-assert.match(markup, /animation-manifest\.js[\s\S]*game\.js/, "Animation manifest must load before the game");
+assert.match(markup, /combat-config\.js[\s\S]*animation-manifest\.js[\s\S]*game\.js/, "Shared combat config and animation manifest must load before the game");
 assert.match(markup, /Tres asaltos de 3 minutos/, "Menu should explain round duration");
 assert.match(markup, /data-mode="practice"/, "Menu should expose practice mode");
 assert.match(markup, /data-mode="online"/, "Menu should expose online mode");
@@ -23,12 +24,12 @@ assert.match(markup, /id="result-scorecard"/, "Result screen should expose the p
 assert.match(markup, /online-client\.js[\s\S]*game\.js/, "Online client must load before the game");
 assert.match(markup, /Sin reloj · daño visible por golpe/, "Practice mode should explain its damage display");
 assert.match(markup, /brillante = stamina actual · tenue = límite recuperable/, "Pause menu should explain both stamina layers");
-assert.match(gameSource, /ONLINE_SNAPSHOT_INTERVAL = 1 \/ 45/, "Online snapshots should run at 45 Hz");
-assert.match(gameSource, /guestInputSequence: this\.onlineProcessedInputSequence/, "Snapshots should acknowledge processed guest inputs");
-assert.match(gameSource, /predictOnlineGuestInput/, "Guests should predict their own controls locally");
+assert.equal(combatConfig.snapshotHz, 30, "Server snapshots should use a bandwidth-safe 30 Hz cadence");
+assert.equal(combatConfig.simulationHz, 60, "The neutral server simulation should use a fixed 60 Hz step");
+assert.match(gameSource, /predictOnlineLocalInput/, "Both players should predict their own controls locally");
+assert.match(onlineServerSource, /authority: "server"/, "The Node service should own authoritative match state");
 assert.match(gameSource, /ONLINE_MAX_EXTRAPOLATION_SECONDS = 0\.2/, "Remote motion extrapolation should be bounded");
 assert.match(gameSource, /sendOnlineInputNow/, "Guest controls should support immediate input delivery");
-assert.match(onlineClientSource, /MAX_REALTIME_BUFFER_BYTES = 24 \* 1024/, "The client should shed stale snapshots early");
 assert.match(onlineServerSource, /MAX_REALTIME_BUFFER_BYTES = 24 \* 1024/, "The relay should shed stale snapshots early");
 assert.match(
   gameSource,
@@ -258,11 +259,15 @@ global.requestAnimationFrame = (callback) => {
 
 const { game, ATTACKS } = require("../game.js");
 
-game.onlineRemoteInput = { ...game.emptyInput(), move: -1 };
-game.fighterTwo.facing = -1;
-assert.equal(game.consumeOnlineRemoteInput().move, -1, "Guest A must advance the right-side fighter toward the left");
-game.onlineRemoteInput.move = 1;
-assert.equal(game.consumeOnlineRemoteInput().move, 1, "Guest D must retreat the right-side fighter toward the right");
+for (const [attackId, serverDefinition] of Object.entries(combatConfig.attacks)) {
+  for (const [field, value] of Object.entries(serverDefinition)) {
+    assert.equal(
+      ATTACKS[attackId][field],
+      value,
+      `${attackId}.${field} must share one browser/server combat definition`,
+    );
+  }
+}
 
 const dispatchWindowKey = (type, code) => {
   for (const listener of windowListeners.get(type) || []) {
@@ -270,7 +275,7 @@ const dispatchWindowKey = (type, code) => {
   }
 };
 game.mode = "online";
-game.onlineRole = "guest";
+game.onlineRole = "player2";
 dispatchWindowKey("keydown", "KeyA");
 assert.equal(game.getOnlineKeyboardInput().move, -1, "Online A must always send screen-left movement");
 dispatchWindowKey("keyup", "KeyA");
@@ -280,17 +285,10 @@ dispatchWindowKey("keyup", "KeyD");
 
 game.fighterOne.resetRound(380, 1);
 game.fighterTwo.resetRound(900, -1);
-game.online = { latencyMs: 160, jitterMs: 18, sendSnapshot() { return true; } };
+game.online = { latencyMs: 160, jitterMs: 18 };
 game.state = "fighting";
-game.onlineInputSequence = 42;
-game.onlineProcessedInputSequence = 42;
-assert.equal(
-  game.createOnlineSnapshot().guestInputSequence,
-  42,
-  "The host snapshot must acknowledge the newest guest input sequence",
-);
 
-game.predictOnlineGuestInput({
+game.predictOnlineLocalInput({
   ...game.emptyInput(),
   leftPunch: true,
 }, 43);
@@ -310,7 +308,7 @@ game.reconcilePredictedAttack(null);
 assert.equal(game.onlinePredictedAttack, null, "A completed host strike should clear its prediction");
 assert.equal(game.fighterTwo.attack, null, "Host completion should not leave a phantom strike");
 
-game.predictOnlineGuestInput({
+game.predictOnlineLocalInput({
   ...game.emptyInput(),
   rightPunch: true,
 }, 44);
@@ -324,7 +322,7 @@ game.fighterTwo.x = 900;
 game.fighterTwo.velocityX = 0;
 game.onlinePositionTargets.fighterTwo = null;
 dispatchWindowKey("keydown", "KeyA");
-game.updateOnlineGuestPrediction(1 / 60);
+game.updateOnlineLocalPrediction(1 / 60);
 dispatchWindowKey("keyup", "KeyA");
 assert(game.fighterTwo.x < 900, "The challenged player should see advancing movement immediately");
 
@@ -333,27 +331,47 @@ game.fighterTwo.velocityX = 0;
 game.onlinePositionTargets.fighterTwo = { x: 850, velocityX: 0, age: 0 };
 game.onlineLastControlChangeSequence = 50;
 game.onlineLastAcknowledgedInput = 49;
-game.updateOnlineGuestPrediction(1 / 60);
+game.updateOnlineLocalPrediction(1 / 60);
 assert.equal(
   game.fighterTwo.x,
   900,
   "A stale snapshot must not pull against a newer local direction change",
 );
 game.onlineLastAcknowledgedInput = 50;
-game.updateOnlineGuestPrediction(1 / 60);
+game.updateOnlineLocalPrediction(1 / 60);
 assert(
   game.fighterTwo.x < 900 && game.fighterTwo.x > 850,
   "Guest reconciliation should correct position smoothly instead of teleporting",
 );
 
-game.onlineRole = "host";
-game.state = "intro";
-game.introTimer = 1;
-game.onlineBackgroundLastTime = 0;
-document.hidden = true;
-game.backgroundOnlineTick(1000 / 30);
-assert(game.introTimer < 1, "A hidden authoritative host must continue advancing the match clock");
-document.hidden = false;
+game.onlineRole = "player1";
+game.fighterOne.resetRound(380, 1);
+game.fighterTwo.resetRound(900, -1);
+game.state = "fighting";
+game.onlinePredictedAttack = null;
+dispatchWindowKey("keydown", "KeyD");
+game.updateOnlineLocalPrediction(1 / 60);
+dispatchWindowKey("keyup", "KeyD");
+assert(game.fighterOne.x > 380, "The challenger should see its advancing movement immediately");
+game.fighterOne.x = 380;
+game.fighterOne.velocityX = 0;
+game.predictOnlineLocalInput({ ...game.emptyInput(), rightPunch: true }, 51);
+assert.equal(game.fighterOne.attack.type, "rightPunchHead", "The challenger should use the same local prediction path");
+game.onlinePredictedAttack = null;
+game.fighterOne.attack = null;
+
+const neutralSnapshot = new OnlineMatchSimulation().snapshot();
+neutralSnapshot.inputAcknowledgements = { player1: 51, player2: 44 };
+game.onlineLastSnapshot = -1;
+game.onlineLastAcknowledgedInput = 0;
+game.applyOnlineSnapshot({ sequence: 1, snapshot: neutralSnapshot });
+assert.equal(game.onlineLastAcknowledgedInput, 51, "Rook should consume its own server acknowledgement");
+game.onlineRole = "player2";
+game.onlineLastSnapshot = -1;
+game.onlineLastAcknowledgedInput = 0;
+game.applyOnlineSnapshot({ sequence: 1, snapshot: neutralSnapshot });
+assert.equal(game.onlineLastAcknowledgedInput, 44, "Vex should consume its own server acknowledgement");
+
 game.onlineRole = null;
 game.mode = "cpu";
 game.state = "menu";

@@ -2,7 +2,7 @@
 
 ## Scope
 
-Online Arena is a deliberately small first multiplayer implementation for friend testing. It prioritizes a stable shared result over competitive rollback networking.
+Online Arena is a deliberately small multiplayer implementation for friend testing. It uses a neutral server authority, fixed simulation steps, and symmetric client prediction. It prioritizes an equal, stable shared result over competitive rollback networking.
 
 The system provides:
 
@@ -20,27 +20,29 @@ The deployment uses one Node Web Service:
 
 ```text
 Browser A ──┐                    ┌─ Vite production files
-            ├─ HTTPS/WSS ─ Node ┤
-Browser B ──┘                    └─ /ws lobby and match relay
+            ├─ HTTPS/WSS ─ Node ┼─ /ws lobby and input transport
+Browser B ──┘                    └─ fixed-step match simulation
 ```
 
-`server.cjs` serves `dist/` through Express and upgrades `/ws` connections with `ws`. Render terminates TLS, so browsers connect with `wss://` in production. The application derives the WebSocket URL from the page origin.
+`server.cjs` serves `dist/` through Express, upgrades `/ws` connections with `ws`, and owns every online match simulation. Render terminates TLS, so browsers connect with `wss://` in production. The application derives the WebSocket URL from the page origin.
 
 The build keeps the complete editable sprite library in Git but removes individual frame directories and archived source revisions from `dist/`. Production therefore deploys only the runtime atlases and small metadata files required by the current fighters.
 
-The player who sends the accepted challenge becomes the authoritative host and controls Rook. The challenged player is the guest and controls Vex. The guest sends input messages to the host. Strike and defense key transitions are sent immediately, while a small periodic input stream keeps held controls synchronized. Online movement uses screen directions: `A` always moves left and `D` always moves right. Therefore Vex advances with `A` when starting on the right side and retreats with `D`. The host simulates the match and sends authoritative snapshots at 45 Hz. This prevents independent `Math.random()` calls or frame timing differences from producing different damage and outcomes.
+The challenger controls Rook and the challenged player controls Vex, but neither browser is authoritative. Both send bounded input directly to the Node server. Strike and defense key transitions are sent immediately, while a small periodic stream keeps held controls synchronized. The server advances all matches at a fixed 60 Hz and broadcasts the same authoritative frame to both players at 30 Hz. Random damage outcomes, stamina, blocks, criticals, knockdowns, knockouts, the clock, and scorecards are therefore decided once in a neutral location.
+
+Online movement uses screen directions: `A` always moves left and `D` always moves right. Therefore Vex advances with `A` when starting on the right side and retreats with `D`.
 
 Version 0.16.2 validates replicated coordinates, facing, attack identifiers, timers, and animation identifiers before drawing them. Invalid state is ignored or replaced with a safe idle frame, so a malformed or partially serialized snapshot cannot make a fighter disappear or stop the Canvas loop.
 
-Version 0.16.3 adds a guest-ready handshake that requests a fresh initial snapshot after the guest has entered the match. It also moves authoritative host simulation to a small worker-driven background clock while the host tab is hidden. This avoids the browser's background `requestAnimationFrame` suspension leaving the guest on `READY` during two-tab testing.
+Version 0.16.3 added a guest-ready handshake and browser-host background clock. Version 0.18.0 supersedes both with a two-player ready barrier and server clock. A hidden, throttled, or slower browser can no longer pause the other player's match simulation.
 
-Version 0.17.0 removes the largest host/guest responsiveness difference with guest-side prediction. Vex now applies its own movement, guard changes, and strike animation startup immediately instead of waiting for a round trip through the server and host. Every host snapshot acknowledges the latest guest input sequence that the simulation has processed. The guest only reconciles against a snapshot that includes its latest real control change, preventing an older state from pulling against a new direction. Reconciliation does not rewind strike animation, and invalid predictions are cancelled when the host reports stun, knockdown, or a finished match. Damage, stamina spending, blocks, critical rolls, knockdowns, knockouts, the clock, and scoring remain host-authoritative.
+Version 0.18.0 gives both roles the same local presentation path. Each browser predicts only its own movement, guard changes, and strike startup. Server snapshots acknowledge the latest processed input sequence independently for Rook and Vex. A browser only corrects position against a snapshot that includes its latest real control change, preventing stale state from pulling against a new direction. Reconciliation does not rewind a confirmed strike animation and cancels invalid predictions after authoritative stun, knockdown, rejection, or match completion.
 
-Remote movement is extrapolated from the most recent authoritative velocity using half of the measured RTT plus jitter, with a strict 200 ms ceiling. Corrections use exponential smoothing, while large errors snap to the safe authoritative position. Animation fast-forward is capped at 80 ms so latency compensation cannot skip an entire strike or impact reaction. Snapshot buffers are shed at 24 KiB on both relay hops, prioritizing fresh state over replaying obsolete visual frames after congestion.
+Remote movement is extrapolated from the most recent authoritative velocity using half of the measured RTT plus jitter, with a strict 200 ms ceiling. Corrections use exponential smoothing, while large errors snap to the safe authoritative position. Animation fast-forward is capped at 80 ms so latency compensation cannot skip an entire strike. Server snapshot buffers are shed at 24 KiB, prioritizing fresh state over replaying obsolete visual frames after congestion.
 
 The client sends a one-second application-level probe and measures its round-trip time (RTT) to the game server. The lobby and match HUD display a smoothed RTT and grade it as excellent, good, fair, or high. This is server RTT, not a direct peer-to-peer measurement.
 
-On a local machine, RTT should normally be only a few milliseconds. A delay felt in the first online version was primarily its 20 Hz snapshot cadence and authoritative guest path, not Internet latency. Version 0.16.1 raised snapshots to 30 Hz, sent guest control transitions immediately, disabled TCP packet coalescing on accepted sockets, and dropped obsolete snapshots when either outgoing real-time buffer became congested. Version 0.17.0 raises snapshots to 45 Hz and predicts the guest's local presentation. Inputs are never intentionally dropped.
+On a local machine, RTT should normally be only a few milliseconds. Earlier versions routed the challenged player's input through the challenger's browser and sent state only in the opposite direction. Version 0.18.0 removes that asymmetric path. Both players now travel client → server for input and server → client for state, and both receive the same 30 Hz frame generated by a 60 Hz simulation. Inputs are never intentionally dropped.
 
 Prediction reduces perceived input delay but cannot remove physical network latency. Under high RTT, the guest sees their control response immediately, while the authoritative result of contact still arrives after network transit. Hosting Render in a region near both players and keeping exactly one instance remain the most effective deployment choices.
 
@@ -49,7 +51,7 @@ Prediction reduces perceived input delay but cannot remove physical network late
 - Lobby and matches are held in memory; a deployment restart clears them.
 - Use exactly one Render instance. Multiple instances would need shared presence/match state through Redis or another broker.
 - There is no account, rating, password, private-room code, spectator mode, rollback, or host migration yet.
-- If the authoritative host disconnects, the match ends and the guest returns to matchmaking.
+- If either player disconnects, the match ends and the remaining player returns to matchmaking.
 - This version is intended for friend testing, not hostile public matchmaking.
 
 ## Protocol summary
@@ -62,14 +64,14 @@ Client messages:
 | `challenge` | Client → server | Challenge one available player |
 | `acceptChallenge` | Client → server | Accept a specific incoming challenge |
 | `declineChallenge` | Client → server | Decline a challenge |
-| `input` | Guest → host | Relay horizontal screen direction and bounded combat input |
-| `matchReady` | Guest → host | Confirm the guest can receive the initial authoritative snapshot |
-| `snapshot` | Host → guest | Relay authoritative match state and latest guest-input acknowledgement |
+| `input` | Either client → server | Submit horizontal screen direction and bounded combat input |
+| `matchReady` | Either client → server | Join the two-player ready barrier |
+| `snapshot` | Server → both clients | Broadcast one neutral match frame and per-player input acknowledgements |
 | `leaveMatch` | Client → server | End pairing and return to the lobby |
 | `latencyProbe` | Client → server | Start an application RTT sample |
 | `latencyPong` | Server → client | Complete an RTT sample |
 
-The server caps WebSocket payloads, sanitizes names and inputs, disables network takedown requests, and only relays match traffic from the assigned role to its assigned opponent. Snapshot shedding prevents old visual states from forming a growing queue on a slow client; the next fresh authoritative snapshot replaces any skipped state.
+The server caps WebSocket payloads, sanitizes names and inputs, disables network takedown requests, and rejects client-generated snapshots. Snapshot shedding prevents old visual states from forming a growing queue on a slow client; the next fresh authoritative snapshot replaces any skipped state.
 
 ## Test locally
 
@@ -132,6 +134,7 @@ Render requires the public server to bind to `0.0.0.0` and the `PORT` environmen
 ```json
 {
   "ok": true,
+  "authority": "server",
   "connectedPlayers": 0,
   "activeMatches": 0
 }
@@ -145,7 +148,7 @@ npm test
 npm run build
 ```
 
-The online integration test creates two real WebSocket clients and verifies latency probes, registration, lobby presence, challenge acceptance, host/guest assignment, input relay, snapshot relay, and return to matchmaking.
+The online tests verify fixed-step simulation, mirrored movement, simultaneous strikes without challenger priority, per-player acknowledgements, two real WebSocket clients receiving identical snapshots, rejected client authority, latency probes, lobby flow, and return to matchmaking.
 
 ## References
 

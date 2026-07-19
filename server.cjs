@@ -6,6 +6,8 @@ const path = require("node:path");
 const fs = require("node:fs");
 const express = require("express");
 const { WebSocket, WebSocketServer } = require("ws");
+const COMBAT_CONFIG = require("./combat-config.js");
+const { OnlineMatchSimulation, FIXED_DELTA } = require("./online-simulation.cjs");
 
 const MAX_NAME_LENGTH = 18;
 const MAX_MESSAGE_BYTES = 128 * 1024;
@@ -58,6 +60,7 @@ function createNeonBrawlServer({
   app.get("/healthz", (_request, response) => {
     response.json({
       ok: true,
+      authority: "server",
       connectedPlayers: players.size,
       activeMatches: matches.size,
     });
@@ -113,7 +116,7 @@ function createNeonBrawlServer({
     if (!player) return;
     const match = player.matchId ? matches.get(player.matchId) : null;
     if (match) {
-      const opponentId = match.hostId === player.id ? match.guestId : match.hostId;
+      const opponentId = match.playerOneId === player.id ? match.playerTwoId : match.playerOneId;
       const opponent = players.get(opponentId);
       matches.delete(match.id);
       if (opponent) {
@@ -133,43 +136,57 @@ function createNeonBrawlServer({
   function startMatch(challenger, challenged) {
     const match = {
       id: crypto.randomUUID(),
-      hostId: challenger.id,
-      guestId: challenged.id,
+      playerOneId: challenger.id,
+      playerTwoId: challenged.id,
       createdAt: Date.now(),
+      simulation: new OnlineMatchSimulation(),
+      readyRoles: new Set(),
+      accumulator: 0,
+      snapshotAccumulator: 0,
+      snapshotSequence: 0,
+      completedSnapshotSent: false,
     };
     matches.set(match.id, match);
     challenger.status = "playing";
     challenger.matchId = match.id;
-    challenger.role = "host";
+    challenger.role = "player1";
     challenged.status = "playing";
     challenged.matchId = match.id;
-    challenged.role = "guest";
+    challenged.role = "player2";
     removePendingChallenges(challenger.id);
     removePendingChallenges(challenged.id);
 
     send(challenger, {
       type: "matchStart",
       matchId: match.id,
-      role: "host",
+      role: "player1",
       playerNumber: 1,
       opponent: { id: challenged.id, name: challenged.name },
     });
     send(challenged, {
       type: "matchStart",
       matchId: match.id,
-      role: "guest",
+      role: "player2",
       playerNumber: 2,
       opponent: { id: challenger.id, name: challenger.name },
     });
     broadcastLobby();
   }
 
-  function relayMatchMessage(player, payload, expectedRole, destinationRole, options) {
-    if (!player.matchId || player.role !== expectedRole) return;
-    const match = matches.get(player.matchId);
-    if (!match) return;
-    const destinationId = destinationRole === "host" ? match.hostId : match.guestId;
-    send(players.get(destinationId), payload, options);
+  function sendMatchSnapshot(match, force = false) {
+    if (!match || match.readyRoles.size < 2) return false;
+    const snapshotInterval = 1 / COMBAT_CONFIG.snapshotHz;
+    if (!force && match.snapshotAccumulator < snapshotInterval) return false;
+    match.snapshotAccumulator = force ? 0 : match.snapshotAccumulator % snapshotInterval;
+    match.snapshotSequence += 1;
+    const payload = {
+      type: "snapshot",
+      sequence: match.snapshotSequence,
+      snapshot: match.simulation.snapshot(),
+    };
+    const playerOneSent = send(players.get(match.playerOneId), payload, { dropIfBusy: !force });
+    const playerTwoSent = send(players.get(match.playerTwoId), payload, { dropIfBusy: !force });
+    return playerOneSent || playerTwoSent;
   }
 
   wss.on("error", (error) => logger.warn?.("WebSocket server error:", error.message));
@@ -252,26 +269,35 @@ function createNeonBrawlServer({
       }
 
       if (message.type === "input") {
-        relayMatchMessage(player, {
-          type: "remoteInput",
-          sequence: Number(message.sequence) || 0,
-          input: sanitizeInput(message.input),
-        }, "guest", "host");
+        if (!player.matchId || !player.role) return;
+        const match = matches.get(player.matchId);
+        if (!match) return;
+        match.simulation.receiveInput(
+          player.role,
+          sanitizeInput(message.input),
+          Number(message.sequence) || 0,
+        );
         return;
       }
 
       if (message.type === "matchReady") {
-        relayMatchMessage(player, { type: "remoteReady" }, "guest", "host");
+        if (!player.matchId || !player.role) return;
+        const match = matches.get(player.matchId);
+        if (!match) return;
+        match.readyRoles.add(player.role);
+        if (match.readyRoles.size === 2 && !match.simulation.active) {
+          match.simulation.activate();
+          sendMatchSnapshot(match, true);
+        }
         return;
       }
 
       if (message.type === "snapshot") {
-        if (!message.snapshot || typeof message.snapshot !== "object") return;
-        relayMatchMessage(player, {
-          type: "snapshot",
-          sequence: Number(message.sequence) || 0,
-          snapshot: message.snapshot,
-        }, "host", "guest", { dropIfBusy: true });
+        send(player, {
+          type: "error",
+          code: "SERVER_AUTHORITY",
+          message: "Match snapshots are generated by the server.",
+        });
         return;
       }
 
@@ -285,7 +311,7 @@ function createNeonBrawlServer({
       if (matchId) {
         const match = matches.get(matchId);
         if (match) {
-          const opponentId = match.hostId === player.id ? match.guestId : match.hostId;
+          const opponentId = match.playerOneId === player.id ? match.playerTwoId : match.playerOneId;
           const opponent = players.get(opponentId);
           matches.delete(matchId);
           if (opponent) {
@@ -312,6 +338,31 @@ function createNeonBrawlServer({
   }, HEARTBEAT_INTERVAL_MS);
   heartbeat.unref?.();
 
+  let previousSimulationTime = performance.now();
+  const simulationTicker = setInterval(() => {
+    const now = performance.now();
+    const elapsed = Math.min(Math.max(0, (now - previousSimulationTime) / 1000), 0.1);
+    previousSimulationTime = now;
+    for (const match of matches.values()) {
+      if (match.readyRoles.size < 2) continue;
+      if (match.completedSnapshotSent) continue;
+      match.accumulator += elapsed;
+      match.snapshotAccumulator += elapsed;
+      let steps = 0;
+      while (match.accumulator >= FIXED_DELTA && steps < 6) {
+        match.simulation.update(FIXED_DELTA);
+        match.accumulator -= FIXED_DELTA;
+        steps += 1;
+      }
+      if (steps >= 6) match.accumulator = 0;
+      if (match.simulation.state === "matchOver") {
+        sendMatchSnapshot(match, true);
+        match.completedSnapshotSent = true;
+      } else sendMatchSnapshot(match);
+    }
+  }, 1000 / COMBAT_CONFIG.simulationHz);
+  simulationTicker.unref?.();
+
   function start() {
     return new Promise((resolve, reject) => {
       server.once("error", reject);
@@ -326,6 +377,7 @@ function createNeonBrawlServer({
 
   function stop() {
     clearInterval(heartbeat);
+    clearInterval(simulationTicker);
     for (const ws of wss.clients) ws.close(1001, "Server shutting down");
     return new Promise((resolve) => wss.close(() => server.close(resolve)));
   }

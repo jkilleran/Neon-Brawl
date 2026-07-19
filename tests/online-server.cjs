@@ -18,7 +18,6 @@ const protocolMessages = [];
 const protocolClient = new NeonBrawlOnlineClient({
   challengeSent: (opponent) => clientEvents.push(["sent", opponent.name]),
   challengeDeclined: (opponent) => clientEvents.push(["declined", opponent.name]),
-  remoteReady: () => clientEvents.push(["ready"]),
 });
 protocolClient.socket = {
   readyState: WebSocket.OPEN,
@@ -28,13 +27,12 @@ protocolClient.receive({ type: "challengeSent", to: { id: "vex", name: "Friend" 
 protocolClient.receive({ type: "challengeDeclined", by: { id: "vex", name: "Friend" } });
 protocolClient.receive({
   type: "matchStart",
-  role: "guest",
+  role: "player2",
   matchId: "match-1",
   opponent: { id: "rook", name: "Johan" },
 });
-protocolClient.receive({ type: "remoteReady" });
-assert.deepEqual(clientEvents, [["sent", "Friend"], ["declined", "Friend"], ["ready"]]);
-assert.deepEqual(protocolMessages, [{ type: "matchReady" }], "A guest should request a fresh initial snapshot");
+assert.deepEqual(clientEvents, [["sent", "Friend"], ["declined", "Friend"]]);
+assert.deepEqual(protocolMessages, [{ type: "matchReady" }], "Every player should confirm that its renderer is ready");
 assert.deepEqual(sanitizeInput({ move: 5, leftPunch: 1, takedown: true }), {
   move: 1,
   guardHigh: false,
@@ -97,6 +95,13 @@ function testClient(url) {
     logger: { log() {}, warn() {} },
   });
   const address = await onlineServer.start();
+  const health = await fetch(`http://127.0.0.1:${address.port}/healthz`).then((response) => response.json());
+  assert.deepEqual(health, {
+    ok: true,
+    authority: "server",
+    connectedPlayers: 0,
+    activeMatches: 0,
+  });
   const url = `ws://127.0.0.1:${address.port}/ws`;
   const rook = testClient(url);
   const vex = testClient(url);
@@ -122,40 +127,59 @@ function testClient(url) {
     vex.send({ type: "acceptChallenge", challengerId: rookWelcome.id });
     const hostMatch = await rook.waitFor(({ type }) => type === "matchStart");
     const guestMatch = await vex.waitFor(({ type }) => type === "matchStart");
-    assert.equal(hostMatch.role, "host");
-    assert.equal(guestMatch.role, "guest");
+    assert.equal(hostMatch.role, "player1");
+    assert.equal(guestMatch.role, "player2");
     assert.equal(hostMatch.matchId, guestMatch.matchId);
 
+    rook.send({ type: "matchReady" });
     vex.send({ type: "matchReady" });
-    await rook.waitFor(({ type }) => type === "remoteReady");
+    const hostInitial = await rook.waitFor((message) => message.type === "snapshot");
+    const guestInitial = await vex.waitFor(
+      (message) => message.type === "snapshot" && message.sequence === hostInitial.sequence,
+    );
+    assert.equal(hostInitial.snapshot.authority, "server");
+    assert.deepEqual(hostInitial.snapshot, guestInitial.snapshot, "Both clients must receive identical authority state");
 
+    rook.send({
+      type: "input",
+      sequence: 5,
+      input: { move: 1 },
+    });
     vex.send({
       type: "input",
       sequence: 7,
       input: { move: -3, rightKick: true, bodyModifier: true, takedown: true },
     });
-    const remoteInput = await rook.waitFor((message) => message.type === "remoteInput" && message.sequence === 7);
-    assert.equal(remoteInput.input.move, -1);
-    assert.equal(remoteInput.input.rightKick, true);
-    assert.equal(remoteInput.input.bodyModifier, true);
-    assert.equal(remoteInput.input.takedown, false);
+    const authoritativeHost = await rook.waitFor(
+      (message) => message.type === "snapshot"
+        && message.snapshot.inputAcknowledgements?.player1 >= 5
+        && message.snapshot.inputAcknowledgements?.player2 >= 7,
+      5000,
+    );
+    const authoritativeGuest = await vex.waitFor(
+      (message) => message.type === "snapshot" && message.sequence === authoritativeHost.sequence,
+      5000,
+    );
+    assert.deepEqual(
+      authoritativeHost.snapshot,
+      authoritativeGuest.snapshot,
+      "Challenger and challenged player must observe the same processed frame",
+    );
+    assert(authoritativeHost.snapshot.fighterOne.x > 380, "Host input should be simulated by the server");
+    assert(authoritativeHost.snapshot.fighterTwo.x < 900, "Guest input should be simulated by the server");
 
-    const sampleSnapshot = {
-      state: "fighting",
-      round: 1,
-      timer: 179.5,
-      guestInputSequence: 7,
-    };
-    rook.send({ type: "snapshot", sequence: 11, snapshot: sampleSnapshot });
-    const snapshot = await vex.waitFor((message) => message.type === "snapshot" && message.sequence === 11);
-    assert.deepEqual(snapshot.snapshot, sampleSnapshot);
+    rook.send({ type: "snapshot", sequence: 99, snapshot: {} });
+    const rejectedAuthority = await rook.waitFor(
+      (message) => message.type === "error" && message.code === "SERVER_AUTHORITY",
+    );
+    assert.match(rejectedAuthority.message, /server/i);
 
     vex.send({ type: "leaveMatch" });
     const opponentLeft = await rook.waitFor(({ type }) => type === "opponentLeft");
     assert.match(opponentLeft.reason, /lobby/i);
     await rook.waitFor((message) => message.type === "lobby" && message.searchingCount === 2);
 
-    console.log("Online server test passed: latency probe, lobby, challenge, roles, input relay, snapshots and lobby return.");
+    console.log("Online server test passed: neutral authority, symmetric snapshots, both inputs, latency and lobby return.");
   } finally {
     await Promise.all([rook.close(), vex.close()]);
     await onlineServer.stop();
