@@ -405,12 +405,51 @@ assert.equal(game.fighterOne.guardBlend, 1, "Guard release should continue from 
 game.updateOnlineLocalPrediction(1 / 60);
 assert(game.fighterOne.guardBlend < 1 && game.fighterOne.guardBlend > 0, "Guard release should animate smoothly");
 
-const queuedOlder = { sequence: 5, snapshot: staleGuardSnapshot };
-const queuedNewer = { sequence: 6, snapshot: staleGuardSnapshot };
+const completedAttack = {
+  type: "leftPunchHead",
+  elapsed: 0.34,
+  connected: false,
+  inefficientPenaltyApplied: false,
+  facing: 1,
+  stationaryStart: true,
+};
+game.fighterOne.attack = null;
+game.fighterOne.guard = "high";
+game.fighterOne.guardVisual = "high";
+game.fighterOne.guardBlend = 0.6;
+game.onlinePredictedAttack = {
+  sequence: 70,
+  type: "leftPunchHead",
+  attack: completedAttack,
+  elapsed: 0.34,
+  totalDuration: 0.34,
+  completed: true,
+  acknowledged: true,
+  acknowledgedElapsed: 0.2,
+  authoritySeen: true,
+};
+dispatchWindowKey("keydown", "KeyW");
+const delayedRecoverySnapshot = new OnlineMatchSimulation().snapshot();
+delayedRecoverySnapshot.state = "fighting";
+delayedRecoverySnapshot.inputAcknowledgements.player1 = 70;
+delayedRecoverySnapshot.fighterOne.attack = { ...completedAttack, elapsed: 0.25 };
+delayedRecoverySnapshot.fighterOne.guard = null;
+delayedRecoverySnapshot.fighterOne.guardVisual = null;
+delayedRecoverySnapshot.fighterOne.guardBlend = 0;
+game.onlineLastSnapshot = 9;
+game.applyOnlineSnapshot({ sequence: 10, snapshot: delayedRecoverySnapshot });
+assert.equal(game.fighterOne.attack, null, "A delayed recovery snapshot must not replay a completed strike");
+assert.equal(game.fighterOne.guard, "high", "Guard should resume immediately after the predicted strike completes");
+assert.equal(game.fighterOne.guardBlend, 0.6, "Strike recovery snapshots must not restart the guard transition");
+dispatchWindowKey("keyup", "KeyW");
+game.onlinePredictedAttack = null;
+
+const queuedOlder = { sequence: 11, snapshot: staleGuardSnapshot };
+const queuedNewer = { sequence: 12, snapshot: staleGuardSnapshot };
 game.onlinePendingSnapshot = null;
 game.queueOnlineSnapshot(queuedNewer);
 game.queueOnlineSnapshot(queuedOlder);
-assert.equal(game.onlinePendingSnapshot.sequence, 6, "Snapshot bursts should retain only the newest state");
+assert.equal(game.onlinePendingSnapshot.sequence, 12, "Snapshot bursts should retain only the newest state");
 game.onlinePendingSnapshot = null;
 
 game.onlineRole = null;

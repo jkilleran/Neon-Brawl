@@ -2161,6 +2161,7 @@
       const localCanPredict = this.state === "fighting"
         && localFighter.knockdownTimer <= 0
         && !localFighter.finishAnimation;
+      this.reconcilePredictedAttack(snapshot[localKey]?.attack ?? null);
       if (hadSnapshot) {
         remoteFighter.x = previousPositions[remoteKey].x;
         if (localCanPredict) {
@@ -2174,11 +2175,13 @@
           remoteFighter.guard,
         );
         const localInput = this.getOnlineKeyboardInput(false);
+        const predictedAttackAllowsGuard = !this.onlinePredictedAttack
+          || this.onlinePredictedAttack.completed;
         const localGuardCanPredict = localCanPredict
           && localFighter.stun <= 0
           && localFighter.evadeTimer <= 0
           && !localFighter.attack
-          && !this.onlinePredictedAttack;
+          && predictedAttackAllowsGuard;
         if (localGuardCanPredict) {
           const desiredGuard = localInput.guardHigh ? "high" : localInput.guardLow ? "low" : null;
           this.reconcileGuardPresentation(
@@ -2188,7 +2191,6 @@
           );
         }
       }
-      this.reconcilePredictedAttack(snapshot[localKey]?.attack ?? null);
       this.matchWinner = snapshot.matchWinner === 1
         ? this.fighterOne
         : snapshot.matchWinner === 2

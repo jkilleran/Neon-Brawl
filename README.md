@@ -57,6 +57,7 @@ The first online version includes:
 - 30 Hz authoritative snapshots sent from the same server frame to both players;
 - identical local prediction for each player's movement, guard changes, and strike animation startup;
 - non-rewinding guard transitions with smooth ten-frame interpolation for local and remote fighters;
+- stable strike-to-guard recovery even when the authoritative attack snapshot arrives late;
 - per-player input acknowledgements, bounded motion extrapolation, and smooth reconciliation;
 - screen-direction WASD online movement (`A` left, `D` right), including the right-side fighter;
 - defensive snapshot validation and visual fallbacks so malformed remote state cannot hide a fighter;
