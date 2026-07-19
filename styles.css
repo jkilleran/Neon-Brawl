@@ -500,6 +500,345 @@ h1 em {
   color: var(--muted);
 }
 
+.mode-button--online {
+  border-color: rgba(214, 255, 125, 0.28);
+  background: linear-gradient(90deg, rgba(214, 255, 125, 0.08), rgba(53, 242, 229, 0.025));
+}
+
+.mode-button--online .mode-button__number,
+.mode-button--online .mode-button__arrow {
+  color: var(--lime);
+}
+
+.dialog-card--online {
+  width: min(820px, 92%);
+  max-height: 92%;
+  padding: 26px 30px;
+  overflow: auto;
+  text-align: left;
+}
+
+.online-header,
+.online-roster > header,
+.online-presence,
+.online-challenge,
+.online-challenge > div {
+  display: flex;
+  align-items: center;
+}
+
+.online-header,
+.online-roster > header,
+.online-challenge {
+  justify-content: space-between;
+}
+
+.dialog-card--online h2 {
+  margin-bottom: 4px;
+  font-size: clamp(28px, 4vw, 52px);
+}
+
+.online-presence {
+  gap: 8px;
+  padding: 8px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #77798f;
+  font: 700 8px "Orbitron", sans-serif;
+  letter-spacing: 0.1em;
+}
+
+.online-presence i,
+.online-roster__live::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #66677a;
+  content: "";
+}
+
+.online-presence[data-state="online"] {
+  border-color: rgba(214, 255, 125, 0.28);
+  color: var(--lime);
+}
+
+.online-presence[data-state="online"] i,
+.online-roster__live::before {
+  background: var(--lime);
+  box-shadow: 0 0 12px var(--lime);
+}
+
+.online-presence[data-state="error"] {
+  border-color: rgba(255, 59, 157, 0.35);
+  color: var(--pink);
+}
+
+.online-connect-form {
+  margin: 18px 0;
+  padding: 14px;
+  border: 1px solid rgba(53, 242, 229, 0.15);
+  background: rgba(53, 242, 229, 0.035);
+}
+
+.online-connect-form label {
+  display: block;
+  margin-bottom: 8px;
+  color: #76788f;
+  font: 700 8px "Orbitron", sans-serif;
+  letter-spacing: 0.14em;
+}
+
+.online-connect-form > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px;
+  gap: 8px;
+}
+
+.online-connect-form input {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  outline: 0;
+  background: rgba(2, 2, 10, 0.82);
+  color: #f4f5ff;
+  padding: 0 14px;
+  font: 700 12px "Orbitron", sans-serif;
+  text-transform: uppercase;
+}
+
+.online-connect-form input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 18px rgba(53, 242, 229, 0.12);
+}
+
+.online-connect-form .dialog-button {
+  margin-top: 0;
+}
+
+.online-roster {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(3, 3, 12, 0.65);
+}
+
+.online-roster > header {
+  padding: 13px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.online-roster > header strong,
+.online-roster > header small {
+  display: block;
+}
+
+.online-roster > header strong {
+  color: #f5f5ff;
+  font: 700 14px "Orbitron", sans-serif;
+}
+
+.online-roster > header strong span {
+  color: var(--cyan);
+}
+
+.online-roster > header small {
+  margin-top: 3px;
+  color: #616278;
+  font-size: 8px;
+  letter-spacing: 0.15em;
+}
+
+.online-roster__live {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--lime);
+  font: 700 8px "Orbitron", sans-serif;
+}
+
+.online-player-list {
+  display: grid;
+  max-height: 245px;
+  overflow: auto;
+}
+
+.online-player,
+.online-empty {
+  min-height: 55px;
+  margin: 0 !important;
+  padding: 10px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.online-player {
+  display: grid;
+  grid-template-columns: 9px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+}
+
+.online-player > i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 9px var(--cyan);
+}
+
+.online-player strong,
+.online-player small {
+  display: block;
+}
+
+.online-player strong {
+  color: #dfe0ee;
+  font: 700 11px "Orbitron", sans-serif;
+}
+
+.online-player small {
+  margin-top: 3px;
+  color: #5e6074;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+
+.online-player button {
+  min-width: 112px;
+  min-height: 32px;
+  margin: 0;
+  padding: 0 10px;
+  font-size: 8px;
+}
+
+.online-player--self button {
+  border-color: rgba(214, 255, 125, 0.2);
+  color: var(--lime);
+  cursor: default;
+}
+
+.online-empty {
+  display: grid;
+  place-items: center;
+  color: #66687c !important;
+  font-size: 10px;
+}
+
+.online-challenge {
+  gap: 15px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 59, 157, 0.35);
+  background: rgba(255, 59, 157, 0.07);
+}
+
+.online-challenge p {
+  margin: 0 !important;
+}
+
+.online-challenge small,
+.online-challenge strong {
+  display: block;
+}
+
+.online-challenge small {
+  color: var(--pink);
+  font: 700 8px "Orbitron", sans-serif;
+  letter-spacing: 0.14em;
+}
+
+.online-challenge strong {
+  margin-top: 3px;
+  color: #fff;
+  font: 700 13px "Orbitron", sans-serif;
+}
+
+.online-challenge > div {
+  gap: 7px;
+}
+
+.online-challenge .dialog-button {
+  min-width: 110px;
+  min-height: 36px;
+  margin: 0;
+  font-size: 8px;
+}
+
+.dialog-card--online > #online-back {
+  margin-top: 12px;
+}
+
+.dialog-card--result {
+  width: min(920px, 92%);
+  max-height: 92%;
+  overflow: auto;
+}
+
+.result-scorecard {
+  margin: 18px 0 10px;
+  overflow-x: auto;
+}
+
+.scorecard-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #aaacbd;
+  font-size: 9px;
+  text-align: center;
+}
+
+.scorecard-table th,
+.scorecard-table td {
+  padding: 9px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.scorecard-table thead th {
+  color: #67697e;
+  font: 700 8px "Orbitron", sans-serif;
+  letter-spacing: 0.08em;
+}
+
+.scorecard-table tbody th {
+  color: #f1f2fc;
+  font: 700 9px "Orbitron", sans-serif;
+  text-align: left;
+}
+
+.scorecard-table .scorecard-round {
+  background: rgba(53, 242, 229, 0.035);
+  color: var(--cyan);
+}
+
+.scorecard-table .scorecard-winner {
+  color: var(--lime);
+  font-weight: 700;
+}
+
+.scorecard-total {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.scorecard-total article {
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.scorecard-total strong,
+.scorecard-total span {
+  display: block;
+}
+
+.scorecard-total strong {
+  color: #f2f3ff;
+  font: 700 10px "Orbitron", sans-serif;
+}
+
+.scorecard-total span {
+  margin-top: 4px;
+  color: #77798d;
+  font-size: 9px;
+}
+
 .dialog-card--pause {
   width: min(760px, 92%);
   max-height: 94%;
@@ -762,6 +1101,21 @@ h1 em {
     right: -7%;
     width: 48%;
     opacity: 0.47;
+  }
+
+  .online-connect-form > div,
+  .scorecard-total {
+    grid-template-columns: 1fr;
+  }
+
+  .online-header,
+  .online-challenge {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .online-presence {
+    align-self: flex-start;
   }
 
   .menu-copy {

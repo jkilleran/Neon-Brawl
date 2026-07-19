@@ -13,9 +13,23 @@
   const resultKicker = document.querySelector("#result-kicker");
   const resultTitle = document.querySelector("#result-title");
   const resultCopy = document.querySelector("#result-copy");
+  const resultScorecard = document.querySelector("#result-scorecard");
+  const rematchButton = document.querySelector("#rematch-button");
   const combatControls = document.querySelector("#combat-controls");
   const soundButton = document.querySelector("#sound-button");
   const soundIcon = document.querySelector("#sound-icon");
+  const onlineScreen = document.querySelector("#online-screen");
+  const onlineConnectForm = document.querySelector("#online-connect-form");
+  const onlineNameInput = document.querySelector("#online-name");
+  const onlinePresence = document.querySelector("#online-presence");
+  const onlineStatus = document.querySelector("#online-status");
+  const onlinePlayerCount = document.querySelector("#online-player-count");
+  const onlinePlayerList = document.querySelector("#online-player-list");
+  const onlineChallenge = document.querySelector("#online-challenge");
+  const onlineChallengerName = document.querySelector("#online-challenger-name");
+  const onlineAccept = document.querySelector("#online-accept");
+  const onlineDecline = document.querySelector("#online-decline");
+  const onlineBack = document.querySelector("#online-back");
 
   const WIDTH = canvas.width;
   const HEIGHT = canvas.height;
@@ -103,6 +117,26 @@
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const lerp = (from, to, amount) => from + (to - from) * amount;
   const random = (min, max) => Math.random() * (max - min) + min;
+
+  const emptyRoundStats = () => ({
+    thrown: 0,
+    landed: 0,
+    missed: 0,
+    blocked: 0,
+    critical: 0,
+    headLanded: 0,
+    bodyLanded: 0,
+  });
+
+  const ONLINE_FIGHTER_FIELDS = Object.freeze([
+    "x", "facing", "velocityX", "headHealth", "bodyHealth", "displayHead", "displayBody",
+    "stamina", "longTermStamina", "displayStamina", "displayStaminaCap", "attack", "guard",
+    "guardBlend", "guardVisual", "stun", "evadeTimer", "evadeCooldown", "invulnerable",
+    "knockdownTimer", "knockdownDuration", "knockdownTarget", "knockdownAnimation",
+    "finishAnimation", "roundDamage", "takedowns", "knockdownsScored", "knockdownsSuffered",
+    "moveFlash", "impactMarker", "hitReaction", "blockReaction", "animationTime", "roundWins",
+    "matchScore", "roundStats", "practiceResetTimer",
+  ]);
 
   function strikeAnimation(id) {
     const movement = ANIMATION_MANIFEST.strikes[id];
@@ -447,6 +481,7 @@
       this.knockdownAnimation = "headKnockdown";
       this.finishAnimation = null;
       this.roundDamage = 0;
+      this.roundStats = emptyRoundStats();
       this.takedowns = 0;
       this.knockdownsScored = 0;
       this.knockdownsSuffered = 0;
@@ -689,6 +724,7 @@
         facing: this.facing,
         stationaryStart,
       };
+      if (definition.target !== "takedown") this.roundStats.thrown += 1;
       this.guard = null;
       this.moveFlash = 0.3;
     }
@@ -715,7 +751,10 @@
 
       const totalDuration = definition.startup + definition.active + definition.recovery;
       if (this.attack && this.attack.elapsed >= totalDuration) {
-        if (!this.attack.connected) this.applyInefficientStrikePenalty(definition);
+        if (!this.attack.connected) {
+          this.applyInefficientStrikePenalty(definition);
+          if (definition.target !== "takedown") this.roundStats.missed += 1;
+        }
         this.attack = null;
       }
     }
@@ -977,6 +1016,19 @@
       this.finishAnnouncementTimer = 0;
       this.aiTimer = 0;
       this.aiIntent = this.emptyInput();
+      this.roundHistory = [];
+      this.recordedRounds = new Set();
+      this.onlineRole = null;
+      this.onlineOpponent = null;
+      this.onlineRemoteInput = this.emptyInput();
+      this.onlineRemoteActions = this.emptyInput();
+      this.onlineInputSequence = 0;
+      this.onlineSnapshotSequence = 0;
+      this.onlineSnapshotTimer = 0;
+      this.onlineInputTimer = 0;
+      this.onlineLastSnapshot = -1;
+      this.onlineLobby = { players: [], searchingCount: 0 };
+      this.pendingChallenger = null;
       this.lastTime = performance.now();
 
       this.fighterOne = new Fighter(this, {
@@ -1000,6 +1052,19 @@
         facing: -1,
       });
 
+      const OnlineClient = globalThis.NeonBrawlOnlineClient;
+      this.online = OnlineClient ? new OnlineClient({
+        status: (status) => this.setOnlineStatus(status),
+        lobby: (lobby) => this.renderOnlineLobby(lobby),
+        challenge: (challenger) => this.showOnlineChallenge(challenger),
+        match: (match) => this.startOnlineMatch(match),
+        remoteInput: (message) => this.receiveOnlineInput(message),
+        snapshot: (message) => this.applyOnlineSnapshot(message),
+        opponentLeft: (message) => this.handleOnlineOpponentLeft(message),
+        error: (message) => this.setOnlineStatus({ state: "error", message: message.message }),
+        disconnected: () => this.setOnlineStatus({ state: "offline", message: "DISCONNECTED" }),
+      }) : null;
+
       requestAnimationFrame((time) => this.loop(time));
     }
 
@@ -1018,12 +1083,156 @@
       };
     }
 
+    openOnlineLobby() {
+      menuScreen.classList.add("is-hidden");
+      resultScreen.classList.add("is-hidden");
+      pauseScreen.classList.add("is-hidden");
+      onlineScreen.classList.remove("is-hidden");
+      this.state = "menu";
+      const storedName = globalThis.localStorage?.getItem("neonBrawlOnlineName");
+      if (storedName && !onlineNameInput.value) onlineNameInput.value = storedName;
+      this.renderOnlineLobby(this.onlineLobby);
+      onlineNameInput.focus?.();
+    }
+
+    connectOnline(name) {
+      if (!this.online) {
+        this.setOnlineStatus({ state: "error", message: "ONLINE CLIENT UNAVAILABLE" });
+        return;
+      }
+      const fighterName = String(name || "NEON FIGHTER").trim().slice(0, 18);
+      globalThis.localStorage?.setItem("neonBrawlOnlineName", fighterName);
+      this.online.connect(fighterName);
+    }
+
+    setOnlineStatus({ state = "offline", message = "DISCONNECTED" } = {}) {
+      onlinePresence.dataset.state = state === "online" || state === "waiting" ? "online" : state;
+      onlineStatus.textContent = message;
+    }
+
+    renderOnlineLobby(lobby = { players: [], searchingCount: 0 }) {
+      this.onlineLobby = lobby;
+      onlinePlayerCount.textContent = String(lobby.searchingCount ?? lobby.players?.length ?? 0);
+      onlinePlayerList.innerHTML = "";
+      const players = lobby.players ?? [];
+      if (players.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "online-empty";
+        empty.textContent = this.online?.connected
+          ? "No hay otros jugadores disponibles todavía."
+          : "Conéctate para entrar al lobby.";
+        onlinePlayerList.append(empty);
+        return;
+      }
+
+      for (const player of players) {
+        const row = document.createElement("article");
+        const self = player.id === this.online?.id;
+        row.className = `online-player${self ? " online-player--self" : ""}`;
+        const light = document.createElement("i");
+        const identity = document.createElement("span");
+        const name = document.createElement("strong");
+        const status = document.createElement("small");
+        const action = document.createElement("button");
+        name.textContent = player.name;
+        status.textContent = self ? "TU SESIÓN // BUSCANDO" : "DISPONIBLE PARA COMBATIR";
+        identity.append(name, status);
+        action.type = "button";
+        action.className = self ? "dialog-button" : "dialog-button dialog-button--primary";
+        action.textContent = self ? "TÚ" : "RETAR";
+        action.disabled = self;
+        if (!self) action.addEventListener("click", () => this.online.challenge(player.id));
+        row.append(light, identity, action);
+        onlinePlayerList.append(row);
+      }
+    }
+
+    showOnlineChallenge(challenger) {
+      this.pendingChallenger = challenger;
+      onlineChallengerName.textContent = challenger.name;
+      onlineChallenge.classList.remove("is-hidden");
+      this.setOnlineStatus({ state: "waiting", message: "INCOMING CHALLENGE" });
+    }
+
+    hideOnlineChallenge() {
+      this.pendingChallenger = null;
+      onlineChallenge.classList.add("is-hidden");
+    }
+
+    startOnlineMatch(match) {
+      this.onlineRole = match.role;
+      this.onlineOpponent = match.opponent;
+      this.onlineRemoteInput = this.emptyInput();
+      this.onlineRemoteActions = this.emptyInput();
+      this.onlineLastSnapshot = -1;
+      this.hideOnlineChallenge();
+      onlineScreen.classList.add("is-hidden");
+      this.start("online");
+      this.showCallout(`${match.opponent.name} CONNECTED`, "#d6ff7d", 1.1);
+    }
+
+    receiveOnlineInput({ input, sequence }) {
+      if (this.mode !== "online" || this.onlineRole !== "host") return;
+      if (sequence < this.onlineInputSequence) return;
+      this.onlineInputSequence = sequence;
+      this.onlineRemoteInput = { ...this.onlineRemoteInput, ...input };
+      for (const action of ["leftPunch", "rightPunch", "leftKick", "rightKick", "evade"]) {
+        if (input[action]) this.onlineRemoteActions[action] = true;
+      }
+      if (input.bodyModifier) this.onlineRemoteActions.bodyModifier = true;
+    }
+
+    consumeOnlineRemoteInput() {
+      const input = { ...this.onlineRemoteInput };
+      for (const action of ["leftPunch", "rightPunch", "leftKick", "rightKick", "evade"]) {
+        input[action] = this.onlineRemoteActions[action];
+        this.onlineRemoteActions[action] = false;
+      }
+      if (input.leftPunch || input.rightPunch || input.leftKick || input.rightKick) {
+        input.bodyModifier = this.onlineRemoteActions.bodyModifier || input.bodyModifier;
+        this.onlineRemoteActions.bodyModifier = false;
+      }
+      return input;
+    }
+
+    returnToOnlineLobby() {
+      this.online?.leaveMatch();
+      this.onlineRole = null;
+      this.onlineOpponent = null;
+      this.state = "menu";
+      this.matchWinner = null;
+      resultScreen.classList.add("is-hidden");
+      pauseScreen.classList.add("is-hidden");
+      roundMessage.classList.add("is-hidden");
+      menuScreen.classList.add("is-hidden");
+      onlineScreen.classList.remove("is-hidden");
+      this.setOnlineStatus({ state: "online", message: "CONNECTED // SEARCHING FOR FIGHTERS" });
+    }
+
+    handleOnlineOpponentLeft({ reason = "Opponent disconnected." } = {}) {
+      this.onlineRole = null;
+      this.onlineOpponent = null;
+      this.state = "menu";
+      resultScreen.classList.add("is-hidden");
+      pauseScreen.classList.add("is-hidden");
+      roundMessage.classList.add("is-hidden");
+      menuScreen.classList.add("is-hidden");
+      onlineScreen.classList.remove("is-hidden");
+      this.setOnlineStatus({ state: "error", message: reason.toUpperCase() });
+    }
+
     start(mode) {
       this.synth.ensure();
       this.mode = mode;
       this.round = 1;
       this.matchWinner = null;
       this.matchMethod = "";
+      this.roundHistory = [];
+      this.recordedRounds.clear();
+      this.onlineSnapshotSequence = 0;
+      this.onlineSnapshotTimer = 0;
+      this.onlineInputSequence = 0;
+      this.onlineInputTimer = 0;
       this.fighterOne.roundWins = 0;
       this.fighterTwo.roundWins = 0;
       this.fighterOne.matchScore = 0;
@@ -1031,8 +1240,11 @@
       this.fighterOne.resetMatchStamina();
       this.fighterTwo.resetMatchStamina();
       menuScreen.classList.add("is-hidden");
+      onlineScreen.classList.add("is-hidden");
       pauseScreen.classList.add("is-hidden");
       resultScreen.classList.add("is-hidden");
+      resultScorecard.innerHTML = "";
+      rematchButton.textContent = mode === "online" ? "VOLVER AL LOBBY" : "REVANCHA";
       this.startRound();
       canvas.focus();
     }
@@ -1063,10 +1275,17 @@
     }
 
     returnToMenu() {
+      if (this.mode === "online") {
+        this.online?.leaveMatch();
+        this.online?.disconnect();
+        this.onlineRole = null;
+        this.onlineOpponent = null;
+      }
       this.state = "menu";
       this.ground = null;
       this.matchWinner = null;
       menuScreen.classList.remove("is-hidden");
+      onlineScreen.classList.add("is-hidden");
       pauseScreen.classList.add("is-hidden");
       resultScreen.classList.add("is-hidden");
       roundMessage.classList.add("is-hidden");
@@ -1074,6 +1293,10 @@
     }
 
     togglePause() {
+      if (this.mode === "online" && ["intro", "fighting", "ground", "roundOver"].includes(this.state)) {
+        this.showCallout("ONLINE MATCHES CANNOT PAUSE", "#d6ff7d", 0.8);
+        return;
+      }
       if (this.state === "paused") {
         this.state = this.previousState;
         pauseScreen.classList.add("is-hidden");
@@ -1216,6 +1439,7 @@
     resolveAttack(attacker, target, definition, contact) {
       if (target.invulnerable > 0) {
         attacker.applyInefficientStrikePenalty(definition);
+        if (definition.target !== "takedown") attacker.roundStats.missed += 1;
         this.showCallout("CLEAN EVADE", target.color, 0.55);
         this.synth.tone(340, 0.08, "sine", 0.015, 620);
         return;
@@ -1271,6 +1495,15 @@
         * criticalMultiplier
         * guardMultiplier;
 
+      if (matchingGuard) {
+        attacker.roundStats.blocked += 1;
+      } else {
+        attacker.roundStats.landed += 1;
+        attacker.roundStats.critical += critical ? 1 : 0;
+        if (definition.target === "head") attacker.roundStats.headLanded += 1;
+        else attacker.roundStats.bodyLanded += 1;
+      }
+
       if (matchingGuard) attacker.applyInefficientStrikePenalty(definition);
 
       if (definition.target === "head") target.headHealth = clamp(target.headHealth - damage, 0, 100);
@@ -1303,6 +1536,7 @@
         const interruptedAttack = target.currentAttack;
         if (interruptedAttack && !target.attack.connected) {
           target.applyInefficientStrikePenalty(interruptedAttack);
+          if (interruptedAttack.target !== "takedown") target.roundStats.missed += 1;
         }
         target.attack = null;
         target.guard = null;
@@ -1482,12 +1716,38 @@
       }
     }
 
+    snapshotRoundStats(fighter) {
+      return {
+        ...fighter.roundStats,
+        damage: Number(fighter.roundDamage.toFixed(2)),
+        headHealth: Number(fighter.headHealth.toFixed(2)),
+        bodyHealth: Number(fighter.bodyHealth.toFixed(2)),
+        knockdowns: fighter.knockdownsScored,
+      };
+    }
+
+    recordRound({ winner, method = "DECISION", scoreOne, scoreTwo } = {}) {
+      if (this.recordedRounds.has(this.round)) return;
+      const winnerIsOne = winner === this.fighterOne;
+      this.roundHistory.push({
+        round: this.round,
+        method,
+        winner: winner?.name ?? null,
+        scoreOne: scoreOne ?? (winnerIsOne ? 10 : 8),
+        scoreTwo: scoreTwo ?? (winnerIsOne ? 8 : 10),
+        fighterOne: this.snapshotRoundStats(this.fighterOne),
+        fighterTwo: this.snapshotRoundStats(this.fighterTwo),
+      });
+      this.recordedRounds.add(this.round);
+    }
+
     finishFight(winner, method, defeated = null, finishTarget = null) {
       if (["roundOver", "matchOver"].includes(this.state)) return;
       const loser = defeated ?? (winner === this.fighterOne ? this.fighterTwo : this.fighterOne);
       const target = finishTarget ?? (method.includes("BODY") ? "body" : "head");
       this.matchWinner = winner;
       this.matchMethod = method;
+      this.recordRound({ winner, method });
       this.state = "roundOver";
       this.ground = null;
       this.roundDelay = 3.15;
@@ -1526,6 +1786,12 @@
         winner = scoreOne > scoreTwo ? this.fighterOne : this.fighterTwo;
       }
       winner.roundWins += 1;
+      this.recordRound({
+        winner,
+        method: "DECISION",
+        scoreOne: winner === this.fighterOne ? 10 : 9,
+        scoreTwo: winner === this.fighterTwo ? 10 : 9,
+      });
       this.state = "roundOver";
       this.roundDelay = 2.35;
       this.showRoundMessage(`${winner.name} TAKES ROUND ${this.round}`, "10 - 9");
@@ -1555,7 +1821,177 @@
       resultCopy.textContent = this.matchMethod === "DECISION"
         ? `${this.matchWinner.roundWins}-${loser.roundWins} por decisión de los jueces.`
         : `Victoria por ${this.matchMethod} dentro del octágono.`;
+      this.renderScorecard();
       resultScreen.classList.remove("is-hidden");
+    }
+
+    renderScorecard() {
+      const rows = this.roundHistory.flatMap((round) => ([
+        { round, fighter: this.fighterOne, stats: round.fighterOne, score: round.scoreOne },
+        { round, fighter: this.fighterTwo, stats: round.fighterTwo, score: round.scoreTwo },
+      ])).map(({ round, fighter, stats, score }, index) => {
+        const accuracy = stats.thrown > 0 ? Math.round(stats.landed / stats.thrown * 100) : 0;
+        const winnerClass = round.winner === fighter.name ? " scorecard-winner" : "";
+        return `<tr>
+          <td class="scorecard-round">R${round.round}</td>
+          <th>${fighter.name}</th>
+          <td class="${winnerClass}">${score}</td>
+          <td>${stats.thrown}</td>
+          <td>${stats.landed}</td>
+          <td>${stats.missed}</td>
+          <td>${stats.blocked}</td>
+          <td>${accuracy}%</td>
+          <td>${stats.damage.toFixed(2)}</td>
+          ${index % 2 === 0 ? `<td rowspan="2">${round.method}</td>` : ""}
+        </tr>`;
+      }).join("");
+
+      const totalFor = (key) => this.roundHistory.reduce((totals, round) => {
+        const stats = round[key];
+        totals.thrown += stats.thrown;
+        totals.landed += stats.landed;
+        totals.missed += stats.missed;
+        totals.blocked += stats.blocked;
+        totals.damage += stats.damage;
+        return totals;
+      }, { thrown: 0, landed: 0, missed: 0, blocked: 0, damage: 0 });
+      const totalOne = totalFor("fighterOne");
+      const totalTwo = totalFor("fighterTwo");
+      const totalCard = (fighter, total) => {
+        const accuracy = total.thrown > 0 ? Math.round(total.landed / total.thrown * 100) : 0;
+        return `<article><strong>${fighter.name} // TOTAL</strong><span>${total.thrown} thrown · ${total.landed} landed · ${total.missed} missed · ${total.blocked} blocked · ${accuracy}% accuracy · ${total.damage.toFixed(2)} damage</span></article>`;
+      };
+
+      resultScorecard.innerHTML = `<table class="scorecard-table">
+        <thead><tr><th>ROUND</th><th>FIGHTER</th><th>SCORE</th><th>THROWN</th><th>LANDED</th><th>MISSED</th><th>BLOCKED</th><th>ACC.</th><th>DAMAGE</th><th>RESULT</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table><div class="scorecard-total">${totalCard(this.fighterOne, totalOne)}${totalCard(this.fighterTwo, totalTwo)}</div>`;
+    }
+
+    serializeFighter(fighter) {
+      return Object.fromEntries(ONLINE_FIGHTER_FIELDS.map((field) => [field, fighter[field]]));
+    }
+
+    createOnlineSnapshot() {
+      return {
+        state: this.state,
+        round: this.round,
+        timer: this.timer,
+        introTimer: this.introTimer,
+        roundDelay: this.roundDelay,
+        matchMethod: this.matchMethod,
+        matchWinner: this.matchWinner === this.fighterOne ? 1 : this.matchWinner === this.fighterTwo ? 2 : null,
+        roundHistory: this.roundHistory,
+        callout: this.callout,
+        flash: this.flash,
+        shake: this.shake,
+        fighterOne: this.serializeFighter(this.fighterOne),
+        fighterTwo: this.serializeFighter(this.fighterTwo),
+        particles: this.particles.map((particle) => ({
+          x: particle.x,
+          y: particle.y,
+          color: particle.color,
+          velocityX: particle.velocityX,
+          velocityY: particle.velocityY,
+          life: particle.life,
+          maxLife: particle.maxLife,
+          size: particle.size,
+          kind: particle.kind,
+        })),
+        damageNumbers: this.damageNumbers,
+        roundOverlay: {
+          hidden: roundMessage.classList.contains("is-hidden"),
+          kicker: roundKicker.textContent,
+          title: roundTitle.textContent,
+        },
+      };
+    }
+
+    sendOnlineSnapshot(deltaTime, force = false) {
+      if (this.mode !== "online" || this.onlineRole !== "host") return;
+      this.onlineSnapshotTimer -= deltaTime;
+      if (!force && this.onlineSnapshotTimer > 0) return;
+      this.onlineSnapshotTimer = 0.05;
+      this.onlineSnapshotSequence += 1;
+      this.online?.sendSnapshot(this.createOnlineSnapshot(), this.onlineSnapshotSequence);
+    }
+
+    applyFighterSnapshot(fighter, snapshot) {
+      if (!snapshot) return;
+      for (const field of ONLINE_FIGHTER_FIELDS) {
+        if (Object.hasOwn(snapshot, field)) fighter[field] = snapshot[field];
+      }
+    }
+
+    applyOnlineSnapshot({ sequence, snapshot }) {
+      if (this.mode !== "online" || this.onlineRole !== "guest" || sequence <= this.onlineLastSnapshot) return;
+      this.onlineLastSnapshot = sequence;
+      const previousState = this.state;
+      this.state = snapshot.state;
+      this.round = snapshot.round;
+      this.timer = snapshot.timer;
+      this.introTimer = snapshot.introTimer;
+      this.roundDelay = snapshot.roundDelay;
+      this.matchMethod = snapshot.matchMethod;
+      this.roundHistory = snapshot.roundHistory ?? [];
+      this.recordedRounds = new Set(this.roundHistory.map(({ round }) => round));
+      this.callout = snapshot.callout;
+      this.flash = snapshot.flash;
+      this.shake = snapshot.shake;
+      this.applyFighterSnapshot(this.fighterOne, snapshot.fighterOne);
+      this.applyFighterSnapshot(this.fighterTwo, snapshot.fighterTwo);
+      this.matchWinner = snapshot.matchWinner === 1
+        ? this.fighterOne
+        : snapshot.matchWinner === 2
+          ? this.fighterTwo
+          : null;
+      this.particles = (snapshot.particles ?? []).map((particle) => {
+        const replica = new Particle(particle);
+        replica.maxLife = particle.maxLife;
+        return replica;
+      });
+      this.damageNumbers = snapshot.damageNumbers ?? [];
+      if (snapshot.roundOverlay) {
+        roundKicker.textContent = snapshot.roundOverlay.kicker;
+        roundTitle.textContent = snapshot.roundOverlay.title;
+        roundMessage.classList.toggle("is-hidden", snapshot.roundOverlay.hidden);
+      }
+      if (this.state === "matchOver" && previousState !== "matchOver") this.showResult();
+    }
+
+    getOnlineKeyboardInput() {
+      const controlledFighter = this.onlineRole === "guest" ? this.fighterTwo : this.fighterOne;
+      const forward = controlledFighter.facing;
+      return {
+        move: (keys.has("KeyD") ? forward : 0) - (keys.has("KeyA") ? forward : 0),
+        guardHigh: keys.has("KeyW"),
+        guardLow: keys.has("KeyS"),
+        leftPunch: pressed.has("KeyT"),
+        rightPunch: pressed.has("KeyY"),
+        leftKick: pressed.has("KeyG"),
+        rightKick: pressed.has("KeyH"),
+        bodyModifier: keys.has("Space"),
+        takedown: false,
+        evade: keys.has("KeyE"),
+      };
+    }
+
+    updateOnlineReplica(deltaTime) {
+      this.elapsed += deltaTime;
+      this.onlineInputSequence += 1;
+      this.online?.sendInput(this.getOnlineKeyboardInput(), this.onlineInputSequence);
+      if (this.state === "fighting") this.timer = Math.max(0, this.timer - deltaTime);
+      for (const fighter of [this.fighterOne, this.fighterTwo]) {
+        fighter.updateVisualState(deltaTime);
+        if (fighter.attack) fighter.attack.elapsed += deltaTime;
+      }
+      for (const particle of this.particles) particle.update(deltaTime);
+      this.particles = this.particles.filter((particle) => particle.life > 0);
+      for (const number of this.damageNumbers) {
+        number.life -= deltaTime;
+        number.y -= 30 * deltaTime;
+      }
+      this.damageNumbers = this.damageNumbers.filter((number) => number.life > 0);
     }
 
     update(deltaTime) {
@@ -1585,9 +2021,14 @@
         }
       } else if (this.state === "fighting") {
         if (this.mode !== "practice") this.timer = Math.max(0, this.timer - deltaTime);
-        this.fighterOne.update(deltaTime, this.getKeyboardInput(1), this.fighterTwo);
+        const inputOne = this.mode === "online" ? this.getOnlineKeyboardInput() : this.getKeyboardInput(1);
+        this.fighterOne.update(deltaTime, inputOne, this.fighterTwo);
         if (this.state === "fighting") {
-          const inputTwo = this.mode === "cpu" ? this.getCpuInput(deltaTime) : this.getKeyboardInput(2);
+          const inputTwo = this.mode === "cpu"
+            ? this.getCpuInput(deltaTime)
+            : this.mode === "online"
+              ? this.consumeOnlineRemoteInput()
+              : this.getKeyboardInput(2);
           this.fighterTwo.update(deltaTime, inputTwo, this.fighterOne);
         }
         if (this.state === "fighting") this.resolveFighterSpacing();
@@ -1626,6 +2067,7 @@
         number.y -= 30 * deltaTime;
       }
       this.damageNumbers = this.damageNumbers.filter((number) => number.life > 0);
+      this.sendOnlineSnapshot(deltaTime, this.state === "matchOver");
     }
 
     spawnDamageNumber(x, y, damage, outcome) {
@@ -1677,7 +2119,9 @@
       const deltaTime = Math.min((time - this.lastTime) / 1000 || 0, 1 / 30);
       this.lastTime = time;
       if (this.hitStop > 0) this.hitStop -= deltaTime;
-      else if (!["paused", "menu", "matchOver"].includes(this.state)) this.update(deltaTime);
+      else if (this.mode === "online" && this.onlineRole === "guest" && !["menu", "matchOver"].includes(this.state)) {
+        this.updateOnlineReplica(deltaTime);
+      } else if (!["paused", "menu", "matchOver"].includes(this.state)) this.update(deltaTime);
       else if (this.state === "menu") this.elapsed += deltaTime;
       this.draw();
       pressed.clear();
@@ -1864,7 +2308,13 @@
       );
       context.fillStyle = "#55576b";
       context.fillText(
-        this.mode === "cpu" ? "QUICK FIGHT" : this.mode === "practice" ? "DAMAGE DISPLAY" : "LOCAL SPARRING",
+        this.mode === "cpu"
+          ? "QUICK FIGHT"
+          : this.mode === "practice"
+            ? "DAMAGE DISPLAY"
+            : this.mode === "online"
+              ? `ONLINE // ${this.onlineRole === "host" ? "HOST" : "GUEST"}`
+              : "LOCAL SPARRING",
         WIDTH / 2,
         104,
       );
@@ -1997,7 +2447,10 @@
     if (!keys.has(event.code)) pressed.add(event.code);
     keys.add(event.code);
     if (event.code === "Escape" && !event.repeat) game.togglePause();
-    if (event.code === "Enter" && game.state === "menu" && !event.repeat) game.start("cpu");
+    if (event.code === "Enter"
+      && game.state === "menu"
+      && !menuScreen.classList.contains("is-hidden")
+      && !event.repeat) game.start("cpu");
   });
 
   window.addEventListener("keyup", (event) => keys.delete(event.code));
@@ -2008,10 +2461,37 @@
   });
 
   document.querySelectorAll("[data-mode]").forEach((button) => {
-    button.addEventListener("click", () => game.start(button.dataset.mode));
+    button.addEventListener("click", () => {
+      if (button.dataset.mode === "online") game.openOnlineLobby();
+      else game.start(button.dataset.mode);
+    });
+  });
+  onlineConnectForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    game.connectOnline(onlineNameInput.value);
+  });
+  onlineAccept.addEventListener("click", () => {
+    if (!game.pendingChallenger) return;
+    game.online?.acceptChallenge(game.pendingChallenger.id);
+    game.hideOnlineChallenge();
+  });
+  onlineDecline.addEventListener("click", () => {
+    if (!game.pendingChallenger) return;
+    game.online?.declineChallenge(game.pendingChallenger.id);
+    game.hideOnlineChallenge();
+    game.setOnlineStatus({ state: "online", message: "CONNECTED // SEARCHING FOR FIGHTERS" });
+  });
+  onlineBack.addEventListener("click", () => {
+    game.online?.disconnect();
+    game.hideOnlineChallenge();
+    game.mode = "cpu";
+    game.returnToMenu();
   });
   document.querySelector("#resume-button").addEventListener("click", () => game.togglePause());
-  document.querySelector("#rematch-button").addEventListener("click", () => game.start(game.mode));
+  rematchButton.addEventListener("click", () => {
+    if (game.mode === "online") game.returnToOnlineLobby();
+    else game.start(game.mode);
+  });
   document.querySelectorAll(".menu-button").forEach((button) => {
     button.addEventListener("click", () => game.returnToMenu());
   });

@@ -12,6 +12,10 @@ assert.match(markup, /SPACE \/ SHIFT<\/kbd><span>mantener \+ cualquier golpe/, "
 assert.match(markup, /animation-manifest\.js[\s\S]*game\.js/, "Animation manifest must load before the game");
 assert.match(markup, /Tres asaltos de 3 minutos/, "Menu should explain round duration");
 assert.match(markup, /data-mode="practice"/, "Menu should expose practice mode");
+assert.match(markup, /data-mode="online"/, "Menu should expose online mode");
+assert.match(markup, /BUSCANDO PARTIDA AHORA MISMO/, "Online lobby should show live matchmaking presence");
+assert.match(markup, /id="result-scorecard"/, "Result screen should expose the per-round scorecard");
+assert.match(markup, /online-client\.js[\s\S]*game\.js/, "Online client must load before the game");
 assert.match(markup, /Sin reloj · daño visible por golpe/, "Practice mode should explain its damage display");
 assert.match(markup, /brillante = stamina actual · tenue = límite recuperable/, "Pause menu should explain both stamina layers");
 assert.match(
@@ -149,9 +153,22 @@ const make = (selector) => {
   "#result-kicker",
   "#result-title",
   "#result-copy",
+  "#result-scorecard",
   "#sound-button",
   "#sound-icon",
   "#combat-controls",
+  "#online-screen",
+  "#online-connect-form",
+  "#online-name",
+  "#online-presence",
+  "#online-status",
+  "#online-player-count",
+  "#online-player-list",
+  "#online-challenge",
+  "#online-challenger-name",
+  "#online-accept",
+  "#online-decline",
+  "#online-back",
   "#resume-button",
   "#rematch-button",
   "#fullscreen-button",
@@ -162,6 +179,7 @@ const modeButtons = [
   new FakeElement({ mode: "cpu" }),
   new FakeElement({ mode: "local" }),
   new FakeElement({ mode: "practice" }),
+  new FakeElement({ mode: "online" }),
 ];
 const menuButtons = [new FakeElement(), new FakeElement()];
 const windowListeners = new Map();
@@ -278,6 +296,8 @@ attacker.attack.elapsed = ATTACKS.leftPunchHead.startup
   + ATTACKS.leftPunchHead.recovery;
 attacker.updateAttack(1 / 60, defender);
 assert.equal(attacker.stamina, 92.5, "A missed strike should spend 150% stamina in total");
+assert.equal(attacker.roundStats.thrown, 1, "Starting a standing strike should count as thrown");
+assert.equal(attacker.roundStats.missed, 1, "A strike with no contact should count as missed");
 
 attacker.resetMatchStamina();
 attacker.resetRound(400, 1);
@@ -310,6 +330,8 @@ game.resolveAttack(attacker, defender, ATTACKS.leftPunchHead, { x: 480, y: 350 }
 assert(defender.blockReaction, "Matching guard should trigger a block reaction");
 assert.equal(defender.hitReaction, null, "Blocked strike should not play a clean reaction");
 assert.equal(attacker.stamina, 92.5, "A blocked strike should spend 150% stamina in total");
+assert.equal(attacker.roundStats.blocked, 1, "A guarded strike should be tracked separately from a clean landing");
+assert.equal(attacker.roundStats.landed, 0, "A guarded strike should not count as landed");
 
 attacker.resetRound(400, 1);
 defender.resetRound(491, -1);
@@ -548,6 +570,22 @@ assert(defender.practiceResetTimer > 0, "A depleted practice dummy should schedu
 defender.update(0.9, game.emptyInput(), attacker);
 assert.equal(defender.bodyHealth, 100, "The practice dummy should recover after the reset delay");
 game.mode = "cpu";
+
+attacker.resetRound(400, 1);
+defender.resetRound(568, -1);
+attacker.roundStats = { thrown: 12, landed: 7, missed: 3, blocked: 2, critical: 1, headLanded: 5, bodyLanded: 2 };
+defender.roundStats = { thrown: 9, landed: 4, missed: 4, blocked: 1, critical: 0, headLanded: 3, bodyLanded: 1 };
+attacker.roundDamage = 28.25;
+defender.roundDamage = 16.5;
+game.roundHistory = [];
+game.recordedRounds.clear();
+game.round = 1;
+game.recordRound({ winner: attacker, method: "DECISION", scoreOne: 10, scoreTwo: 9 });
+game.renderScorecard();
+assert.match(selectors.get("#result-scorecard").innerHTML, /12/);
+assert.match(selectors.get("#result-scorecard").innerHTML, /28\.25/);
+assert.match(selectors.get("#result-scorecard").innerHTML, /10/);
+assert.match(selectors.get("#result-scorecard").innerHTML, /9/);
 
 assert.equal(animationFrames.length, 1, "The game should schedule its animation loop");
 assert.equal(modeButtons[0].listeners.has("click"), true, "CPU mode should be interactive");

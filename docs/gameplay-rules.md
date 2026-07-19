@@ -9,6 +9,21 @@ This document records the current Neon Brawl balance. Executable values live in 
 - Decisions use the existing 10-9 scoring system.
 - Accumulated knockdown count is a statistic and scoring input; it never triggers an automatic TKO.
 
+## Post-fight scorecard
+
+Every completed CPU, local, or online match stores a separate record for each round. The final screen displays, for both fighters:
+
+- judge score for the round;
+- strikes thrown;
+- clean/critical strikes landed;
+- strikes missed or evaded;
+- strikes absorbed by the matching guard;
+- landing accuracy;
+- total damage;
+- round result or finish method.
+
+Blocked strikes are tracked independently and do not count as landed. A strike interrupted before contact counts as missed. Decision rounds preserve the current 10-9 scoring rule. A finish round is recorded as 10-8 for summary purposes and retains the actual KO method in the result column.
+
 ## Practice Lab
 
 - Practice has no time limit and cannot end through KO/TKO.

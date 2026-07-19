@@ -1,6 +1,6 @@
 # Neon Brawl MMA
 
-Neon Brawl is a lightweight browser MMA game built with Canvas and plain JavaScript. It combines arcade presentation with tactical distance, two-layer stamina, separate head/body health, guards, critical counters, knockdowns, knockouts, three-round scoring, and a practice mode.
+Neon Brawl is a lightweight browser MMA game built with Canvas and plain JavaScript. It combines arcade presentation with tactical distance, two-layer stamina, separate head/body health, guards, critical counters, knockdowns, knockouts, three-round scoring, practice mode, and a testable online arena.
 
 ## Run locally in Visual Studio Code
 
@@ -12,6 +12,14 @@ npm run dev
 ```
 
 Open the address printed by Vite, normally `http://localhost:5173`.
+
+To test the complete online stack in two browser tabs:
+
+```bash
+npm run dev:online
+```
+
+Open `http://localhost:3000` in both tabs, enter two different fighter names, and challenge one session from the other.
 
 ## Controls
 
@@ -32,6 +40,23 @@ Open the address printed by Vite, normally `http://localhost:5173`.
 Without a modifier, strikes target the head. Hold that player's modifier while pressing a strike key to use the body variant.
 
 Takedowns and ground control remain disabled. Their prototype logic and legacy sprites are preserved for a future grappling animation pass.
+
+In Online Arena, both players use the Player 1 keyboard layout on their own computer. Online matches cannot be paused.
+
+## Online Arena
+
+The first online version includes:
+
+- live presence count for players currently searching;
+- a lobby roster with direct challenge buttons;
+- accept and decline controls for incoming challenges;
+- host-authoritative gameplay to keep damage, criticals, knockdowns, and scoring synchronized;
+- guest input relay and 20 Hz authoritative state snapshots;
+- automatic WebSocket keepalive and reconnect attempts;
+- automatic return to the lobby when an opponent leaves;
+- one Node service serving both the Vite build and `/ws` WebSocket endpoint.
+
+The lobby is intentionally ephemeral and in-memory. Deploy exactly one Render instance for this test version. See [Online Mode and Render Deployment](docs/online-mode.md).
 
 ## Character sprite libraries
 
@@ -88,6 +113,8 @@ npm run build
 - Four head and four body knockout variants
 - Minimum fighter spacing and assisted contact at valid strike distance
 - No automatic TKO based on accumulated knockdown count
+- Per-round scorecards with strikes thrown, landed, missed, blocked, accuracy, damage, and 10-point scoring
+- Online lobby, direct challenges, and synchronized friend matches
 
 Exact balance values are documented in [Gameplay Rules](docs/gameplay-rules.md).
 

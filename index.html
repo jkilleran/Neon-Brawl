@@ -67,6 +67,11 @@
                 <span><strong>PRACTICE LAB</strong><small>Sin reloj · daño visible por golpe</small></span>
                 <span class="mode-button__arrow">→</span>
               </button>
+              <button class="mode-button mode-button--online" data-mode="online" type="button">
+                <span class="mode-button__number">04</span>
+                <span><strong>ONLINE ARENA</strong><small>Busca jugadores y reta a un amigo</small></span>
+                <span class="mode-button__arrow">⌁</span>
+              </button>
             </div>
           </div>
 
@@ -87,6 +92,51 @@
           <div class="menu-controls">
             <div><span>P1</span><b>W A S D</b> defensa/mov. <b>T Y</b> puños <b>G H</b> patadas <b>SPACE</b> cuerpo <b>E</b> evade</div>
             <div><span>P2</span><b>↑ ← ↓ →</b> defensa/mov. <b>I O</b> puños <b>K L</b> patadas <b>SHIFT</b> cuerpo <b>P</b> evade</div>
+          </div>
+        </div>
+
+        <div id="online-screen" class="screen screen--dialog is-hidden" role="dialog" aria-modal="true">
+          <div class="dialog-card dialog-card--online">
+            <div class="online-header">
+              <div>
+                <p class="eyebrow"><span></span> NEON NETWORK // LIVE</p>
+                <h2>ONLINE ARENA</h2>
+              </div>
+              <div id="online-presence" class="online-presence" data-state="offline">
+                <i></i><span id="online-status">DESCONECTADO</span>
+              </div>
+            </div>
+
+            <form id="online-connect-form" class="online-connect-form">
+              <label for="online-name">NOMBRE DEL PELEADOR</label>
+              <div>
+                <input id="online-name" maxlength="18" autocomplete="nickname" placeholder="NEON FIGHTER" />
+                <button class="dialog-button dialog-button--primary" type="submit">CONECTAR</button>
+              </div>
+            </form>
+
+            <section class="online-roster" aria-live="polite">
+              <header>
+                <div>
+                  <strong><span id="online-player-count">0</span> JUGADORES</strong>
+                  <small>BUSCANDO PARTIDA AHORA MISMO</small>
+                </div>
+                <span class="online-roster__live">LIVE</span>
+              </header>
+              <div id="online-player-list" class="online-player-list">
+                <p class="online-empty">Conéctate para entrar al lobby.</p>
+              </div>
+            </section>
+
+            <section id="online-challenge" class="online-challenge is-hidden">
+              <p><small>RETO RECIBIDO</small><strong id="online-challenger-name">FIGHTER</strong></p>
+              <div>
+                <button id="online-accept" class="dialog-button dialog-button--primary" type="button">ACEPTAR</button>
+                <button id="online-decline" class="dialog-button" type="button">RECHAZAR</button>
+              </div>
+            </section>
+
+            <button id="online-back" class="dialog-button" type="button">VOLVER AL MENÚ</button>
           </div>
         </div>
 
@@ -134,6 +184,7 @@
             <p id="result-kicker" class="eyebrow"><span></span> COMBATE FINALIZADO</p>
             <h2 id="result-title">ROOK GANA</h2>
             <p id="result-copy">Victoria dentro del octágono.</p>
+            <div id="result-scorecard" class="result-scorecard"></div>
             <button id="rematch-button" class="dialog-button dialog-button--primary" type="button">REVANCHA</button>
             <button class="dialog-button menu-button" type="button">VOLVER AL MENÚ</button>
           </div>
@@ -156,11 +207,12 @@
       <footer class="footer-note">
         <span><i></i> SYSTEM ONLINE</span>
         <p>ESC para pausar · Cada crítico tiene 1 de 2.2 de probabilidad de knockdown</p>
-        <span>BUILD 0.15.0 // CHARACTER SPRITE LIBRARY</span>
+        <span>BUILD 0.16.0 // ONLINE ARENA</span>
       </footer>
     </main>
 
     <script type="module" src="animation-manifest.js"></script>
+    <script type="module" src="online-client.js"></script>
     <script type="module" src="game.js"></script>
   </body>
 </html>
