@@ -52,7 +52,10 @@ The first online version includes:
 - accept and decline controls for incoming challenges;
 - host-authoritative gameplay to keep damage, criticals, knockdowns, and scoring synchronized;
 - visible server round-trip latency with connection-quality grading;
+- explicit connected and outgoing-challenge states in the lobby;
 - immediate guest action delivery and 30 Hz authoritative state snapshots;
+- authoritative forward/back movement for the right-side online fighter;
+- defensive snapshot validation and visual fallbacks so malformed remote state cannot hide a fighter;
 - stale-snapshot shedding when a slow connection starts buffering;
 - automatic WebSocket keepalive and reconnect attempts;
 - automatic return to the lobby when an opponent leaves;

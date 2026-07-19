@@ -669,6 +669,28 @@ h1 em {
   margin-top: 0;
 }
 
+.online-connect-form--connected {
+  border-color: rgba(214, 255, 125, 0.3);
+  background: rgba(214, 255, 125, 0.045);
+}
+
+.online-connect-form--connected input:disabled,
+.online-connect-form--connected button:disabled {
+  opacity: 1;
+  color: var(--lime);
+  border-color: rgba(214, 255, 125, 0.28);
+}
+
+.online-challenge--outgoing {
+  border-color: rgba(53, 242, 229, 0.32);
+}
+
+.online-challenge--outgoing > span {
+  color: var(--cyan);
+  font: 700 9px "Orbitron", sans-serif;
+  letter-spacing: 0.08em;
+}
+
 .online-roster {
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(3, 3, 12, 0.65);

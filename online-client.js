@@ -62,7 +62,7 @@
       this.lastRawLatencyMs = null;
       this.emit("latency", { latencyMs: null, jitterMs: null, quality: "unknown" });
       if (this.socket && this.socket.readyState <= WebSocket.OPEN) this.socket.close();
-      this.emit("status", { state: "connecting", message: "CONNECTING TO NEON NETWORK…" });
+      this.emit("status", { state: "connecting", message: "CONECTANDO A NEON NETWORK…" });
 
       const socket = new WebSocket(this.url);
       this.socket = socket;
@@ -72,7 +72,7 @@
         this.reconnectAttempts = 0;
         this.send({ type: "hello", name: this.name });
         this.startLatencyProbes();
-        this.emit("status", { state: "online", message: "CONNECTED // SEARCHING FOR FIGHTERS" });
+        this.emit("status", { state: "online", message: "CONECTADO // REGISTRANDO PELEADOR" });
       });
       socket.addEventListener("message", (event) => {
         if (socket !== this.socket) return;
@@ -86,7 +86,7 @@
       });
       socket.addEventListener("error", () => {
         if (socket !== this.socket) return;
-        this.emit("status", { state: "error", message: "ONLINE SERVER UNAVAILABLE" });
+        this.emit("status", { state: "error", message: "SERVIDOR ONLINE NO DISPONIBLE" });
       });
       socket.addEventListener("close", () => {
         if (socket !== this.socket) return;
@@ -126,10 +126,10 @@
           this.emit("challenge", message.from);
           break;
         case "challengeSent":
-          this.emit("status", { state: "waiting", message: `CHALLENGE SENT TO ${message.to.name}` });
+          this.emit("challengeSent", message.to);
           break;
         case "challengeDeclined":
-          this.emit("status", { state: "online", message: `${message.by.name} DECLINED // SEARCHING` });
+          this.emit("challengeDeclined", message.by);
           break;
         case "matchStart":
           this.role = message.role;

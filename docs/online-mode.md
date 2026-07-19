@@ -28,7 +28,9 @@ Browser B ──┘                    └─ /ws lobby and match relay
 
 The build keeps the complete editable sprite library in Git but removes individual frame directories and archived source revisions from `dist/`. Production therefore deploys only the runtime atlases and small metadata files required by the current fighters.
 
-The player who sends the accepted challenge becomes the authoritative host and controls Rook. The challenged player is the guest and controls Vex. The guest sends input messages to the host. Strike and defense key transitions are sent immediately, while a small periodic input stream keeps held controls synchronized. The host simulates the match and sends authoritative snapshots at 30 Hz. This prevents independent `Math.random()` calls or frame timing differences from producing different damage and outcomes.
+The player who sends the accepted challenge becomes the authoritative host and controls Rook. The challenged player is the guest and controls Vex. The guest sends input messages to the host. Strike and defense key transitions are sent immediately, while a small periodic input stream keeps held controls synchronized. Guest movement is transmitted semantically (`+1` forward, `-1` backward), and the host resolves it against Vex's current authoritative facing. This prevents stale guest snapshots from reversing the right-side controls. The host simulates the match and sends authoritative snapshots at 30 Hz. This prevents independent `Math.random()` calls or frame timing differences from producing different damage and outcomes.
+
+Version 0.16.2 validates replicated coordinates, facing, attack identifiers, timers, and animation identifiers before drawing them. Invalid state is ignored or replaced with a safe idle frame, so a malformed or partially serialized snapshot cannot make a fighter disappear or stop the Canvas loop.
 
 The client sends a one-second application-level probe and measures its round-trip time (RTT) to the game server. The lobby and match HUD display a smoothed RTT and grade it as excellent, good, fair, or high. This is server RTT, not a direct peer-to-peer measurement.
 
@@ -52,7 +54,7 @@ Client messages:
 | `challenge` | Client → server | Challenge one available player |
 | `acceptChallenge` | Client → server | Accept a specific incoming challenge |
 | `declineChallenge` | Client → server | Decline a challenge |
-| `input` | Guest → host | Relay bounded movement and combat input |
+| `input` | Guest → host | Relay forward/back intent and bounded combat input |
 | `snapshot` | Host → guest | Relay authoritative match state |
 | `leaveMatch` | Client → server | End pairing and return to the lobby |
 | `latencyProbe` | Client → server | Start an application RTT sample |
@@ -65,7 +67,7 @@ The server caps WebSocket payloads, sanitizes names and inputs, disables network
 Build and start the online server:
 
 ```bash
-npm install
+npm ci
 npm run dev:online
 ```
 
@@ -89,7 +91,7 @@ services:
     name: neon-brawl-online
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /healthz
     numInstances: 1
@@ -107,7 +109,7 @@ Deployment steps:
 If configuring the service manually, use:
 
 - Runtime: `Node`
-- Build command: `npm install && npm run build`
+- Build command: `npm ci --include=dev && npm run build`
 - Start command: `npm start`
 - Health check: `/healthz`
 - Instance count: `1`

@@ -3,7 +3,7 @@
 const assert = require("node:assert/strict");
 const WebSocket = require("ws");
 const { createNeonBrawlServer, sanitizeInput, sanitizeName } = require("../server.cjs");
-const { latencyQuality } = require("../online-client.js");
+const { NeonBrawlOnlineClient, latencyQuality } = require("../online-client.js");
 
 assert.equal(sanitizeName("  Róök<script>  "), "Róökscript");
 assert.equal(sanitizeName(""), "NEON FIGHTER");
@@ -12,6 +12,14 @@ assert.equal(latencyQuality(50), "good");
 assert.equal(latencyQuality(95), "fair");
 assert.equal(latencyQuality(180), "high");
 assert.equal(latencyQuality(null), "unknown");
+const clientEvents = [];
+const protocolClient = new NeonBrawlOnlineClient({
+  challengeSent: (opponent) => clientEvents.push(["sent", opponent.name]),
+  challengeDeclined: (opponent) => clientEvents.push(["declined", opponent.name]),
+});
+protocolClient.receive({ type: "challengeSent", to: { id: "vex", name: "Friend" } });
+protocolClient.receive({ type: "challengeDeclined", by: { id: "vex", name: "Friend" } });
+assert.deepEqual(clientEvents, [["sent", "Friend"], ["declined", "Friend"]]);
 assert.deepEqual(sanitizeInput({ move: 5, leftPunch: 1, takedown: true }), {
   move: 1,
   guardHigh: false,
@@ -92,6 +100,8 @@ function testClient(url) {
     assert.equal(latencyPong.id, 42);
 
     rook.send({ type: "challenge", targetId: vexWelcome.id });
+    const challengeSent = await rook.waitFor(({ type }) => type === "challengeSent");
+    assert.equal(challengeSent.to.name, "Friend");
     const incoming = await vex.waitFor(({ type }) => type === "challengeIncoming");
     assert.equal(incoming.from.id, rookWelcome.id);
     vex.send({ type: "acceptChallenge", challengerId: rookWelcome.id });

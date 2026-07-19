@@ -116,7 +116,7 @@
               <label for="online-name">NOMBRE DEL PELEADOR</label>
               <div>
                 <input id="online-name" maxlength="18" autocomplete="nickname" placeholder="NEON FIGHTER" />
-                <button class="dialog-button dialog-button--primary" type="submit">CONECTAR</button>
+                <button id="online-connect-button" class="dialog-button dialog-button--primary" type="submit">CONECTAR</button>
               </div>
             </form>
 
@@ -131,6 +131,11 @@
               <div id="online-player-list" class="online-player-list">
                 <p class="online-empty">Conéctate para entrar al lobby.</p>
               </div>
+            </section>
+
+            <section id="online-outgoing-challenge" class="online-challenge online-challenge--outgoing is-hidden" aria-live="polite">
+              <p><small>RETO ENVIADO</small><strong id="online-outgoing-name">FIGHTER</strong></p>
+              <span>ESPERANDO RESPUESTA…</span>
             </section>
 
             <section id="online-challenge" class="online-challenge is-hidden">
@@ -212,7 +217,7 @@
       <footer class="footer-note">
         <span><i></i> SYSTEM ONLINE</span>
         <p>ESC para pausar · Cada crítico tiene 1 de 2.2 de probabilidad de knockdown</p>
-        <span>BUILD 0.16.1 // LATENCY PASS</span>
+        <span>BUILD 0.16.2 // ONLINE STABILITY PASS</span>
       </footer>
     </main>
 

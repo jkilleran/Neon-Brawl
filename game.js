@@ -21,6 +21,7 @@
   const onlineScreen = document.querySelector("#online-screen");
   const onlineConnectForm = document.querySelector("#online-connect-form");
   const onlineNameInput = document.querySelector("#online-name");
+  const onlineConnectButton = document.querySelector("#online-connect-button");
   const onlinePresence = document.querySelector("#online-presence");
   const onlineStatus = document.querySelector("#online-status");
   const onlineLatency = document.querySelector("#online-latency");
@@ -30,6 +31,8 @@
   const onlinePlayerList = document.querySelector("#online-player-list");
   const onlineChallenge = document.querySelector("#online-challenge");
   const onlineChallengerName = document.querySelector("#online-challenger-name");
+  const onlineOutgoingChallenge = document.querySelector("#online-outgoing-challenge");
+  const onlineOutgoingName = document.querySelector("#online-outgoing-name");
   const onlineAccept = document.querySelector("#online-accept");
   const onlineDecline = document.querySelector("#online-decline");
   const onlineBack = document.querySelector("#online-back");
@@ -136,6 +139,10 @@
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const lerp = (from, to, amount) => from + (to - from) * amount;
   const random = (min, max) => Math.random() * (max - min) + min;
+  const isFacing = (value) => value === -1 || value === 1;
+  const resolveForwardMovement = (intent, facing) => (
+    clamp(Number(intent) || 0, -1, 1) * (facing === -1 ? -1 : 1)
+  );
 
   const emptyRoundStats = () => ({
     thrown: 0,
@@ -155,6 +162,14 @@
     "finishAnimation", "roundDamage", "takedowns", "knockdownsScored", "knockdownsSuffered",
     "moveFlash", "impactMarker", "hitReaction", "blockReaction", "animationTime", "roundWins",
     "matchScore", "roundStats", "practiceResetTimer",
+  ]);
+  const ONLINE_NUMERIC_FIGHTER_FIELDS = new Set([
+    "x", "velocityX", "headHealth", "bodyHealth", "displayHead", "displayBody",
+    "stamina", "longTermStamina", "displayStamina", "displayStaminaCap", "guardBlend",
+    "stun", "evadeTimer", "evadeCooldown", "invulnerable", "knockdownTimer",
+    "knockdownDuration", "roundDamage", "takedowns", "knockdownsScored",
+    "knockdownsSuffered", "moveFlash", "animationTime", "roundWins", "matchScore",
+    "practiceResetTimer",
   ]);
 
   function strikeAnimation(id) {
@@ -815,19 +830,29 @@
     }
 
     draw(context, options = {}) {
-      const visual = options.frame !== undefined
-        ? { animation: options.animation ?? "legacyGround", frame: options.frame }
-        : this.getVisualFrame();
-      const sheet = ANIMATIONS[this.characterId][visual.animation];
-      if (!sheet) {
-        throw new Error(`Missing ${this.characterId} animation: ${visual.animation}`);
+      const fallbackVisual = { animation: "footworkForward", frame: 0 };
+      let visual = fallbackVisual;
+      try {
+        visual = options.frame !== undefined
+          ? { animation: options.animation ?? "legacyGround", frame: options.frame }
+          : this.getVisualFrame();
+      } catch {
+        visual = fallbackVisual;
       }
-      const frame = clamp(visual.frame, 0, sheet.frames - 1);
-      let drawX = options.x ?? this.x;
-      const drawY = options.y ?? FLOOR;
-      let rotation = options.rotation ?? 0;
-      const scale = options.scale ?? 1;
-      const facing = options.facing ?? this.attackFacing;
+      const sheet = ANIMATIONS[this.characterId][visual.animation]
+        ?? ANIMATIONS[this.characterId][fallbackVisual.animation];
+      const rawFrame = Number(visual.frame);
+      const frame = Math.floor(clamp(Number.isFinite(rawFrame) ? rawFrame : 0, 0, sheet.frames - 1));
+      let drawX = Number(options.x ?? this.x);
+      if (!Number.isFinite(drawX)) drawX = WIDTH / 2;
+      const rawDrawY = Number(options.y ?? FLOOR);
+      const drawY = Number.isFinite(rawDrawY) ? rawDrawY : FLOOR;
+      let rotation = Number(options.rotation ?? 0);
+      if (!Number.isFinite(rotation)) rotation = 0;
+      const rawScale = Number(options.scale ?? 1);
+      const scale = Number.isFinite(rawScale) && rawScale > 0 ? rawScale : 1;
+      const rawFacing = options.facing ?? this.attackFacing;
+      const facing = rawFacing === -1 ? -1 : 1;
       if (this.hitReaction?.severity === "critical" && options.x === undefined) {
         const progress = clamp(this.hitReaction.elapsed / this.hitReaction.duration, 0, 1);
         const impulse = Math.sin(progress * Math.PI);
@@ -1074,16 +1099,24 @@
       const OnlineClient = globalThis.NeonBrawlOnlineClient;
       this.online = OnlineClient ? new OnlineClient({
         status: (status) => this.setOnlineStatus(status),
+        welcome: (message) => this.handleOnlineWelcome(message),
         lobby: (lobby) => this.renderOnlineLobby(lobby),
         challenge: (challenger) => this.showOnlineChallenge(challenger),
+        challengeSent: (opponent) => this.showOutgoingChallenge(opponent),
+        challengeDeclined: (opponent) => this.handleChallengeDeclined(opponent),
         match: (match) => this.startOnlineMatch(match),
         remoteInput: (message) => this.receiveOnlineInput(message),
         snapshot: (message) => this.applyOnlineSnapshot(message),
         latency: (metrics) => this.updateOnlineLatency(metrics),
         opponentLeft: (message) => this.handleOnlineOpponentLeft(message),
-        error: (message) => this.setOnlineStatus({ state: "error", message: message.message }),
+        error: (message) => {
+          this.hideOutgoingChallenge();
+          this.setOnlineStatus({ state: "error", message: message.message });
+        },
         disconnected: () => {
-          this.setOnlineStatus({ state: "offline", message: "DISCONNECTED" });
+          this.setOnlineStatus({ state: "offline", message: "DESCONECTADO" });
+          this.setOnlineConnectionState(false);
+          this.hideOutgoingChallenge();
           this.updateOnlineLatency();
         },
       }) : null;
@@ -1114,6 +1147,7 @@
       this.state = "menu";
       const storedName = globalThis.localStorage?.getItem("neonBrawlOnlineName");
       if (storedName && !onlineNameInput.value) onlineNameInput.value = storedName;
+      if (!this.online?.connected) this.setOnlineConnectionState(false);
       this.renderOnlineLobby(this.onlineLobby);
       onlineNameInput.focus?.();
     }
@@ -1126,6 +1160,19 @@
       const fighterName = String(name || "NEON FIGHTER").trim().slice(0, 18);
       globalThis.localStorage?.setItem("neonBrawlOnlineName", fighterName);
       this.online.connect(fighterName);
+    }
+
+    setOnlineConnectionState(connected, name = "") {
+      onlineConnectForm.classList.toggle("online-connect-form--connected", connected);
+      onlineNameInput.disabled = connected;
+      onlineConnectButton.disabled = connected;
+      onlineConnectButton.textContent = connected ? "CONECTADO" : "CONECTAR";
+      if (connected && name) onlineNameInput.value = name;
+    }
+
+    handleOnlineWelcome({ name } = {}) {
+      this.setOnlineConnectionState(true, name);
+      this.setOnlineStatus({ state: "online", message: `CONECTADO // ${String(name || "FIGHTER").toUpperCase()}` });
     }
 
     setOnlineStatus({ state = "offline", message = "DISCONNECTED" } = {}) {
@@ -1185,12 +1232,34 @@
       this.pendingChallenger = challenger;
       onlineChallengerName.textContent = challenger.name;
       onlineChallenge.classList.remove("is-hidden");
-      this.setOnlineStatus({ state: "waiting", message: "INCOMING CHALLENGE" });
+      this.setOnlineStatus({ state: "waiting", message: `RETO RECIBIDO DE ${challenger.name.toUpperCase()}` });
     }
 
     hideOnlineChallenge() {
       this.pendingChallenger = null;
       onlineChallenge.classList.add("is-hidden");
+    }
+
+    showOutgoingChallenge(opponent) {
+      onlineOutgoingName.textContent = opponent.name;
+      onlineOutgoingChallenge.classList.remove("is-hidden");
+      this.setOnlineStatus({
+        state: "waiting",
+        message: `RETO ENVIADO A ${opponent.name.toUpperCase()} // ESPERANDO`,
+      });
+    }
+
+    hideOutgoingChallenge() {
+      onlineOutgoingChallenge.classList.add("is-hidden");
+      onlineOutgoingName.textContent = "FIGHTER";
+    }
+
+    handleChallengeDeclined(opponent) {
+      this.hideOutgoingChallenge();
+      this.setOnlineStatus({
+        state: "online",
+        message: `${opponent.name.toUpperCase()} RECHAZÓ EL RETO // BUSCANDO`,
+      });
     }
 
     startOnlineMatch(match) {
@@ -1200,6 +1269,7 @@
       this.onlineRemoteActions = this.emptyInput();
       this.onlineLastSnapshot = -1;
       this.hideOnlineChallenge();
+      this.hideOutgoingChallenge();
       onlineScreen.classList.add("is-hidden");
       this.start("online");
       this.showCallout(`${match.opponent.name} CONNECTED`, "#d6ff7d", 1.1);
@@ -1218,6 +1288,9 @@
 
     consumeOnlineRemoteInput() {
       const input = { ...this.onlineRemoteInput };
+      // Remote clients send semantic movement: +1 is forward and -1 is backward.
+      // The authoritative host resolves it against the current right-side facing.
+      input.move = resolveForwardMovement(input.move, this.fighterTwo.facing);
       for (const action of ["leftPunch", "rightPunch", "leftKick", "rightKick", "evade"]) {
         input[action] = this.onlineRemoteActions[action];
         this.onlineRemoteActions[action] = false;
@@ -1240,7 +1313,8 @@
       roundMessage.classList.add("is-hidden");
       menuScreen.classList.add("is-hidden");
       onlineScreen.classList.remove("is-hidden");
-      this.setOnlineStatus({ state: "online", message: "CONNECTED // SEARCHING FOR FIGHTERS" });
+      this.hideOutgoingChallenge();
+      this.setOnlineStatus({ state: "online", message: "CONECTADO // BUSCANDO PELEADORES" });
     }
 
     handleOnlineOpponentLeft({ reason = "Opponent disconnected." } = {}) {
@@ -1312,6 +1386,8 @@
       if (this.mode === "online") {
         this.online?.leaveMatch();
         this.online?.disconnect();
+        this.setOnlineConnectionState(false);
+        this.hideOutgoingChallenge();
         this.onlineRole = null;
         this.onlineOpponent = null;
       }
@@ -1951,27 +2027,100 @@
     }
 
     applyFighterSnapshot(fighter, snapshot) {
-      if (!snapshot) return;
+      if (!snapshot || typeof snapshot !== "object") return;
       for (const field of ONLINE_FIGHTER_FIELDS) {
-        if (Object.hasOwn(snapshot, field)) fighter[field] = snapshot[field];
+        if (!Object.hasOwn(snapshot, field)) continue;
+        if (ONLINE_NUMERIC_FIGHTER_FIELDS.has(field)) {
+          if (Number.isFinite(snapshot[field])) fighter[field] = snapshot[field];
+          continue;
+        }
+        fighter[field] = snapshot[field];
+      }
+
+      fighter.x = clamp(Number.isFinite(fighter.x) ? fighter.x : WIDTH / 2, STAGE_LEFT, STAGE_RIGHT);
+      if (!isFacing(fighter.facing)) fighter.facing = fighter.player === 1 ? 1 : -1;
+      if (fighter.guard !== null && fighter.guard !== "high" && fighter.guard !== "low") fighter.guard = null;
+      if (fighter.guardVisual !== null && fighter.guardVisual !== "high" && fighter.guardVisual !== "low") {
+        fighter.guardVisual = null;
+      }
+
+      if (fighter.attack !== null) {
+        const attack = fighter.attack;
+        if (!attack || typeof attack !== "object" || !ATTACKS[attack.type]) fighter.attack = null;
+        else {
+          fighter.attack = {
+            ...attack,
+            elapsed: Number.isFinite(attack.elapsed) ? Math.max(0, attack.elapsed) : 0,
+            facing: isFacing(attack.facing) ? attack.facing : fighter.facing,
+            connected: Boolean(attack.connected),
+            stationaryStart: Boolean(attack.stationaryStart),
+          };
+        }
+      }
+
+      const animations = ANIMATIONS[fighter.characterId];
+      if (!animations[fighter.knockdownAnimation]) {
+        fighter.knockdownAnimation = fighter.knockdownTarget === "body" ? "bodyKnockdown" : "headKnockdown";
+      }
+      if (fighter.finishAnimation) {
+        const finish = fighter.finishAnimation;
+        if (!finish || !animations[finish.animation]) fighter.finishAnimation = null;
+        else {
+          fighter.finishAnimation = {
+            ...finish,
+            elapsed: Number.isFinite(finish.elapsed) ? Math.max(0, finish.elapsed) : 0,
+            duration: Number.isFinite(finish.duration) && finish.duration > 0 ? finish.duration : 1,
+          };
+        }
+      }
+      for (const effectName of ["hitReaction", "blockReaction"]) {
+        const effect = fighter[effectName];
+        if (!effect) continue;
+        if (typeof effect !== "object") fighter[effectName] = null;
+        else {
+          effect.elapsed = Number.isFinite(effect.elapsed) ? Math.max(0, effect.elapsed) : 0;
+          effect.duration = Number.isFinite(effect.duration) && effect.duration > 0 ? effect.duration : 0.12;
+        }
+      }
+      if (fighter.impactMarker) {
+        const marker = fighter.impactMarker;
+        const validMarker = typeof marker === "object"
+          && Number.isFinite(marker.x)
+          && Number.isFinite(marker.y)
+          && Number.isFinite(marker.life)
+          && Number.isFinite(marker.maxLife)
+          && marker.maxLife > 0;
+        if (!validMarker) fighter.impactMarker = null;
       }
     }
 
     applyOnlineSnapshot({ sequence, snapshot }) {
-      if (this.mode !== "online" || this.onlineRole !== "guest" || sequence <= this.onlineLastSnapshot) return;
+      if (this.mode !== "online"
+        || this.onlineRole !== "guest"
+        || !snapshot
+        || typeof snapshot !== "object"
+        || !Number.isFinite(sequence)
+        || sequence <= this.onlineLastSnapshot) return;
       this.onlineLastSnapshot = sequence;
       const previousState = this.state;
-      this.state = snapshot.state;
-      this.round = snapshot.round;
-      this.timer = snapshot.timer;
-      this.introTimer = snapshot.introTimer;
-      this.roundDelay = snapshot.roundDelay;
-      this.matchMethod = snapshot.matchMethod;
-      this.roundHistory = snapshot.roundHistory ?? [];
+      const onlineStates = new Set(["intro", "fighting", "ground", "roundOver", "matchOver"]);
+      if (onlineStates.has(snapshot.state)) this.state = snapshot.state;
+      if (Number.isFinite(snapshot.round)) this.round = clamp(Math.round(snapshot.round), 1, MAX_ROUNDS);
+      if (Number.isFinite(snapshot.timer)) this.timer = Math.max(0, snapshot.timer);
+      if (Number.isFinite(snapshot.introTimer)) this.introTimer = snapshot.introTimer;
+      if (Number.isFinite(snapshot.roundDelay)) this.roundDelay = snapshot.roundDelay;
+      if (typeof snapshot.matchMethod === "string") this.matchMethod = snapshot.matchMethod;
+      this.roundHistory = Array.isArray(snapshot.roundHistory) ? snapshot.roundHistory : [];
       this.recordedRounds = new Set(this.roundHistory.map(({ round }) => round));
-      this.callout = snapshot.callout;
-      this.flash = snapshot.flash;
-      this.shake = snapshot.shake;
+      this.callout = snapshot.callout && typeof snapshot.callout === "object"
+        && typeof snapshot.callout.text === "string"
+        && Number.isFinite(snapshot.callout.life)
+        && Number.isFinite(snapshot.callout.maxLife)
+        && snapshot.callout.maxLife > 0
+        ? snapshot.callout
+        : null;
+      if (Number.isFinite(snapshot.flash)) this.flash = Math.max(0, snapshot.flash);
+      if (Number.isFinite(snapshot.shake)) this.shake = Math.max(0, snapshot.shake);
       this.applyFighterSnapshot(this.fighterOne, snapshot.fighterOne);
       this.applyFighterSnapshot(this.fighterTwo, snapshot.fighterTwo);
       this.matchWinner = snapshot.matchWinner === 1
@@ -1979,12 +2128,25 @@
         : snapshot.matchWinner === 2
           ? this.fighterTwo
           : null;
-      this.particles = (snapshot.particles ?? []).map((particle) => {
+      this.particles = (Array.isArray(snapshot.particles) ? snapshot.particles : [])
+        .filter((particle) => particle
+          && Number.isFinite(particle.x)
+          && Number.isFinite(particle.y)
+          && Number.isFinite(particle.life)
+          && Number.isFinite(particle.maxLife)
+          && particle.maxLife > 0)
+        .map((particle) => {
         const replica = new Particle(particle);
         replica.maxLife = particle.maxLife;
         return replica;
       });
-      this.damageNumbers = snapshot.damageNumbers ?? [];
+      this.damageNumbers = (Array.isArray(snapshot.damageNumbers) ? snapshot.damageNumbers : [])
+        .filter((number) => number
+          && Number.isFinite(number.x)
+          && Number.isFinite(number.y)
+          && Number.isFinite(number.life)
+          && Number.isFinite(number.maxLife)
+          && number.maxLife > 0);
       if (snapshot.roundOverlay) {
         roundKicker.textContent = snapshot.roundOverlay.kicker;
         roundTitle.textContent = snapshot.roundOverlay.title;
@@ -1994,10 +2156,12 @@
     }
 
     getOnlineKeyboardInput(includeActions = true) {
-      const controlledFighter = this.onlineRole === "guest" ? this.fighterTwo : this.fighterOne;
-      const forward = controlledFighter.facing;
+      const movementIntent = (keys.has("KeyD") ? 1 : 0) - (keys.has("KeyA") ? 1 : 0);
+      const move = this.onlineRole === "guest"
+        ? movementIntent
+        : resolveForwardMovement(movementIntent, this.fighterOne.facing);
       return {
-        move: (keys.has("KeyD") ? forward : 0) - (keys.has("KeyA") ? forward : 0),
+        move,
         guardHigh: keys.has("KeyW"),
         guardLow: keys.has("KeyS"),
         leftPunch: includeActions && pressed.has("KeyT"),
@@ -2547,6 +2711,8 @@
   onlineBack.addEventListener("click", () => {
     game.online?.disconnect();
     game.hideOnlineChallenge();
+    game.hideOutgoingChallenge();
+    game.setOnlineConnectionState(false);
     game.mode = "cpu";
     game.returnToMenu();
   });
@@ -2581,6 +2747,6 @@
   });
 
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { game, Fighter, ATTACKS, GAMEPLAY_RULES };
+    module.exports = { game, Fighter, ATTACKS, GAMEPLAY_RULES, resolveForwardMovement };
   }
 })();

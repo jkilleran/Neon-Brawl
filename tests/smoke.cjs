@@ -15,6 +15,8 @@ assert.match(markup, /data-mode="practice"/, "Menu should expose practice mode")
 assert.match(markup, /data-mode="online"/, "Menu should expose online mode");
 assert.match(markup, /BUSCANDO PARTIDA AHORA MISMO/, "Online lobby should show live matchmaking presence");
 assert.match(markup, /id="online-latency"[\s\S]*SERVER RTT/, "Online lobby should show server round-trip latency");
+assert.match(markup, /id="online-connect-button"[\s\S]*CONECTAR/, "Online lobby should expose explicit connection state");
+assert.match(markup, /id="online-outgoing-challenge"[\s\S]*RETO ENVIADO/, "Online lobby should show outgoing challenge state");
 assert.match(markup, /id="result-scorecard"/, "Result screen should expose the per-round scorecard");
 assert.match(markup, /online-client\.js[\s\S]*game\.js/, "Online client must load before the game");
 assert.match(markup, /Sin reloj · daño visible por golpe/, "Practice mode should explain its damage display");
@@ -163,6 +165,7 @@ const make = (selector) => {
   "#online-screen",
   "#online-connect-form",
   "#online-name",
+  "#online-connect-button",
   "#online-presence",
   "#online-status",
   "#online-latency",
@@ -172,6 +175,8 @@ const make = (selector) => {
   "#online-player-list",
   "#online-challenge",
   "#online-challenger-name",
+  "#online-outgoing-challenge",
+  "#online-outgoing-name",
   "#online-accept",
   "#online-decline",
   "#online-back",
@@ -243,7 +248,45 @@ global.requestAnimationFrame = (callback) => {
   animationFrames.push(callback);
 };
 
-const { game, ATTACKS } = require("../game.js");
+const { game, ATTACKS, resolveForwardMovement } = require("../game.js");
+
+assert.equal(resolveForwardMovement(1, 1), 1, "Forward intent should move a left-side fighter right");
+assert.equal(resolveForwardMovement(1, -1), -1, "Forward intent should move a right-side fighter left");
+assert.equal(resolveForwardMovement(-1, -1), 1, "Backward intent should move a right-side fighter right");
+
+game.onlineRemoteInput = { ...game.emptyInput(), move: 1 };
+game.fighterTwo.facing = -1;
+assert.equal(game.consumeOnlineRemoteInput().move, -1, "The host must resolve guest D against authoritative facing");
+game.onlineRemoteInput.move = -1;
+assert.equal(game.consumeOnlineRemoteInput().move, 1, "The host must resolve guest A as retreat");
+
+const safeReplicaX = game.fighterTwo.x;
+game.applyFighterSnapshot(game.fighterTwo, {
+  x: null,
+  facing: null,
+  attack: { type: "missingAttack", elapsed: null },
+  knockdownAnimation: "missingAnimation",
+  finishAnimation: { animation: "missingAnimation", elapsed: null, duration: null },
+});
+assert.equal(game.fighterTwo.x, safeReplicaX, "Invalid snapshot coordinates must not move a replica off canvas");
+assert.equal(game.fighterTwo.facing, -1, "Invalid right-side facing must recover to the canonical orientation");
+assert.equal(game.fighterTwo.attack, null, "Unknown remote attacks must not break rendering");
+assert.equal(game.fighterTwo.finishAnimation, null, "Unknown remote finish animations must be discarded");
+assert.doesNotThrow(
+  () => game.fighterTwo.draw(context, { animation: "missingAnimation", frame: Number.NaN, facing: 0 }),
+  "A malformed visual state must fall back to an idle sprite instead of hiding the fighter",
+);
+
+game.handleOnlineWelcome({ name: "Johan" });
+assert.equal(selectors.get("#online-status").textContent, "CONECTADO // JOHAN");
+assert.equal(selectors.get("#online-connect-button").textContent, "CONECTADO");
+assert.equal(selectors.get("#online-connect-button").disabled, true);
+game.showOutgoingChallenge({ name: "Friend" });
+assert.equal(selectors.get("#online-outgoing-name").textContent, "Friend");
+assert.equal(selectors.get("#online-outgoing-challenge").classList.contains("is-hidden"), false);
+assert.match(selectors.get("#online-status").textContent, /RETO ENVIADO A FRIEND/);
+game.handleChallengeDeclined({ name: "Friend" });
+assert.equal(selectors.get("#online-outgoing-challenge").classList.contains("is-hidden"), true);
 
 assert.deepEqual(globalThis.NEON_BRAWL_GAMEPLAY_RULES, {
   roundTimeSeconds: 180,
