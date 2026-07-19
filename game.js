@@ -74,6 +74,18 @@
     fair: "#ffc35b",
     high: "#ff3b9d",
   });
+  const HUD_HEALTH_STATES = Object.freeze([
+    Object.freeze({ minimum: 70, tier: "stable", color: "#70f6d3", glow: 7 }),
+    Object.freeze({ minimum: 45, tier: "worn", color: "#ffd65a", glow: 9 }),
+    Object.freeze({ minimum: 20, tier: "danger", color: "#ff9d4d", glow: 12 }),
+    Object.freeze({ minimum: 0, tier: "critical", color: "#ff405f", glow: 18 }),
+  ]);
+
+  const getHudHealthState = (health) => {
+    const safeHealth = clamp(Number.isFinite(health) ? health : 0, 0, 100);
+    return HUD_HEALTH_STATES.find((state) => safeHealth >= state.minimum)
+      ?? HUD_HEALTH_STATES.at(-1);
+  };
 
   const ANIMATION_MANIFEST = globalThis.NEON_BRAWL_ANIMATIONS;
   if (!ANIMATION_MANIFEST) {
@@ -2815,30 +2827,31 @@
 
     drawHud(context) {
       const width = 430;
+      this.drawHudFrame(context);
       this.drawFighterHud(context, this.fighterOne, 50, false, width);
       this.drawFighterHud(context, this.fighterTwo, WIDTH - 50 - width, true, width);
 
       context.save();
       context.textAlign = "center";
       context.fillStyle = "#f6f7ff";
-      context.font = "700 43px Orbitron, sans-serif";
+      context.font = "700 40px Orbitron, sans-serif";
       context.shadowColor = "rgba(255,255,255,0.24)";
       context.shadowBlur = 12;
       if (this.mode === "practice") {
-        context.fillText("∞", WIDTH / 2, 67);
+        context.fillText("∞", WIDTH / 2, 59);
       } else {
         const totalSeconds = Math.ceil(this.timer);
         const minutes = Math.floor(totalSeconds / 60);
         const seconds = String(totalSeconds % 60).padStart(2, "0");
-        context.fillText(`${minutes}:${seconds}`, WIDTH / 2, 67);
+        context.fillText(`${minutes}:${seconds}`, WIDTH / 2, 59);
       }
       context.shadowBlur = 0;
-      context.fillStyle = "#77798e";
-      context.font = "700 10px Chakra Petch, sans-serif";
+      context.fillStyle = "#d9d9e5";
+      context.font = "700 10px Orbitron, sans-serif";
       context.fillText(
         this.mode === "practice" ? "NO TIME LIMIT" : `ROUND ${this.round} / ${MAX_ROUNDS}`,
         WIDTH / 2,
-        88,
+        79,
       );
       const onlineLatencyMs = this.online?.latencyMs;
       const onlineQuality = Number.isFinite(onlineLatencyMs)
@@ -2856,8 +2869,64 @@
               ? `ONLINE // ${this.onlineRole === "player1" ? "PLAYER 1" : "PLAYER 2"} // ${Number.isFinite(onlineLatencyMs) ? `${onlineLatencyMs} MS` : "-- MS"}`
               : "LOCAL SPARRING",
         WIDTH / 2,
-        104,
+        98,
       );
+      context.restore();
+    }
+
+    drawHudFrame(context) {
+      const drawSide = (reverse, color) => {
+        const outerX = reverse ? WIDTH - 24 : 24;
+        const innerX = reverse ? WIDTH / 2 + 92 : WIDTH / 2 - 92;
+        const innerShoulder = reverse ? innerX + 34 : innerX - 34;
+        const gradient = context.createLinearGradient(outerX, 0, innerX, 0);
+        gradient.addColorStop(0, "rgba(5, 7, 18, 0.94)");
+        gradient.addColorStop(0.72, "rgba(7, 9, 23, 0.86)");
+        gradient.addColorStop(1, "rgba(7, 7, 18, 0.35)");
+
+        context.beginPath();
+        context.moveTo(outerX, 15);
+        context.lineTo(innerShoulder, 15);
+        context.lineTo(innerX, 54);
+        context.lineTo(innerShoulder, 108);
+        context.lineTo(outerX, 108);
+        context.closePath();
+        context.fillStyle = gradient;
+        context.fill();
+        context.strokeStyle = `${color}80`;
+        context.lineWidth = 1;
+        context.stroke();
+      };
+
+      context.save();
+      drawSide(false, this.fighterOne.color);
+      drawSide(true, this.fighterTwo.color);
+
+      const centerX = WIDTH / 2;
+      const centerGradient = context.createLinearGradient(centerX - 102, 0, centerX + 102, 0);
+      centerGradient.addColorStop(0, "rgba(53, 242, 229, 0.08)");
+      centerGradient.addColorStop(0.5, "rgba(8, 8, 22, 0.97)");
+      centerGradient.addColorStop(1, "rgba(255, 59, 157, 0.08)");
+      context.beginPath();
+      context.moveTo(centerX - 88, 19);
+      context.lineTo(centerX + 88, 19);
+      context.lineTo(centerX + 108, 53);
+      context.lineTo(centerX + 87, 105);
+      context.lineTo(centerX - 87, 105);
+      context.lineTo(centerX - 108, 53);
+      context.closePath();
+      context.fillStyle = centerGradient;
+      context.fill();
+      context.strokeStyle = "rgba(200, 213, 255, 0.3)";
+      context.lineWidth = 1.2;
+      context.stroke();
+
+      context.globalAlpha = 0.32;
+      context.strokeStyle = "rgba(255,255,255,0.14)";
+      context.beginPath();
+      context.moveTo(32, 114);
+      context.lineTo(WIDTH - 32, 114);
+      context.stroke();
       context.restore();
     }
 
@@ -2884,20 +2953,22 @@
       context.textAlign = reverse ? "right" : "left";
       const textX = reverse ? x + width : x;
       context.fillStyle = "#f5f5ff";
-      context.font = "700 19px Orbitron, sans-serif";
-      context.fillText(fighter.name, textX, 30);
+      context.font = "700 21px Orbitron, sans-serif";
+      context.fillText(fighter.name, textX, 31);
       context.fillStyle = fighter.color;
       context.font = "600 9px Chakra Petch, sans-serif";
-      context.fillText(fighter.style, textX, 43);
+      context.fillText(fighter.style, textX, 46);
 
-      this.drawBar(context, x, 51, width, 20, fighter.displayHead / 100, fighter.color, reverse, "HEAD");
-      this.drawBar(context, x, 76, width, 7, fighter.displayBody / 100, "#ffad57", reverse, "BODY");
-      this.drawStaminaBar(context, fighter, x, 88, width, 6, reverse);
+      const headX = reverse ? x + 92 : x + width - 92;
+      const bodyX = reverse ? x + 43 : x + width - 43;
+      this.drawHealthStatusIcon(context, "head", headX, 35, fighter.displayHead, fighter.color);
+      this.drawHealthStatusIcon(context, "body", bodyX, 35, fighter.displayBody, fighter.color);
+      this.drawStaminaBar(context, fighter, x, 65, width, 10, reverse);
 
       for (let index = 0; index < MAX_ROUNDS; index += 1) {
         const dotX = reverse ? x + width - index * 19 : x + index * 19;
         context.beginPath();
-        context.arc(dotX, 108, 4.5, 0, Math.PI * 2);
+        context.arc(dotX, 96, 3.5, 0, Math.PI * 2);
         context.fillStyle = index < fighter.roundWins ? fighter.color : "rgba(255,255,255,0.12)";
         context.shadowColor = fighter.color;
         context.shadowBlur = index < fighter.roundWins ? 9 : 0;
@@ -2906,53 +2977,145 @@
       context.restore();
     }
 
-    drawStaminaBar(context, fighter, x, y, width, height, reverse) {
-      context.fillStyle = "rgba(1, 1, 8, 0.82)";
-      context.strokeStyle = "rgba(255,255,255,0.14)";
+    drawHealthStatusIcon(context, type, centerX, centerY, health, accent) {
+      const status = getHudHealthState(health);
+      const criticalPulse = status.tier === "critical"
+        ? 0.78 + Math.sin(this.elapsed * 8) * 0.22
+        : 1;
+
+      context.save();
+      context.globalAlpha = criticalPulse;
+      context.beginPath();
+      context.moveTo(centerX - 17, centerY - 22);
+      context.lineTo(centerX + 12, centerY - 22);
+      context.lineTo(centerX + 22, centerY);
+      context.lineTo(centerX + 12, centerY + 22);
+      context.lineTo(centerX - 17, centerY + 22);
+      context.lineTo(centerX - 25, centerY);
+      context.closePath();
+      context.fillStyle = "rgba(5, 7, 18, 0.9)";
+      context.fill();
+      context.strokeStyle = `${accent}70`;
       context.lineWidth = 1;
-      context.fillRect(x, y, width, height);
-      context.strokeRect(x, y, width, height);
+      context.stroke();
 
-      const capacityWidth = clamp(width * (fighter.displayStaminaCap / 100), 0, width);
-      const staminaWidth = clamp(width * (fighter.displayStamina / 100), 0, capacityWidth);
-      const capacityX = reverse ? x + width - capacityWidth : x;
-      const staminaX = reverse ? x + width - staminaWidth : x;
+      context.beginPath();
+      context.moveTo(centerX - 13, centerY - 17);
+      context.lineTo(centerX + 9, centerY - 17);
+      context.lineTo(centerX + 17, centerY);
+      context.lineTo(centerX + 9, centerY + 17);
+      context.lineTo(centerX - 13, centerY + 17);
+      context.lineTo(centerX - 19, centerY);
+      context.closePath();
+      context.fillStyle = `${status.color}18`;
+      context.fill();
 
-      context.fillStyle = "rgba(214, 255, 125, 0.28)";
+      context.fillStyle = status.color;
+      context.strokeStyle = status.color;
+      context.shadowColor = status.color;
+      context.shadowBlur = status.glow;
+      if (type === "head") this.drawHeadHealthGlyph(context, centerX - 1, centerY);
+      else this.drawBodyHealthGlyph(context, centerX - 1, centerY);
+      context.shadowBlur = 0;
+
+      context.fillStyle = status.color;
+      context.fillRect(centerX - 7, centerY + 16, 12, 1.5);
+      context.restore();
+    }
+
+    drawHeadHealthGlyph(context, centerX, centerY) {
+      context.beginPath();
+      context.arc(centerX - 1, centerY - 5, 6, 0, Math.PI * 2);
+      context.fill();
+      context.fillRect(centerX - 4, centerY, 7, 8);
+      context.beginPath();
+      context.moveTo(centerX - 9, centerY + 10);
+      context.quadraticCurveTo(centerX - 1, centerY + 4, centerX + 7, centerY + 10);
+      context.lineTo(centerX + 7, centerY + 12);
+      context.lineTo(centerX - 9, centerY + 12);
+      context.closePath();
+      context.fill();
+    }
+
+    drawBodyHealthGlyph(context, centerX, centerY) {
+      context.beginPath();
+      context.arc(centerX, centerY - 10, 3.7, 0, Math.PI * 2);
+      context.fill();
+      context.beginPath();
+      context.moveTo(centerX - 11, centerY - 4);
+      context.quadraticCurveTo(centerX - 5, centerY - 8, centerX - 3, centerY - 4);
+      context.lineTo(centerX - 5, centerY + 10);
+      context.lineTo(centerX, centerY + 13);
+      context.lineTo(centerX + 5, centerY + 10);
+      context.lineTo(centerX + 3, centerY - 4);
+      context.quadraticCurveTo(centerX + 5, centerY - 8, centerX + 11, centerY - 4);
+      context.lineTo(centerX + 8, centerY + 2);
+      context.lineTo(centerX + 5, centerY - 1);
+      context.lineTo(centerX + 4, centerY + 7);
+      context.lineTo(centerX - 4, centerY + 7);
+      context.lineTo(centerX - 5, centerY - 1);
+      context.lineTo(centerX - 8, centerY + 2);
+      context.closePath();
+      context.fill();
+    }
+
+    drawStaminaBar(context, fighter, x, y, width, height, reverse) {
+      const labelSpace = 66;
+      const trackX = reverse ? x + labelSpace : x + 8;
+      const trackWidth = width - labelSpace - 8;
+      const labelX = reverse ? x + 10 : x + width - 10;
+
+      context.beginPath();
+      context.moveTo(x + 7, y - 6);
+      context.lineTo(x + width - 7, y - 6);
+      context.lineTo(x + width, y + height / 2);
+      context.lineTo(x + width - 7, y + height + 6);
+      context.lineTo(x + 7, y + height + 6);
+      context.lineTo(x, y + height / 2);
+      context.closePath();
+      context.fillStyle = "rgba(1, 1, 8, 0.88)";
+      context.fill();
+      context.strokeStyle = `${fighter.color}70`;
+      context.lineWidth = 1;
+      context.stroke();
+
+      context.fillStyle = "rgba(255,255,255,0.07)";
+      context.fillRect(trackX, y, trackWidth, height);
+      const capacityWidth = clamp(trackWidth * (fighter.displayStaminaCap / 100), 0, trackWidth);
+      const staminaWidth = clamp(trackWidth * (fighter.displayStamina / 100), 0, capacityWidth);
+      const capacityX = reverse ? trackX + trackWidth - capacityWidth : trackX;
+      const staminaX = reverse ? trackX + trackWidth - staminaWidth : trackX;
+
+      context.fillStyle = `${fighter.color}3d`;
       context.fillRect(capacityX, y, capacityWidth, height);
-      context.fillStyle = "#d6ff7d";
-      context.shadowColor = "#d6ff7d";
-      context.shadowBlur = 5;
+      context.fillStyle = fighter.color;
+      context.shadowColor = fighter.color;
+      context.shadowBlur = 7;
       context.fillRect(staminaX, y, staminaWidth, height);
       context.shadowBlur = 0;
 
-      if (capacityWidth < width - 1) {
-        const capX = reverse ? x + width - capacityWidth : x + capacityWidth;
+      context.textAlign = reverse ? "left" : "right";
+      context.fillStyle = fighter.color;
+      context.font = "700 8px Orbitron, sans-serif";
+      context.fillText("STAMINA", labelX, y + 8);
+
+      context.strokeStyle = "rgba(5, 5, 15, 0.34)";
+      context.lineWidth = 1;
+      for (let segment = 1; segment < 5; segment += 1) {
+        const segmentX = trackX + (trackWidth * segment) / 5;
+        context.beginPath();
+        context.moveTo(segmentX, y);
+        context.lineTo(segmentX, y + height);
+        context.stroke();
+      }
+
+      if (capacityWidth < trackWidth - 1) {
+        const capX = reverse ? trackX + trackWidth - capacityWidth : trackX + capacityWidth;
         context.strokeStyle = "rgba(255, 179, 92, 0.9)";
         context.beginPath();
         context.moveTo(capX, y - 1);
         context.lineTo(capX, y + height + 1);
         context.stroke();
-      }
-    }
-
-    drawBar(context, x, y, width, height, ratio, color, reverse, label) {
-      context.fillStyle = "rgba(1, 1, 8, 0.78)";
-      context.strokeStyle = "rgba(255,255,255,0.14)";
-      context.lineWidth = 1;
-      context.fillRect(x, y, width, height);
-      context.strokeRect(x, y, width, height);
-      const fillWidth = clamp(width * ratio, 0, width);
-      context.fillStyle = color;
-      context.shadowColor = color;
-      context.shadowBlur = height > 10 ? 10 : 5;
-      context.fillRect(reverse ? x + width - fillWidth : x, y, fillWidth, height);
-      context.shadowBlur = 0;
-      if (height > 10) {
-        context.fillStyle = "rgba(255,255,255,0.6)";
-        context.font = "700 8px Chakra Petch, sans-serif";
-        context.textAlign = reverse ? "left" : "right";
-        context.fillText(label, reverse ? x + 7 : x + width - 7, y + 14);
       }
     }
 
@@ -3087,6 +3250,6 @@
   });
 
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { game, Fighter, ATTACKS, GAMEPLAY_RULES };
+    module.exports = { game, Fighter, ATTACKS, GAMEPLAY_RULES, getHudHealthState };
   }
 })();

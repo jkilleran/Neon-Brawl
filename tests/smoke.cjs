@@ -281,7 +281,13 @@ global.requestAnimationFrame = (callback) => {
   animationFrames.push(callback);
 };
 
-const { game, ATTACKS } = require("../game.js");
+const { game, ATTACKS, getHudHealthState } = require("../game.js");
+
+assert.equal(getHudHealthState(100).tier, "stable", "Healthy fighters should show a calm status icon");
+assert.equal(getHudHealthState(69).tier, "worn", "Moderate damage should turn the status icon yellow");
+assert.equal(getHudHealthState(44).tier, "danger", "Heavy damage should turn the status icon orange");
+assert.equal(getHudHealthState(19).tier, "critical", "Critical damage should turn the status icon red");
+assert.equal(getHudHealthState(Number.NaN).tier, "critical", "Invalid health must fail safely as critical");
 
 for (const [attackId, serverDefinition] of Object.entries(combatConfig.attacks)) {
   for (const [field, value] of Object.entries(serverDefinition)) {
@@ -530,6 +536,10 @@ assert.match(gameSource, /critical\s*\? GAMEPLAY_RULES\.criticalStrikeDamageScal
 assert.match(gameSource, /severity: critical \? "critical" : "clean"/, "Clean and critical hits should use distinct reactions");
 assert.match(gameSource, /target\.blockReaction = \{/, "Blocked strikes should trigger a subtle guard reaction");
 assert.match(gameSource, /drawStaminaBar\(context, fighter/, "HUD should draw short and long-term stamina together");
+assert.match(gameSource, /drawHealthStatusIcon\(context, "head"/, "HUD should represent head health with an icon");
+assert.match(gameSource, /drawHealthStatusIcon\(context, "body"/, "HUD should represent body health with an icon");
+assert.doesNotMatch(gameSource, /this\.drawBar\(context[\s\S]{0,120}displayHead/, "HUD should not expose a direct head-health bar");
+assert.doesNotMatch(gameSource, /this\.drawBar\(context[\s\S]{0,120}displayBody/, "HUD should not expose a direct body-health bar");
 assert.match(gameSource, /this\.mode !== "practice"[\s\S]*this\.timer/, "Practice mode should not consume the timer");
 assert.match(gameSource, /spawnDamageNumber\(/, "Practice impacts should show numeric damage");
 assert.doesNotMatch(gameSource, /knockdownsSuffered\s*>=/, "Knockdown count must not trigger a TKO");

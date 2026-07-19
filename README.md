@@ -115,6 +115,7 @@ npm run build
 ## Gameplay highlights
 
 - Two-level mode selection that cleanly separates Local and Online play
+- Competitive HUD with condition-based head/body icons and one layered stamina meter
 - Quick Fight, Local Sparring, and infinite-time Practice Lab
 - Three 3-minute rounds with 10-9 scoring
 - Separate head and body damage
@@ -130,6 +131,7 @@ npm run build
 - Online lobby, direct challenges, and synchronized friend matches
 
 Exact balance values are documented in [Gameplay Rules](docs/gameplay-rules.md).
+HUD presentation and health-state thresholds are documented in [Competitive HUD](docs/competitive-hud.md).
 
 ## Local ZIP updates
 
