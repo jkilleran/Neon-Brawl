@@ -53,6 +53,7 @@
   const ONLINE_MAX_ANIMATION_FAST_FORWARD_SECONDS = 0.08;
   const ONLINE_REMOTE_SMOOTHING_RATE = 24;
   const ONLINE_LOCAL_RECONCILIATION_RATE = 7;
+  const GUARD_TRANSITION_RATE = COMBAT_CONFIG.guardTransitionRate;
   const STAGE_LEFT = 105;
   const STAGE_RIGHT = WIDTH - 105;
   const FEATURES = Object.freeze({
@@ -676,8 +677,8 @@
       }
       this.guard = nextGuard;
       this.guardBlend = this.guard
-        ? clamp(this.guardBlend + deltaTime * 9, 0, 1)
-        : clamp(this.guardBlend - deltaTime * 10, 0, 1);
+        ? clamp(this.guardBlend + deltaTime * GUARD_TRANSITION_RATE, 0, 1)
+        : clamp(this.guardBlend - deltaTime * GUARD_TRANSITION_RATE, 0, 1);
 
       if (!this.attack && this.stun <= 0 && this.evadeTimer <= 0) {
         const shortTermRatio = this.stamina / Math.max(1, this.maxStamina);
@@ -1062,6 +1063,7 @@
       this.onlineLastControlChangeSequence = 0;
       this.onlineInputTimer = 0;
       this.onlineLastSnapshot = -1;
+      this.onlinePendingSnapshot = null;
       this.onlineLastAcknowledgedInput = 0;
       this.onlinePredictedAttack = null;
       this.onlinePositionTargets = { fighterOne: null, fighterTwo: null };
@@ -1100,7 +1102,7 @@
         challengeSent: (opponent) => this.showOutgoingChallenge(opponent),
         challengeDeclined: (opponent) => this.handleChallengeDeclined(opponent),
         match: (match) => this.startOnlineMatch(match),
-        snapshot: (message) => this.applyOnlineSnapshot(message),
+        snapshot: (message) => this.queueOnlineSnapshot(message),
         latency: (metrics) => this.updateOnlineLatency(metrics),
         opponentLeft: (message) => this.handleOnlineOpponentLeft(message),
         error: (message) => {
@@ -1260,6 +1262,7 @@
       this.onlineRole = match.role;
       this.onlineOpponent = match.opponent;
       this.onlineLastSnapshot = -1;
+      this.onlinePendingSnapshot = null;
       this.onlineLastControlSignature = "";
       this.onlineLastControlChangeSequence = 0;
       this.onlineLastAcknowledgedInput = 0;
@@ -2041,6 +2044,41 @@
       }
     }
 
+    captureGuardPresentation(fighter) {
+      return {
+        guard: fighter.guard === "high" || fighter.guard === "low" ? fighter.guard : null,
+        guardVisual: fighter.guardVisual === "high" || fighter.guardVisual === "low"
+          ? fighter.guardVisual
+          : null,
+        guardBlend: clamp(Number(fighter.guardBlend) || 0, 0, 1),
+      };
+    }
+
+    reconcileGuardPresentation(fighter, previous, desiredGuard) {
+      const desired = desiredGuard === "high" || desiredGuard === "low" ? desiredGuard : null;
+      const previousVisual = previous.guardVisual ?? previous.guard;
+      fighter.guard = desired;
+
+      if (desired) {
+        const continuingSameGuard = previous.guard === desired
+          || (previous.guard === null && previousVisual === desired && previous.guardBlend > 0);
+        fighter.guardVisual = desired;
+        fighter.guardBlend = continuingSameGuard ? previous.guardBlend : 0;
+        return;
+      }
+
+      fighter.guardVisual = previousVisual;
+      fighter.guardBlend = previous.guardBlend;
+    }
+
+    queueOnlineSnapshot(message) {
+      if (!message || !Number.isFinite(message.sequence)) return;
+      if (message.sequence <= this.onlineLastSnapshot) return;
+      if (this.onlinePendingSnapshot
+        && message.sequence <= this.onlinePendingSnapshot.sequence) return;
+      this.onlinePendingSnapshot = message;
+    }
+
     applyOnlineSnapshot({ sequence, snapshot }) {
       if (this.mode !== "online"
         || !this.onlineRole
@@ -2053,6 +2091,10 @@
       const previousPositions = {
         fighterOne: { x: this.fighterOne.x, velocityX: this.fighterOne.velocityX },
         fighterTwo: { x: this.fighterTwo.x, velocityX: this.fighterTwo.velocityX },
+      };
+      const previousGuards = {
+        fighterOne: this.captureGuardPresentation(this.fighterOne),
+        fighterTwo: this.captureGuardPresentation(this.fighterTwo),
       };
       this.onlineLastSnapshot = sequence;
       const acknowledgedInput = snapshot.inputAcknowledgements?.[this.onlineRole];
@@ -2124,6 +2166,26 @@
         if (localCanPredict) {
           localFighter.x = previousPositions[localKey].x;
           localFighter.velocityX = previousPositions[localKey].velocityX;
+        }
+
+        this.reconcileGuardPresentation(
+          remoteFighter,
+          previousGuards[remoteKey],
+          remoteFighter.guard,
+        );
+        const localInput = this.getOnlineKeyboardInput(false);
+        const localGuardCanPredict = localCanPredict
+          && localFighter.stun <= 0
+          && localFighter.evadeTimer <= 0
+          && !localFighter.attack
+          && !this.onlinePredictedAttack;
+        if (localGuardCanPredict) {
+          const desiredGuard = localInput.guardHigh ? "high" : localInput.guardLow ? "low" : null;
+          this.reconcileGuardPresentation(
+            localFighter,
+            previousGuards[localKey],
+            desiredGuard,
+          );
         }
       }
       this.reconcilePredictedAttack(snapshot[localKey]?.attack ?? null);
@@ -2358,8 +2420,9 @@
         }
         fighter.guard = nextGuard;
         fighter.guardBlend = nextGuard
-          ? clamp(fighter.guardBlend + deltaTime * 9, 0, 1)
-          : clamp(fighter.guardBlend - deltaTime * 10, 0, 1);
+          ? clamp(fighter.guardBlend + deltaTime * GUARD_TRANSITION_RATE, 0, 1)
+          : clamp(fighter.guardBlend - deltaTime * GUARD_TRANSITION_RATE, 0, 1);
+        if (!nextGuard && fighter.guardBlend <= 0) fighter.guardVisual = null;
 
         const shortTermRatio = fighter.stamina / Math.max(1, fighter.maxStamina);
         const longTermRatio = fighter.maxStamina / 100;
@@ -2413,6 +2476,11 @@
     }
 
     updateOnlineReplica(deltaTime) {
+      if (this.onlinePendingSnapshot) {
+        const pendingSnapshot = this.onlinePendingSnapshot;
+        this.onlinePendingSnapshot = null;
+        this.applyOnlineSnapshot(pendingSnapshot);
+      }
       this.elapsed += deltaTime;
       this.onlineInputTimer -= deltaTime;
       if (this.onlineInputTimer <= 0) this.sendOnlineInputNow();
@@ -2429,6 +2497,10 @@
           1 - Math.exp(-ONLINE_REMOTE_SMOOTHING_RATE * deltaTime),
         );
       }
+      remoteFighter.guardBlend = remoteFighter.guard
+        ? clamp(remoteFighter.guardBlend + deltaTime * GUARD_TRANSITION_RATE, 0, 1)
+        : clamp(remoteFighter.guardBlend - deltaTime * GUARD_TRANSITION_RATE, 0, 1);
+      if (!remoteFighter.guard && remoteFighter.guardBlend <= 0) remoteFighter.guardVisual = null;
       this.updateOnlineLocalPrediction(deltaTime);
       for (const fighter of [this.fighterOne, this.fighterTwo]) {
         fighter.updateVisualState(deltaTime);

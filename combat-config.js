@@ -65,6 +65,7 @@
     maxRounds: 3,
     simulationHz: 60,
     snapshotHz: 30,
+    guardTransitionRate: 6,
     stage: Object.freeze({ left: 105, right: 1175, width: 1280, floor: 604 }),
     knockdownVariants: Object.freeze({
       head: Object.freeze([

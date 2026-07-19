@@ -56,11 +56,13 @@ The first online version includes:
 - immediate action delivery from both players to a fixed 60 Hz server simulation;
 - 30 Hz authoritative snapshots sent from the same server frame to both players;
 - identical local prediction for each player's movement, guard changes, and strike animation startup;
+- non-rewinding guard transitions with smooth ten-frame interpolation for local and remote fighters;
 - per-player input acknowledgements, bounded motion extrapolation, and smooth reconciliation;
 - screen-direction WASD online movement (`A` left, `D` right), including the right-side fighter;
 - defensive snapshot validation and visual fallbacks so malformed remote state cannot hide a fighter;
 - a two-player ready barrier and server clock that continues when either browser is hidden;
 - stale-snapshot shedding when a slow connection starts buffering;
+- browser-side snapshot coalescing and one-time server serialization for lower render and server overhead;
 - automatic WebSocket keepalive and reconnect attempts;
 - automatic return to the lobby when an opponent leaves;
 - one Node service serving both the Vite build and `/ws` WebSocket endpoint.

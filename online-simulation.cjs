@@ -6,6 +6,7 @@ const RULES = COMBAT_CONFIG.gameplayRules;
 const ATTACKS = COMBAT_CONFIG.attacks;
 const { left: STAGE_LEFT, right: STAGE_RIGHT, floor: FLOOR } = COMBAT_CONFIG.stage;
 const FIXED_DELTA = 1 / COMBAT_CONFIG.simulationHz;
+const GUARD_TRANSITION_RATE = COMBAT_CONFIG.guardTransitionRate;
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const lerp = (from, to, amount) => from + (to - from) * amount;
@@ -233,8 +234,8 @@ class ServerFighter {
     }
     this.guard = nextGuard;
     this.guardBlend = this.guard
-      ? clamp(this.guardBlend + deltaTime * 9, 0, 1)
-      : clamp(this.guardBlend - deltaTime * 10, 0, 1);
+      ? clamp(this.guardBlend + deltaTime * GUARD_TRANSITION_RATE, 0, 1)
+      : clamp(this.guardBlend - deltaTime * GUARD_TRANSITION_RATE, 0, 1);
 
     if (!this.attack && this.stun <= 0 && this.evadeTimer <= 0) {
       const shortTermRatio = this.stamina / Math.max(1, this.maxStamina);

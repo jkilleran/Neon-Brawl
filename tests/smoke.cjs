@@ -26,8 +26,12 @@ assert.match(markup, /Sin reloj · daño visible por golpe/, "Practice mode shou
 assert.match(markup, /brillante = stamina actual · tenue = límite recuperable/, "Pause menu should explain both stamina layers");
 assert.equal(combatConfig.snapshotHz, 30, "Server snapshots should use a bandwidth-safe 30 Hz cadence");
 assert.equal(combatConfig.simulationHz, 60, "The neutral server simulation should use a fixed 60 Hz step");
+assert.equal(combatConfig.guardTransitionRate, 6, "Guard transitions should expose all ten frames at 60 Hz");
 assert.match(gameSource, /predictOnlineLocalInput/, "Both players should predict their own controls locally");
+assert.match(gameSource, /reconcileGuardPresentation/, "Online guards should have a snapshot-safe presentation layer");
+assert.match(gameSource, /queueOnlineSnapshot/, "The browser should coalesce snapshot bursts before rendering");
 assert.match(onlineServerSource, /authority: "server"/, "The Node service should own authoritative match state");
+assert.match(onlineServerSource, /const serializedPayload = JSON\.stringify\(payload\)/, "The server should serialize each shared snapshot only once");
 assert.match(gameSource, /ONLINE_MAX_EXTRAPOLATION_SECONDS = 0\.2/, "Remote motion extrapolation should be bounded");
 assert.match(gameSource, /sendOnlineInputNow/, "Guest controls should support immediate input delivery");
 assert.match(onlineServerSource, /MAX_REALTIME_BUFFER_BYTES = 24 \* 1024/, "The relay should shed stale snapshots early");
@@ -371,6 +375,43 @@ game.onlineLastSnapshot = -1;
 game.onlineLastAcknowledgedInput = 0;
 game.applyOnlineSnapshot({ sequence: 1, snapshot: neutralSnapshot });
 assert.equal(game.onlineLastAcknowledgedInput, 44, "Vex should consume its own server acknowledgement");
+
+game.onlineRole = "player1";
+game.mode = "online";
+game.state = "fighting";
+game.onlinePredictedAttack = null;
+game.onlineLastSnapshot = 1;
+game.fighterOne.guard = "high";
+game.fighterOne.guardVisual = "high";
+game.fighterOne.guardBlend = 0.8;
+dispatchWindowKey("keydown", "KeyW");
+const staleGuardSnapshot = new OnlineMatchSimulation().snapshot();
+staleGuardSnapshot.state = "fighting";
+staleGuardSnapshot.fighterOne.guard = null;
+staleGuardSnapshot.fighterOne.guardVisual = null;
+staleGuardSnapshot.fighterOne.guardBlend = 0;
+game.applyOnlineSnapshot({ sequence: 2, snapshot: staleGuardSnapshot });
+assert.equal(game.fighterOne.guard, "high", "A stale snapshot must not drop the locally held guard");
+assert.equal(game.fighterOne.guardBlend, 0.8, "A stale snapshot must not rewind the local guard animation");
+
+game.fighterOne.guardBlend = 1;
+dispatchWindowKey("keyup", "KeyW");
+staleGuardSnapshot.fighterOne.guard = "high";
+staleGuardSnapshot.fighterOne.guardVisual = "high";
+staleGuardSnapshot.fighterOne.guardBlend = 0.4;
+game.applyOnlineSnapshot({ sequence: 3, snapshot: staleGuardSnapshot });
+assert.equal(game.fighterOne.guard, null, "A stale snapshot must not re-raise a locally released guard");
+assert.equal(game.fighterOne.guardBlend, 1, "Guard release should continue from the visible pose without jumping");
+game.updateOnlineLocalPrediction(1 / 60);
+assert(game.fighterOne.guardBlend < 1 && game.fighterOne.guardBlend > 0, "Guard release should animate smoothly");
+
+const queuedOlder = { sequence: 5, snapshot: staleGuardSnapshot };
+const queuedNewer = { sequence: 6, snapshot: staleGuardSnapshot };
+game.onlinePendingSnapshot = null;
+game.queueOnlineSnapshot(queuedNewer);
+game.queueOnlineSnapshot(queuedOlder);
+assert.equal(game.onlinePendingSnapshot.sequence, 6, "Snapshot bursts should retain only the newest state");
+game.onlinePendingSnapshot = null;
 
 game.onlineRole = null;
 game.mode = "cpu";

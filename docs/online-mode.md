@@ -38,6 +38,8 @@ Version 0.16.3 added a guest-ready handshake and browser-host background clock. 
 
 Version 0.18.0 gives both roles the same local presentation path. Each browser predicts only its own movement, guard changes, and strike startup. Server snapshots acknowledge the latest processed input sequence independently for Rook and Vex. A browser only corrects position against a snapshot that includes its latest real control change, preventing stale state from pulling against a new direction. Reconciliation does not rewind a confirmed strike animation and cancels invalid predictions after authoritative stun, knockdown, rejection, or match completion.
 
+Version 0.18.1 separates guard presentation from authoritative guard resolution. A delayed snapshot can still confirm whether a strike was blocked, but it cannot rewind a locally held guard, re-raise a released guard, or repeatedly restart the transition. Remote guards use the same continuous client-frame interpolation, so both participants see all ten transition frames instead of 30 Hz frame jumps. Snapshot bursts are coalesced to the newest frame before rendering, and the server serializes the shared snapshot once before sending the identical bytes to both players. These are presentation and transport optimizations; combat authority remains exclusively on the neutral server.
+
 Remote movement is extrapolated from the most recent authoritative velocity using half of the measured RTT plus jitter, with a strict 200 ms ceiling. Corrections use exponential smoothing, while large errors snap to the safe authoritative position. Animation fast-forward is capped at 80 ms so latency compensation cannot skip an entire strike. Server snapshot buffers are shed at 24 KiB, prioritizing fresh state over replaying obsolete visual frames after congestion.
 
 The client sends a one-second application-level probe and measures its round-trip time (RTT) to the game server. The lobby and match HUD display a smoothed RTT and grade it as excellent, good, fair, or high. This is server RTT, not a direct peer-to-peer measurement.
@@ -71,7 +73,7 @@ Client messages:
 | `latencyProbe` | Client → server | Start an application RTT sample |
 | `latencyPong` | Server → client | Complete an RTT sample |
 
-The server caps WebSocket payloads, sanitizes names and inputs, disables network takedown requests, and rejects client-generated snapshots. Snapshot shedding prevents old visual states from forming a growing queue on a slow client; the next fresh authoritative snapshot replaces any skipped state.
+The server caps WebSocket payloads, sanitizes names and inputs, disables network takedown requests, and rejects client-generated snapshots. Snapshot shedding prevents old visual states from forming a growing queue on a slow client; the browser also coalesces a burst of already-arrived snapshots so only its newest state reaches the next render frame.
 
 ## Test locally
 
@@ -148,7 +150,7 @@ npm test
 npm run build
 ```
 
-The online tests verify fixed-step simulation, mirrored movement, simultaneous strikes without challenger priority, per-player acknowledgements, two real WebSocket clients receiving identical snapshots, rejected client authority, latency probes, lobby flow, and return to matchmaking.
+The online tests verify fixed-step simulation, mirrored movement, simultaneous strikes without challenger priority, per-player acknowledgements, non-rewinding guard presentation, snapshot coalescing, two real WebSocket clients receiving identical snapshots, rejected client authority, latency probes, lobby flow, and return to matchmaking.
 
 ## References
 

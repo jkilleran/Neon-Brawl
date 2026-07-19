@@ -80,9 +80,13 @@ function createNeonBrawlServer({
   });
 
   function send(player, payload, { dropIfBusy = false } = {}) {
+    return sendSerialized(player, JSON.stringify(payload), { dropIfBusy });
+  }
+
+  function sendSerialized(player, serializedPayload, { dropIfBusy = false } = {}) {
     if (player?.ws.readyState === WebSocket.OPEN) {
       if (dropIfBusy && player.ws.bufferedAmount > MAX_REALTIME_BUFFER_BYTES) return false;
-      player.ws.send(JSON.stringify(payload));
+      player.ws.send(serializedPayload);
       return true;
     }
     return false;
@@ -184,8 +188,17 @@ function createNeonBrawlServer({
       sequence: match.snapshotSequence,
       snapshot: match.simulation.snapshot(),
     };
-    const playerOneSent = send(players.get(match.playerOneId), payload, { dropIfBusy: !force });
-    const playerTwoSent = send(players.get(match.playerTwoId), payload, { dropIfBusy: !force });
+    const serializedPayload = JSON.stringify(payload);
+    const playerOneSent = sendSerialized(
+      players.get(match.playerOneId),
+      serializedPayload,
+      { dropIfBusy: !force },
+    );
+    const playerTwoSent = sendSerialized(
+      players.get(match.playerTwoId),
+      serializedPayload,
+      { dropIfBusy: !force },
+    );
     return playerOneSent || playerTwoSent;
   }
 
