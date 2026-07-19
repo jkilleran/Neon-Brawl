@@ -28,7 +28,11 @@ Browser B ──┘                    └─ /ws lobby and match relay
 
 The build keeps the complete editable sprite library in Git but removes individual frame directories and archived source revisions from `dist/`. Production therefore deploys only the runtime atlases and small metadata files required by the current fighters.
 
-The player who sends the accepted challenge becomes the authoritative host and controls Rook. The challenged player is the guest and controls Vex. The guest sends input messages to the host. The host simulates the match and sends an authoritative snapshot every 50 ms. This prevents independent `Math.random()` calls or frame timing differences from producing different damage and outcomes.
+The player who sends the accepted challenge becomes the authoritative host and controls Rook. The challenged player is the guest and controls Vex. The guest sends input messages to the host. Strike and defense key transitions are sent immediately, while a small periodic input stream keeps held controls synchronized. The host simulates the match and sends authoritative snapshots at 30 Hz. This prevents independent `Math.random()` calls or frame timing differences from producing different damage and outcomes.
+
+The client sends a one-second application-level probe and measures its round-trip time (RTT) to the game server. The lobby and match HUD display a smoothed RTT and grade it as excellent, good, fair, or high. This is server RTT, not a direct peer-to-peer measurement.
+
+On a local machine, RTT should normally be only a few milliseconds. A delay felt in the first online version was primarily its 20 Hz snapshot cadence and authoritative guest path, not Internet latency. Version 0.16.1 raises snapshots to 30 Hz, sends guest control transitions immediately, disables TCP packet coalescing on accepted sockets, and drops obsolete snapshots when either outgoing real-time buffer becomes congested. Inputs are never intentionally dropped.
 
 ## Current test limitations
 
@@ -51,8 +55,10 @@ Client messages:
 | `input` | Guest → host | Relay bounded movement and combat input |
 | `snapshot` | Host → guest | Relay authoritative match state |
 | `leaveMatch` | Client → server | End pairing and return to the lobby |
+| `latencyProbe` | Client → server | Start an application RTT sample |
+| `latencyPong` | Server → client | Complete an RTT sample |
 
-The server caps WebSocket payloads, sanitizes names and inputs, disables network takedown requests, and only relays match traffic from the assigned role to its assigned opponent.
+The server caps WebSocket payloads, sanitizes names and inputs, disables network takedown requests, and only relays match traffic from the assigned role to its assigned opponent. Snapshot shedding prevents old visual states from forming a growing queue on a slow client; the next fresh authoritative snapshot replaces any skipped state.
 
 ## Test locally
 
@@ -128,7 +134,7 @@ npm test
 npm run build
 ```
 
-The online integration test creates two real WebSocket clients and verifies registration, lobby presence, challenge acceptance, host/guest assignment, input relay, snapshot relay, and return to matchmaking.
+The online integration test creates two real WebSocket clients and verifies latency probes, registration, lobby presence, challenge acceptance, host/guest assignment, input relay, snapshot relay, and return to matchmaking.
 
 ## References
 

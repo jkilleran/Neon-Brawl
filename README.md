@@ -51,7 +51,9 @@ The first online version includes:
 - a lobby roster with direct challenge buttons;
 - accept and decline controls for incoming challenges;
 - host-authoritative gameplay to keep damage, criticals, knockdowns, and scoring synchronized;
-- guest input relay and 20 Hz authoritative state snapshots;
+- visible server round-trip latency with connection-quality grading;
+- immediate guest action delivery and 30 Hz authoritative state snapshots;
+- stale-snapshot shedding when a slow connection starts buffering;
 - automatic WebSocket keepalive and reconnect attempts;
 - automatic return to the lobby when an opponent leaves;
 - one Node service serving both the Vite build and `/ws` WebSocket endpoint.

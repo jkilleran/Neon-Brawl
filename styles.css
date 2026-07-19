@@ -8,6 +8,8 @@
   --pink: #ff3b9d;
   --purple: #8d5cff;
   --yellow: #ffe66d;
+  --lime: #d6ff7d;
+  --amber: #ffc35b;
   font-family: "Chakra Petch", system-ui, sans-serif;
 }
 
@@ -519,8 +521,10 @@ h1 em {
 }
 
 .online-header,
+.online-connection,
 .online-roster > header,
 .online-presence,
+.online-latency,
 .online-challenge,
 .online-challenge > div {
   display: flex;
@@ -538,6 +542,11 @@ h1 em {
   font-size: clamp(28px, 4vw, 52px);
 }
 
+.online-connection {
+  align-items: stretch;
+  gap: 7px;
+}
+
 .online-presence {
   gap: 8px;
   padding: 8px 11px;
@@ -545,6 +554,53 @@ h1 em {
   color: #77798f;
   font: 700 8px "Orbitron", sans-serif;
   letter-spacing: 0.1em;
+}
+
+.online-latency {
+  min-width: 132px;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(2, 2, 10, 0.72);
+  color: #77798f;
+  font-family: "Orbitron", sans-serif;
+  white-space: nowrap;
+}
+
+.online-latency small {
+  color: #55576c;
+  font-size: 6px;
+  letter-spacing: 0.08em;
+}
+
+.online-latency strong {
+  font-size: 10px;
+}
+
+.online-latency span {
+  font-size: 6px;
+  letter-spacing: 0.07em;
+}
+
+.online-latency[data-quality="excellent"] {
+  border-color: rgba(214, 255, 125, 0.35);
+  color: var(--lime);
+}
+
+.online-latency[data-quality="good"] {
+  border-color: rgba(53, 242, 229, 0.35);
+  color: var(--cyan);
+}
+
+.online-latency[data-quality="fair"] {
+  border-color: rgba(255, 195, 91, 0.4);
+  color: var(--amber);
+}
+
+.online-latency[data-quality="high"] {
+  border-color: rgba(255, 59, 157, 0.45);
+  color: var(--pink);
 }
 
 .online-presence i,
@@ -1116,6 +1172,11 @@ h1 em {
 
   .online-presence {
     align-self: flex-start;
+  }
+
+  .online-connection {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .menu-copy {

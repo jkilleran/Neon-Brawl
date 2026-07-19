@@ -23,6 +23,9 @@
   const onlineNameInput = document.querySelector("#online-name");
   const onlinePresence = document.querySelector("#online-presence");
   const onlineStatus = document.querySelector("#online-status");
+  const onlineLatency = document.querySelector("#online-latency");
+  const onlineLatencyValue = document.querySelector("#online-latency-value");
+  const onlineLatencyQuality = document.querySelector("#online-latency-quality");
   const onlinePlayerCount = document.querySelector("#online-player-count");
   const onlinePlayerList = document.querySelector("#online-player-list");
   const onlineChallenge = document.querySelector("#online-challenge");
@@ -57,10 +60,26 @@
 
   const ROUND_TIME = GAMEPLAY_RULES.roundTimeSeconds;
   const MAX_ROUNDS = 3;
+  const ONLINE_SNAPSHOT_INTERVAL = 1 / 30;
+  const ONLINE_INPUT_INTERVAL = 1 / 60;
   const STAGE_LEFT = 105;
   const STAGE_RIGHT = WIDTH - 105;
   const FEATURES = Object.freeze({
     takedowns: false,
+  });
+  const ONLINE_LATENCY_LABELS = Object.freeze({
+    unknown: "SIN MEDIR",
+    excellent: "EXCELENTE",
+    good: "BUENA",
+    fair: "MEDIA",
+    high: "ALTA",
+  });
+  const ONLINE_LATENCY_COLORS = Object.freeze({
+    unknown: "#55576b",
+    excellent: "#d6ff7d",
+    good: "#35f2e5",
+    fair: "#ffc35b",
+    high: "#ff3b9d",
   });
 
   const ANIMATION_MANIFEST = globalThis.NEON_BRAWL_ANIMATIONS;
@@ -1060,9 +1079,13 @@
         match: (match) => this.startOnlineMatch(match),
         remoteInput: (message) => this.receiveOnlineInput(message),
         snapshot: (message) => this.applyOnlineSnapshot(message),
+        latency: (metrics) => this.updateOnlineLatency(metrics),
         opponentLeft: (message) => this.handleOnlineOpponentLeft(message),
         error: (message) => this.setOnlineStatus({ state: "error", message: message.message }),
-        disconnected: () => this.setOnlineStatus({ state: "offline", message: "DISCONNECTED" }),
+        disconnected: () => {
+          this.setOnlineStatus({ state: "offline", message: "DISCONNECTED" });
+          this.updateOnlineLatency();
+        },
       }) : null;
 
       requestAnimationFrame((time) => this.loop(time));
@@ -1108,6 +1131,17 @@
     setOnlineStatus({ state = "offline", message = "DISCONNECTED" } = {}) {
       onlinePresence.dataset.state = state === "online" || state === "waiting" ? "online" : state;
       onlineStatus.textContent = message;
+    }
+
+    updateOnlineLatency({ latencyMs = null, jitterMs = null, quality = "unknown" } = {}) {
+      const validLatency = Number.isFinite(latencyMs);
+      const safeQuality = Object.hasOwn(ONLINE_LATENCY_LABELS, quality) ? quality : "unknown";
+      onlineLatency.dataset.quality = validLatency ? safeQuality : "unknown";
+      onlineLatencyValue.textContent = validLatency ? `${Math.max(0, Math.round(latencyMs))} MS` : "-- MS";
+      onlineLatencyQuality.textContent = validLatency ? ONLINE_LATENCY_LABELS[safeQuality] : "SIN MEDIR";
+      onlineLatency.title = validLatency
+        ? `Latencia de ida y vuelta al servidor: ${Math.round(latencyMs)} ms · variación: ${Math.max(0, Math.round(jitterMs ?? 0))} ms`
+        : "Latencia de ida y vuelta al servidor";
     }
 
     renderOnlineLobby(lobby = { players: [], searchingCount: 0 }) {
@@ -1173,7 +1207,7 @@
 
     receiveOnlineInput({ input, sequence }) {
       if (this.mode !== "online" || this.onlineRole !== "host") return;
-      if (sequence < this.onlineInputSequence) return;
+      if (sequence <= this.onlineInputSequence) return;
       this.onlineInputSequence = sequence;
       this.onlineRemoteInput = { ...this.onlineRemoteInput, ...input };
       for (const action of ["leftPunch", "rightPunch", "leftKick", "rightKick", "evade"]) {
@@ -1911,7 +1945,7 @@
       if (this.mode !== "online" || this.onlineRole !== "host") return;
       this.onlineSnapshotTimer -= deltaTime;
       if (!force && this.onlineSnapshotTimer > 0) return;
-      this.onlineSnapshotTimer = 0.05;
+      this.onlineSnapshotTimer = ONLINE_SNAPSHOT_INTERVAL;
       this.onlineSnapshotSequence += 1;
       this.online?.sendSnapshot(this.createOnlineSnapshot(), this.onlineSnapshotSequence);
     }
@@ -1959,27 +1993,39 @@
       if (this.state === "matchOver" && previousState !== "matchOver") this.showResult();
     }
 
-    getOnlineKeyboardInput() {
+    getOnlineKeyboardInput(includeActions = true) {
       const controlledFighter = this.onlineRole === "guest" ? this.fighterTwo : this.fighterOne;
       const forward = controlledFighter.facing;
       return {
         move: (keys.has("KeyD") ? forward : 0) - (keys.has("KeyA") ? forward : 0),
         guardHigh: keys.has("KeyW"),
         guardLow: keys.has("KeyS"),
-        leftPunch: pressed.has("KeyT"),
-        rightPunch: pressed.has("KeyY"),
-        leftKick: pressed.has("KeyG"),
-        rightKick: pressed.has("KeyH"),
+        leftPunch: includeActions && pressed.has("KeyT"),
+        rightPunch: includeActions && pressed.has("KeyY"),
+        leftKick: includeActions && pressed.has("KeyG"),
+        rightKick: includeActions && pressed.has("KeyH"),
         bodyModifier: keys.has("Space"),
         takedown: false,
         evade: keys.has("KeyE"),
       };
     }
 
+    sendOnlineInputNow(includeActions = true) {
+      if (this.mode !== "online" || this.onlineRole !== "guest" || !this.online?.connected) return false;
+      if (["menu", "matchOver"].includes(this.state)) return false;
+      this.onlineInputSequence += 1;
+      const sent = this.online.sendInput(
+        this.getOnlineKeyboardInput(includeActions),
+        this.onlineInputSequence,
+      );
+      if (sent) this.onlineInputTimer = ONLINE_INPUT_INTERVAL;
+      return sent;
+    }
+
     updateOnlineReplica(deltaTime) {
       this.elapsed += deltaTime;
-      this.onlineInputSequence += 1;
-      this.online?.sendInput(this.getOnlineKeyboardInput(), this.onlineInputSequence);
+      this.onlineInputTimer -= deltaTime;
+      if (this.onlineInputTimer <= 0) this.sendOnlineInputNow();
       if (this.state === "fighting") this.timer = Math.max(0, this.timer - deltaTime);
       for (const fighter of [this.fighterOne, this.fighterTwo]) {
         fighter.updateVisualState(deltaTime);
@@ -2306,14 +2352,20 @@
         WIDTH / 2,
         88,
       );
-      context.fillStyle = "#55576b";
+      const onlineLatencyMs = this.online?.latencyMs;
+      const onlineQuality = Number.isFinite(onlineLatencyMs)
+        ? onlineLatency.dataset.quality
+        : "unknown";
+      context.fillStyle = this.mode === "online"
+        ? ONLINE_LATENCY_COLORS[onlineQuality] ?? ONLINE_LATENCY_COLORS.unknown
+        : "#55576b";
       context.fillText(
         this.mode === "cpu"
           ? "QUICK FIGHT"
           : this.mode === "practice"
             ? "DAMAGE DISPLAY"
             : this.mode === "online"
-              ? `ONLINE // ${this.onlineRole === "host" ? "HOST" : "GUEST"}`
+              ? `ONLINE // ${this.onlineRole === "host" ? "HOST" : "GUEST"} // ${Number.isFinite(onlineLatencyMs) ? `${onlineLatencyMs} MS` : "-- MS"}`
               : "LOCAL SPARRING",
         WIDTH / 2,
         104,
@@ -2439,6 +2491,10 @@
 
   const keys = new Set();
   const pressed = new Set();
+  const onlineControlCodes = new Set([
+    "KeyW", "KeyA", "KeyS", "KeyD", "KeyT", "KeyY", "KeyG", "KeyH", "KeyE", "Space",
+  ]);
+  const onlineActionCodes = new Set(["KeyT", "KeyY", "KeyG", "KeyH"]);
   const game = new NeonMMA();
 
   window.addEventListener("keydown", (event) => {
@@ -2446,6 +2502,9 @@
       && game.state !== "menu") event.preventDefault();
     if (!keys.has(event.code)) pressed.add(event.code);
     keys.add(event.code);
+    if (!event.repeat && onlineControlCodes.has(event.code) && game.sendOnlineInputNow()) {
+      if (onlineActionCodes.has(event.code)) pressed.delete(event.code);
+    }
     if (event.code === "Escape" && !event.repeat) game.togglePause();
     if (event.code === "Enter"
       && game.state === "menu"
@@ -2453,10 +2512,14 @@
       && !event.repeat) game.start("cpu");
   });
 
-  window.addEventListener("keyup", (event) => keys.delete(event.code));
+  window.addEventListener("keyup", (event) => {
+    keys.delete(event.code);
+    if (onlineControlCodes.has(event.code)) game.sendOnlineInputNow(false);
+  });
   window.addEventListener("blur", () => {
     keys.clear();
     pressed.clear();
+    game.sendOnlineInputNow(false);
     if (["fighting", "ground"].includes(game.state)) game.togglePause();
   });
 

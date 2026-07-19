@@ -3,9 +3,15 @@
 const assert = require("node:assert/strict");
 const WebSocket = require("ws");
 const { createNeonBrawlServer, sanitizeInput, sanitizeName } = require("../server.cjs");
+const { latencyQuality } = require("../online-client.js");
 
 assert.equal(sanitizeName("  Róök<script>  "), "Róökscript");
 assert.equal(sanitizeName(""), "NEON FIGHTER");
+assert.equal(latencyQuality(12), "excellent");
+assert.equal(latencyQuality(50), "good");
+assert.equal(latencyQuality(95), "fair");
+assert.equal(latencyQuality(180), "high");
+assert.equal(latencyQuality(null), "unknown");
 assert.deepEqual(sanitizeInput({ move: 5, leftPunch: 1, takedown: true }), {
   move: 1,
   guardHigh: false,
@@ -81,6 +87,10 @@ function testClient(url) {
     const lobby = await rook.waitFor((message) => message.type === "lobby" && message.searchingCount === 2);
     assert.deepEqual(lobby.players.map(({ name }) => name).sort(), ["Friend", "Johan"]);
 
+    rook.send({ type: "latencyProbe", id: 42 });
+    const latencyPong = await rook.waitFor((message) => message.type === "latencyPong" && message.id === 42);
+    assert.equal(latencyPong.id, 42);
+
     rook.send({ type: "challenge", targetId: vexWelcome.id });
     const incoming = await vex.waitFor(({ type }) => type === "challengeIncoming");
     assert.equal(incoming.from.id, rookWelcome.id);
@@ -112,7 +122,7 @@ function testClient(url) {
     assert.match(opponentLeft.reason, /lobby/i);
     await rook.waitFor((message) => message.type === "lobby" && message.searchingCount === 2);
 
-    console.log("Online server test passed: lobby, challenge, match roles, input relay, snapshots and lobby return.");
+    console.log("Online server test passed: latency probe, lobby, challenge, roles, input relay, snapshots and lobby return.");
   } finally {
     await Promise.all([rook.close(), vex.close()]);
     await onlineServer.stop();

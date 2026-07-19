@@ -14,10 +14,13 @@ assert.match(markup, /Tres asaltos de 3 minutos/, "Menu should explain round dur
 assert.match(markup, /data-mode="practice"/, "Menu should expose practice mode");
 assert.match(markup, /data-mode="online"/, "Menu should expose online mode");
 assert.match(markup, /BUSCANDO PARTIDA AHORA MISMO/, "Online lobby should show live matchmaking presence");
+assert.match(markup, /id="online-latency"[\s\S]*SERVER RTT/, "Online lobby should show server round-trip latency");
 assert.match(markup, /id="result-scorecard"/, "Result screen should expose the per-round scorecard");
 assert.match(markup, /online-client\.js[\s\S]*game\.js/, "Online client must load before the game");
 assert.match(markup, /Sin reloj · daño visible por golpe/, "Practice mode should explain its damage display");
 assert.match(markup, /brillante = stamina actual · tenue = límite recuperable/, "Pause menu should explain both stamina layers");
+assert.match(gameSource, /ONLINE_SNAPSHOT_INTERVAL = 1 \/ 30/, "Online snapshots should run at 30 Hz");
+assert.match(gameSource, /sendOnlineInputNow/, "Guest controls should support immediate input delivery");
 assert.match(
   gameSource,
   /context\.translate\(this\.x, guardY\);[\s\S]*context\.scale\(this\.facing, 1\);[\s\S]*context\.arc\(22, 0, 48/,
@@ -162,6 +165,9 @@ const make = (selector) => {
   "#online-name",
   "#online-presence",
   "#online-status",
+  "#online-latency",
+  "#online-latency-value",
+  "#online-latency-quality",
   "#online-player-count",
   "#online-player-list",
   "#online-challenge",

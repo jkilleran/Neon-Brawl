@@ -102,8 +102,13 @@
                 <p class="eyebrow"><span></span> NEON NETWORK // LIVE</p>
                 <h2>ONLINE ARENA</h2>
               </div>
-              <div id="online-presence" class="online-presence" data-state="offline">
-                <i></i><span id="online-status">DESCONECTADO</span>
+              <div class="online-connection">
+                <div id="online-presence" class="online-presence" data-state="offline">
+                  <i></i><span id="online-status">DESCONECTADO</span>
+                </div>
+                <div id="online-latency" class="online-latency" data-quality="unknown" title="Latencia de ida y vuelta al servidor">
+                  <small>SERVER RTT</small><strong id="online-latency-value">-- MS</strong><span id="online-latency-quality">SIN MEDIR</span>
+                </div>
               </div>
             </div>
 
@@ -207,7 +212,7 @@
       <footer class="footer-note">
         <span><i></i> SYSTEM ONLINE</span>
         <p>ESC para pausar · Cada crítico tiene 1 de 2.2 de probabilidad de knockdown</p>
-        <span>BUILD 0.16.0 // ONLINE ARENA</span>
+        <span>BUILD 0.16.1 // LATENCY PASS</span>
       </footer>
     </main>
 

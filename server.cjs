@@ -9,6 +9,7 @@ const { WebSocket, WebSocketServer } = require("ws");
 
 const MAX_NAME_LENGTH = 18;
 const MAX_MESSAGE_BYTES = 128 * 1024;
+const MAX_REALTIME_BUFFER_BYTES = 64 * 1024;
 const HEARTBEAT_INTERVAL_MS = 25_000;
 
 function sanitizeName(value) {
@@ -75,10 +76,13 @@ function createNeonBrawlServer({
     response.sendFile(indexFile);
   });
 
-  function send(player, payload) {
+  function send(player, payload, { dropIfBusy = false } = {}) {
     if (player?.ws.readyState === WebSocket.OPEN) {
+      if (dropIfBusy && player.ws.bufferedAmount > MAX_REALTIME_BUFFER_BYTES) return false;
       player.ws.send(JSON.stringify(payload));
+      return true;
     }
+    return false;
   }
 
   function searchingPlayers() {
@@ -160,15 +164,19 @@ function createNeonBrawlServer({
     broadcastLobby();
   }
 
-  function relayMatchMessage(player, payload, expectedRole, destinationRole) {
+  function relayMatchMessage(player, payload, expectedRole, destinationRole, options) {
     if (!player.matchId || player.role !== expectedRole) return;
     const match = matches.get(player.matchId);
     if (!match) return;
     const destinationId = destinationRole === "host" ? match.hostId : match.guestId;
-    send(players.get(destinationId), payload);
+    send(players.get(destinationId), payload, options);
   }
 
-  wss.on("connection", (ws) => {
+  wss.on("error", (error) => logger.warn?.("WebSocket server error:", error.message));
+
+  wss.on("connection", (ws, request) => {
+    request.socket.setNoDelay(true);
+    request.socket.setKeepAlive(true, HEARTBEAT_INTERVAL_MS);
     const player = {
       id: crypto.randomUUID(),
       name: "NEON FIGHTER",
@@ -204,6 +212,12 @@ function createNeonBrawlServer({
         return;
       }
       if (!player.ready) return;
+
+      if (message.type === "latencyProbe") {
+        const id = Number(message.id);
+        if (Number.isSafeInteger(id) && id >= 0) send(player, { type: "latencyPong", id });
+        return;
+      }
 
       if (message.type === "challenge") {
         const target = players.get(String(message.targetId));
@@ -252,7 +266,7 @@ function createNeonBrawlServer({
           type: "snapshot",
           sequence: Number(message.sequence) || 0,
           snapshot: message.snapshot,
-        }, "host", "guest");
+        }, "host", "guest", { dropIfBusy: true });
         return;
       }
 
