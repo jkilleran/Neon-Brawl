@@ -1,129 +1,127 @@
-# Catálogo de animaciones
+# Animation Catalog
 
-Este catálogo es la referencia para arte, lógica y pruebas. Los metadatos consumidos por el juego viven en `animation-manifest.js`.
+This document is the human-readable inventory for art, gameplay, and tests. `animation-manifest.js` is the executable source of truth. Generated copies of the same metadata live in each character's `movement-list.json` and each movement's `movement.json`.
 
-## Convención de producción
+## Catalog summary
 
-- Cada movimiento de ataque tiene **exactamente 10 frames** y su propio PNG.
-- Todas las fuentes atacan hacia la **derecha de la pantalla**.
-- El motor refleja la hoja completa cuando el rival está a la izquierda; no se mantienen copias duplicadas para P1/P2.
-- La dirección se bloquea al iniciar el ataque, de modo que un cruce de posiciones no puede invertir el golpe a mitad de la animación.
-- Las hojas base usan una cuadrícula `4 × 3`; los modelos v5 aprobados usan `5 × 2`. En ambos casos hay exactamente diez frames en orden de lectura.
-- Cada celda conserva un margen alfa mínimo de 6 px; el validador rechaza piezas que invadan una celda vecina.
-- En patadas, la pierna de apoyo se fija en el manifiesto y debe permanecer plantada desde carga hasta retroceso.
-- Contacto: frame **6** para puños y para las dos patadas derechas corregidas; la patada alta izquierda conserva contacto en el frame **4**.
+Each character currently owns 33 independent movements:
 
-## Fases por frame
+| Category | Count | Purpose |
+| --- | ---: | --- |
+| Strikes | 8 | Left/right punches and kicks, each with head/body variants |
+| Knockdowns | 10 | Five head and five body recoverable falls |
+| Knockouts | 8 | Four head and four body finishes |
+| Locomotion | 2 | Forward and backward footwork |
+| Defense | 2 | High and low guards |
+| Reactions | 2 | Clean head and body hit reactions |
+| Legacy | 1 | Disabled prototype ground sequence |
 
-| Frame | Etiqueta | Función |
+Rook and Vex contain the same approved art at this checkpoint, but they load different file paths. Either library can therefore diverge without changing the other fighter.
+
+## Production rules
+
+- A modern movement uses exactly 10 frames.
+- Source art faces screen-right. Runtime mirroring handles a fighter facing left.
+- An attack locks its facing when it starts, preventing a mid-animation direction flip.
+- Every frame has an English phase label and a stable one-based number.
+- Runtime cells retain at least 6 transparent pixels around visible art.
+- A kick declares both the striking leg and the opposite support leg.
+- The same striking limb must remain consistent through load, contact, recoil, and recovery.
+- Frame 6 is the contact frame for punches and the approved right kicks. `leftKickHead` keeps its earlier contact at frame 4.
+- `sheet.png` is consumed by the game; the PNGs in `frames/` are the editable source for future frame replacement.
+
+## Standard strike phases
+
+| Frame | Label | Function |
 | ---: | --- | --- |
-| 1 | `guard` | Guardia inicial |
-| 2 | `anticipation` | Anticipación |
-| 3 | `load` | Carga de peso o nivel |
-| 4 | `extension-1` | Primera extensión |
-| 5 | `extension-2` | Extensión previa al impacto |
-| 6 | `contact` | Contacto visual y colisión |
-| 7 | `recoil-1` | Primer retroceso |
-| 8 | `recoil-2` | Segundo retroceso |
-| 9 | `recovery` | Recuperación |
-| 10 | `guard-return` | Regreso a guardia |
+| 1 | `guard` | Neutral fighting guard |
+| 2 | `anticipation` | Initial tell and weight shift |
+| 3 | `load` | Limb and body load |
+| 4 | `extension-1` | Early extension |
+| 5 | `extension-2` | Pre-contact extension |
+| 6 | `contact` | Visual and gameplay contact |
+| 7 | `recoil-1` | Initial withdrawal |
+| 8 | `recoil-2` | Continued withdrawal |
+| 9 | `recovery` | Balance recovery |
+| 10 | `guard-return` | Return to neutral guard |
 
-## Ataques registrados
+The early-contact left head kick uses `contact` at frame 4 and follow-through labels for frames 5–6.
 
-| ID de lógica | Nombre visible | Extremidad | Objetivo | Contacto | P1 | P2 | Archivo |
-| --- | --- | --- | --- | ---: | --- | --- | --- |
-| `leftPunchHead` | LEFT PUNCH // HEAD | mano izquierda | cabeza | 6 | `U` | `N` | `left-punch-head-v3.png` |
-| `rightPunchHead` | RIGHT PUNCH // HEAD | mano derecha | cabeza | 6 | `I` | `M` | `right-punch-head-v3.png` |
-| `leftPunchBody` | LEFT PUNCH // BODY | mano izquierda | cuerpo | 6 | `Space + U` | `Space + N` | `left-punch-body-v5.png` |
-| `rightPunchBody` | RIGHT PUNCH // BODY | mano derecha | cuerpo | 6 | `Space + I` | `Space + M` | `right-punch-body-v4.png` |
-| `leftKickHead` | LEFT KICK // HEAD | pierna izquierda | cabeza | 4 | `J` | `,` | `left-kick-head-v3.png` |
-| `rightKickHead` | RIGHT KICK // HEAD | pierna derecha | cabeza | 6 | `K` | `.` | `right-kick-head-v5.png` |
-| `leftKickBody` | LEFT KICK // BODY | pierna izquierda | cuerpo | 6 | `Space + J` | `Space + ,` | `left-kick-body-v3.png` |
-| `rightKickBody` | RIGHT KICK // BODY | pierna derecha | cuerpo | 6 | `Space + K` | `Space + .` | `right-kick-body-v5.png` |
+## Strike list
 
-Ruta común: `public/assets/animations/strikes/`.
+Paths below are relative to `public/assets/characters/<characterId>/`.
 
-## Invariantes biomecánicas
+| Movement ID | Limb | Target | Contact | P1 | P2 | Movement folder |
+| --- | --- | --- | ---: | --- | --- | --- |
+| `leftPunchHead` | Left hand | Head | 6 | `T` | `I` | `animations/strikes/head/left-punch/` |
+| `rightPunchHead` | Right hand | Head | 6 | `Y` | `O` | `animations/strikes/head/right-punch/` |
+| `leftPunchBody` | Left hand | Body | 6 | `Space + T` | `Shift + I` | `animations/strikes/body/left-punch/` |
+| `rightPunchBody` | Right hand | Body | 6 | `Space + Y` | `Shift + O` | `animations/strikes/body/right-punch/` |
+| `leftKickHead` | Left leg; right support | Head | 4 | `G` | `K` | `animations/strikes/head/left-kick/` |
+| `rightKickHead` | Right leg; left support | Head | 6 | `H` | `L` | `animations/strikes/head/right-kick/` |
+| `leftKickBody` | Left leg; right support | Body | 6 | `Space + G` | `Shift + K` | `animations/strikes/body/left-kick/` |
+| `rightKickBody` | Right leg; left support | Body | 6 | `Space + H` | `Shift + L` | `animations/strikes/body/right-kick/` |
 
-| Movimiento | Pierna de golpe | Pierna de apoyo | Frames críticos |
+The approved v5 right head kick and right body kick keep the left foot planted through frame 6. The approved v5 left body punch keeps the left hand as the striking limb and the right glove protecting the face.
+
+## Knockdown list
+
+All knockdowns use the general sequence guard, impact, balance break, fall, mat contact, stunned state, brace, rise, and guard return.
+
+| Movement ID | Zone | Variant | Movement folder |
 | --- | --- | --- | --- |
-| `leftKickHead` | izquierda | derecha | 3–7 |
-| `rightKickHead` | derecha | izquierda | 3–8 |
-| `leftKickBody` | izquierda | derecha | 3–7 |
-| `rightKickBody` | derecha | izquierda | 3–8 |
+| `headKnockdown` | Head | Backward side fall | `animations/knockdowns/head/backward-side-fall/` |
+| `headKnockdownForward` | Head | Forward hands and knee | `animations/knockdowns/head/forward-hands-and-knee/` |
+| `headKnockdownSeated` | Head | Rotational seated recovery | `animations/knockdowns/head/rotational-seated/` |
+| `headKnockdownShoulderRoll` | Head | Corkscrew shoulder roll | `animations/knockdowns/head/corkscrew-shoulder-roll/` |
+| `headKnockdownKneeDrop` | Head | Delayed one-knee recovery | `animations/knockdowns/head/delayed-one-knee/` |
+| `bodyKnockdown` | Body | Side roll recovery | `animations/knockdowns/body/side-roll-recovery/` |
+| `bodyKnockdownKneel` | Body | Double-knee solar plexus | `animations/knockdowns/body/double-knee-solar-plexus/` |
+| `bodyKnockdownSeated` | Body | Backward seated recovery | `animations/knockdowns/body/backward-seated/` |
+| `bodyKnockdownElbowFold` | Body | Compact liver elbow/hip fall | `animations/knockdowns/body/compact-liver-elbow-hip/` |
+| `bodyKnockdownThreePoint` | Body | Solar-plexus three-point fall | `animations/knockdowns/body/solar-plexus-three-point/` |
 
-En `rightKickHead` y `rightKickBody`, el frame 6 conserva explícitamente el pie izquierdo plantado. La pierna derecha sale de la cámara de los frames 3–4, impacta en 6 y vuelve a cámara en 7–8; no puede intercambiarse con la pierna de apoyo.
+## Knockout list
 
-## Modelos v5 aprobados
+Knockout frames progress from guard to decisive impact, collapse, mat contact, settling, and a stable final pose.
 
-| Movimiento | Modelo aprobado | Referencia de revisión | Invariante visual |
-|---|---|---|---|
-| `leftPunchBody` | puño izquierdo al cuerpo v5 | `image-edit-target-94684e6fb053fec6.png` | La mano izquierda recorre los frames 2–8; la derecha permanece en la mejilla. El contacto del frame 6 queda a la altura del abdomen. |
-| `rightKickHead` | patada derecha alta v5 | `exec-cb602f47-cd16-49f6-912e-094d223fac85.png` | La pierna izquierda permanece plantada; la derecha alcanza la cabeza en el frame 6. |
-| `rightKickBody` | patada derecha al cuerpo v5 | `exec-fc01a764-b8d7-4ec1-bda1-b5acd7714fc5.png` | La pierna izquierda permanece plantada; la derecha alcanza las costillas en el frame 6. |
+| Movement ID | Zone | Variant | Movement folder |
+| --- | --- | --- | --- |
+| `headKnockout` | Head | Supine finish | `animations/knockouts/head/supine-finish/` |
+| `headKnockoutProne` | Head | Forward prone finish | `animations/knockouts/head/forward-prone-finish/` |
+| `headKnockoutSide` | Head | Spinning side finish | `animations/knockouts/head/spinning-side-finish/` |
+| `headKnockoutKneeCollapse` | Head | Delayed double-knee side finish | `animations/knockouts/head/delayed-double-knee-side/` |
+| `bodyKnockout` | Body | Curled side finish | `animations/knockouts/body/curled-side-finish/` |
+| `bodyKnockoutProne` | Body | Kneeling prone finish | `animations/knockouts/body/kneeling-prone-finish/` |
+| `bodyKnockoutSupine` | Body | Backward supine finish | `animations/knockouts/body/backward-supine-finish/` |
+| `bodyKnockoutSeatedSlump` | Body | Seated side slump | `animations/knockouts/body/seated-side-slump/` |
 
-Los tres modelos usan una cuadrícula `5 × 2`, exactamente diez celdas ocupadas y una sola extremidad atacante bloqueada mediante `lockedStrikingLimb` en el manifiesto. Las imágenes del juego son copias normalizadas con fondo transparente; las poses de las referencias aprobadas no se regeneran durante la integración.
+## Support and legacy movements
 
-## Reacciones e indicadores
+The former 20-frame combined atlases were split into independent 10-frame movements. This removes offsets from gameplay code and makes individual maintenance safer.
 
-`hit-reactions-v4.png` conserva los diez frames de reacción de cabeza y reconstruye los diez frames de cuerpo con la secuencia `10, 11, 12, 13, 14, 14, 13, 12, 11, 10`. La entrada y la recuperación son simétricas y se omiten los frames antiguos que reducían bruscamente la escala del peleador.
-
-El arco de guardia se dibuja en coordenadas locales y usa `facing` como escala horizontal. Por eso el peleador izquierdo lo muestra hacia la derecha y el peleador derecho lo muestra hacia la izquierda, siempre orientado hacia el rival.
-
-## Resultados de impacto registrados
-
-Todas las hojas de resultado usan una cuadrícula `5 × 2`, diez frames, fuente orientada a la derecha y espejo determinista para el peleador del lado opuesto.
-
-| ID de lógica | Resultado | Zona | Frames 1–10 | Archivo |
-| --- | --- | --- | --- | --- |
-| `headKnockdown` | knockdown recuperable | cabeza | guardia, impacto, pérdida de balance, rodillas, caída, suelo, stun, apoyo, rodilla, guardia | `head-knockdown-v1.png` |
-| `bodyKnockdown` | knockdown recuperable | cuerpo | guardia, impacto corporal, pliegue, rodillas, caída, suelo, stun, apoyo, rodilla, guardia | `body-knockdown-v1.png` |
-| `headKnockdownForward` | knockdown recuperable alterno | cabeza | guardia, giro de cabeza, tropiezo, cruce, manos/rodilla, costado, stun, cuatro apoyos, rodilla, guardia | `head-knockdown-forward-v2.png` |
-| `bodyKnockdownKneel` | knockdown recuperable alterno | cuerpo | guardia, impacto al plexo, pliegue, rodilla, ambas rodillas, talones, manos, apoyo, rodilla, guardia | `body-knockdown-kneel-v2.png` |
-| `headKnockdownSeated` | knockdown recuperable rotacional | cabeza | guardia, impacto, giro, pérdida de balance, caída sentada, costado, stun, apoyo, rodilla, guardia | `head-knockdown-seated-v3.png` |
-| `bodyKnockdownSeated` | knockdown recuperable sentado | cuerpo | guardia, impacto, pérdida de aire, retroceso, caída sentada, reclinado, stun, apoyo, rodilla, guardia | `body-knockdown-seated-v3.png` |
-| `headKnockdownShoulderRoll` | knockdown recuperable en espiral | cabeza | guardia, impacto, giro, caída diagonal, hombro/cadera, rodamiento, apoyo, tres puntos, subida, guardia | `head-knockdown-shoulder-roll-v4.png` |
-| `headKnockdownKneeDrop` | knockdown recuperable retardado | cabeza | guardia, impacto, pausa inestable, rodilla, palma, tres puntos, rodilla, subida, guardia compacta, guardia | `head-knockdown-knee-drop-v5.png` |
-| `bodyKnockdownElbowFold` | knockdown recuperable compacto | cuerpo | guardia, impacto al hígado, pliegue, cadera, codo/suelo, stun, apoyo, rodilla, subida, guardia | `body-knockdown-elbow-fold-v4.png` |
-| `bodyKnockdownThreePoint` | knockdown recuperable a tres apoyos | cuerpo | guardia, plexo, pliegue, paso atrás, rodilla, rodilla/pie/palma, estabilización, subida, guardia corporal, guardia | `body-knockdown-three-point-v5.png` |
-| `headKnockout` | finalización | cabeza | guardia, impacto decisivo, pérdida de balance, colapso, suelo, asentamiento y cuatro poses inmóviles | `head-knockout-v1.png` |
-| `bodyKnockout` | finalización | cuerpo | guardia, impacto decisivo, pliegue, colapso, suelo, asentamiento y cuatro poses inmóviles | `body-knockout-v1.png` |
-| `headKnockoutProne` | finalización frontal | cabeza | guardia, impacto decisivo, caída frontal, manos/rodilla, pecho al suelo y cinco poses boca abajo inmóviles | `head-knockout-prone-v2.png` |
-| `bodyKnockoutProne` | finalización frontal plegada | cuerpo | guardia, impacto al cuerpo, rodillas, caída frontal, asentamiento y cinco poses plegadas inmóviles | `body-knockout-prone-v2.png` |
-| `headKnockoutSide` | finalización lateral con giro | cabeza | guardia, impacto, giro, caída diagonal, hombro/cadera, asentamiento y cuatro poses laterales inmóviles | `head-knockout-side-v3.png` |
-| `headKnockoutKneeCollapse` | finalización retardada desde rodillas | cabeza | guardia, impacto, pausa, caída vertical, ambas rodillas, vuelco y cuatro poses laterales inmóviles | `head-knockout-knee-collapse-v4.png` |
-| `bodyKnockoutSupine` | finalización corporal supina | cuerpo | guardia, plexo, retroceso, caída, asiento/espalda y cinco poses boca arriba inmóviles | `body-knockout-supine-v3.png` |
-| `bodyKnockoutSeatedSlump` | finalización corporal sentada/lateral | cuerpo | guardia, hígado, pliegue, cadera, sentado, desplome y cuatro poses laterales inmóviles | `body-knockout-seated-slump-v4.png` |
-
-Ruta común: `public/assets/animations/support/`. El manifiesto etiqueta cada frame mediante `frameLabels`, identifica `target` (`head`/`body`), `result` (`knockdown`/`knockout`) y un nombre estable de `variant`. Las dieciocho hojas conservan el mismo peleador, vestuario, proporciones y dirección canónica de los modelos ofensivos. El motor elige uniformemente entre cinco knockdowns por zona y cuatro knockouts por zona.
-
-## Animaciones no ofensivas conservadas
-
-| ID | Hoja | Segmentos |
+| Movement ID | Purpose | Movement folder |
 | --- | --- | --- |
-| `hitReactions` | `animations/support/hit-reactions-v4.png` | cabeza 0–9, cuerpo 10–19 |
-| `footwork` | `animations/support/footwork-v3.png` | avance 0–9, retroceso 10–19 |
-| `guards` | `animations/support/guards-v3.png` | alta 0–9, baja 10–19 |
-| `headKnockdown` | `animations/support/head-knockdown-v1.png` | caída y recuperación por impacto de cabeza 0–9 |
-| `bodyKnockdown` | `animations/support/body-knockdown-v1.png` | caída y recuperación por impacto corporal 0–9 |
-| `headKnockdownForward` | `animations/support/head-knockdown-forward-v2.png` | caída frontal y recuperación por impacto de cabeza 0–9 |
-| `bodyKnockdownKneel` | `animations/support/body-knockdown-kneel-v2.png` | caída de rodillas y recuperación por impacto corporal 0–9 |
-| `headKnockdownSeated` | `animations/support/head-knockdown-seated-v3.png` | caída rotacional sentada y recuperación por impacto de cabeza 0–9 |
-| `bodyKnockdownSeated` | `animations/support/body-knockdown-seated-v3.png` | caída sentada hacia atrás y recuperación por impacto corporal 0–9 |
-| `headKnockdownShoulderRoll` | `animations/support/head-knockdown-shoulder-roll-v4.png` | giro, caída sobre hombro/cadera y recuperación 0–9 |
-| `headKnockdownKneeDrop` | `animations/support/head-knockdown-knee-drop-v5.png` | caída retardada a una rodilla y recuperación 0–9 |
-| `bodyKnockdownElbowFold` | `animations/support/body-knockdown-elbow-fold-v4.png` | pliegue al hígado sobre codo/cadera y recuperación 0–9 |
-| `bodyKnockdownThreePoint` | `animations/support/body-knockdown-three-point-v5.png` | caída al plexo a tres apoyos y recuperación 0–9 |
-| `headKnockout` | `animations/support/head-knockout-v1.png` | finalización por cabeza 0–9 |
-| `bodyKnockout` | `animations/support/body-knockout-v1.png` | finalización por cuerpo 0–9 |
-| `headKnockoutProne` | `animations/support/head-knockout-prone-v2.png` | finalización frontal boca abajo por cabeza 0–9 |
-| `bodyKnockoutProne` | `animations/support/body-knockout-prone-v2.png` | finalización de rodillas y plegada por cuerpo 0–9 |
-| `headKnockoutSide` | `animations/support/head-knockout-side-v3.png` | finalización lateral con giro por cabeza 0–9 |
-| `headKnockoutKneeCollapse` | `animations/support/head-knockout-knee-collapse-v4.png` | finalización retardada desde ambas rodillas 0–9 |
-| `bodyKnockoutSupine` | `animations/support/body-knockout-supine-v3.png` | finalización corporal completamente boca arriba 0–9 |
-| `bodyKnockoutSeatedSlump` | `animations/support/body-knockout-seated-slump-v4.png` | finalización corporal sentada con desplome lateral 0–9 |
-| `legacy` | `fighter-mma-sprites.png` | lógica de derribos preservada y desactivada |
+| `footworkForward` | Forward step | `animations/locomotion/forward-step/` |
+| `footworkBackward` | Backward step and evade pose source | `animations/locomotion/backward-step/` |
+| `guardHigh` | High guard and high block reaction | `animations/defense/high-guard/` |
+| `guardLow` | Low guard and low block reaction | `animations/defense/low-guard/` |
+| `hitReactionHead` | Clean/critical head recoil | `animations/reactions/head-hit/` |
+| `hitReactionBody` | Clean/critical body recoil | `animations/reactions/body-hit/` |
+| `legacyGround` | Preserved disabled grappling prototype | `animations/legacy/ground-sequence/` |
 
-## Verificación
+## Runtime selection
 
-`npm run check` valida archivos, etiquetas, dimensiones, transparencia, celdas reservadas vacías y un margen alfa mínimo por frame. `node scripts/normalize-support-sheets.cjs` reconstruye las hojas de soporte desde sus fuentes v2 sin que pies o brazos crucen los límites de celda.
+`game.js` assigns `characterId: "rook"` to Player 1 and `characterId: "vex"` to Player 2. The renderer selects `ANIMATIONS[characterId][movementId]`. Both libraries use canonical right-facing artwork, and `facing` mirrors the selected frame toward the opponent.
+
+## Verification
+
+Run:
+
+```bash
+npm run sprites:validate
+npm run check
+npm test
+```
+
+Validation checks all character/movement mappings, metadata files, frame files, atlas dimensions, alpha channels, grid capacity, empty reserved cells, cell padding, source facing, limb locks, and labeled contact frames.

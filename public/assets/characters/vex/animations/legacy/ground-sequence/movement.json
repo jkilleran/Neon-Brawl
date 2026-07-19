@@ -1,0 +1,71 @@
+{
+  "id": "legacyGround",
+  "label": "LEGACY // GROUND SEQUENCE",
+  "category": "legacy",
+  "target": null,
+  "result": null,
+  "variant": null,
+  "limb": null,
+  "supportLimb": null,
+  "input": null,
+  "folder": "animations/legacy/ground-sequence",
+  "runtimeSheet": "animations/legacy/ground-sequence/sheet.png",
+  "frameCount": 8,
+  "contactFrame": null,
+  "canonicalFacing": "right",
+  "mirrorForFacingLeft": true,
+  "grid": {
+    "columns": 4,
+    "rows": 2,
+    "frames": 8,
+    "fallbackWidth": 1774,
+    "fallbackHeight": 887,
+    "isolatedCells": false,
+    "minCellPadding": 0
+  },
+  "provenance": "original-prototype-sheet",
+  "verification": "runtime-only-disabled-feature",
+  "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/fighter-mma-sprites.png",
+  "frames": [
+    {
+      "index": 1,
+      "label": "entry",
+      "file": "animations/legacy/ground-sequence/frames/frame-01-entry.png"
+    },
+    {
+      "index": 2,
+      "label": "transition",
+      "file": "animations/legacy/ground-sequence/frames/frame-02-transition.png"
+    },
+    {
+      "index": 3,
+      "label": "top-control",
+      "file": "animations/legacy/ground-sequence/frames/frame-03-top-control.png"
+    },
+    {
+      "index": 4,
+      "label": "ground-strike",
+      "file": "animations/legacy/ground-sequence/frames/frame-04-ground-strike.png"
+    },
+    {
+      "index": 5,
+      "label": "defense",
+      "file": "animations/legacy/ground-sequence/frames/frame-05-defense.png"
+    },
+    {
+      "index": 6,
+      "label": "escape",
+      "file": "animations/legacy/ground-sequence/frames/frame-06-escape.png"
+    },
+    {
+      "index": 7,
+      "label": "stand-up",
+      "file": "animations/legacy/ground-sequence/frames/frame-07-stand-up.png"
+    },
+    {
+      "index": 8,
+      "label": "reset",
+      "file": "animations/legacy/ground-sequence/frames/frame-08-reset.png"
+    }
+  ]
+}

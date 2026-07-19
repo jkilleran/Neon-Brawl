@@ -60,8 +60,15 @@
     return { image, columns, rows, frames, fallbackWidth, fallbackHeight };
   }
 
-  const ANIMATIONS = Object.fromEntries(Object.entries(ANIMATION_MANIFEST.sheets)
-    .map(([id, definition]) => [id, animationSheet(definition)]));
+  const ANIMATIONS = Object.fromEntries(
+    Object.entries(ANIMATION_MANIFEST.characters).map(([characterId, character]) => [
+      characterId,
+      Object.fromEntries(
+        Object.entries(character.sheets)
+          .map(([id, definition]) => [id, animationSheet(definition)]),
+      ),
+    ]),
+  );
   const KNOCKDOWN_VARIANTS = Object.freeze({
     head: Object.freeze([
       "headKnockdown",
@@ -280,7 +287,7 @@
     },
     takedown: {
       label: "TAKEDOWN",
-      animation: "legacy",
+      animation: "legacyGround",
       legacyFrame: 7,
       target: "takedown",
       startup: 0.2,
@@ -399,6 +406,10 @@
   class Fighter {
     constructor(game, config) {
       this.game = game;
+      this.characterId = config.characterId;
+      if (!ANIMATIONS[this.characterId]) {
+        throw new Error(`Unknown character sprite library: ${this.characterId}`);
+      }
       this.name = config.name;
       this.style = config.style;
       this.color = config.color;
@@ -747,9 +758,12 @@
 
     draw(context, options = {}) {
       const visual = options.frame !== undefined
-        ? { animation: options.animation ?? "legacy", frame: options.frame }
+        ? { animation: options.animation ?? "legacyGround", frame: options.frame }
         : this.getVisualFrame();
-      const sheet = ANIMATIONS[visual.animation];
+      const sheet = ANIMATIONS[this.characterId][visual.animation];
+      if (!sheet) {
+        throw new Error(`Missing ${this.characterId} animation: ${visual.animation}`);
+      }
       const frame = clamp(visual.frame, 0, sheet.frames - 1);
       let drawX = options.x ?? this.x;
       const drawY = options.y ?? FLOOR;
@@ -887,36 +901,34 @@
       if (this.blockReaction) {
         const progress = clamp(this.blockReaction.elapsed / this.blockReaction.duration, 0, 0.999);
         const blockFrames = [9, 8, 7, 8, 9];
-        const guardOffset = this.blockReaction.guard === "low" ? 10 : 0;
         return {
-          animation: "guards",
-          frame: guardOffset + blockFrames[Math.floor(progress * blockFrames.length)],
+          animation: this.blockReaction.guard === "low" ? "guardLow" : "guardHigh",
+          frame: blockFrames[Math.floor(progress * blockFrames.length)],
         };
       }
       if (this.hitReaction) {
         const reactionProgress = clamp(this.hitReaction.elapsed / this.hitReaction.duration, 0, 0.999);
-        const reactionOffset = this.hitReaction.target === "body" ? 10 : 0;
         return {
-          animation: "hitReactions",
-          frame: reactionOffset + Math.floor(reactionProgress * 10),
+          animation: this.hitReaction.target === "body" ? "hitReactionBody" : "hitReactionHead",
+          frame: Math.floor(reactionProgress * 10),
         };
       }
       const visibleGuard = this.guard ?? (this.guardBlend > 0 ? this.guardVisual : null);
       if (visibleGuard === "high") {
-        return { animation: "guards", frame: clamp(Math.floor(this.guardBlend * 9), 0, 9) };
+        return { animation: "guardHigh", frame: clamp(Math.floor(this.guardBlend * 9), 0, 9) };
       }
       if (visibleGuard === "low") {
-        return { animation: "guards", frame: 10 + clamp(Math.floor(this.guardBlend * 9), 0, 9) };
+        return { animation: "guardLow", frame: clamp(Math.floor(this.guardBlend * 9), 0, 9) };
       }
-      if (this.evadeTimer > 0) return { animation: "footwork", frame: 15 };
+      if (this.evadeTimer > 0) return { animation: "footworkBackward", frame: 5 };
       if (Math.abs(this.velocityX) > 18) {
         const cycle = Math.floor(this.animationTime * 14) % 10;
         return {
-          animation: "footwork",
-          frame: this.velocityX * this.facing >= 0 ? cycle : 10 + cycle,
+          animation: this.velocityX * this.facing >= 0 ? "footworkForward" : "footworkBackward",
+          frame: cycle,
         };
       }
-      return { animation: "footwork", frame: 0 };
+      return { animation: "footworkForward", frame: 0 };
     }
 
     drawStatus(context) {
@@ -968,6 +980,7 @@
       this.lastTime = performance.now();
 
       this.fighterOne = new Fighter(this, {
+        characterId: "rook",
         name: "ROOK",
         style: "PRESSURE STRIKER",
         color: "#35f2e5",
@@ -977,6 +990,7 @@
         facing: 1,
       });
       this.fighterTwo = new Fighter(this, {
+        characterId: "vex",
         name: "VEX",
         style: "COUNTER WRESTLER",
         color: "#ff3b9d",

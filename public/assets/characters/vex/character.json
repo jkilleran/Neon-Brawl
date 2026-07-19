@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "vex",
+  "displayName": "Vex",
+  "role": "Counter Fighter",
+  "palette": {
+    "primary": "#ff3b9d",
+    "accent": "#ffc35b"
+  },
+  "canonicalFacing": "right",
+  "movementList": "movement-list.json",
+  "animationRoot": "animations",
+  "movementCount": 33
+}

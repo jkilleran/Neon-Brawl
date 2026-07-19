@@ -21,6 +21,9 @@ assert.match(
 );
 assert.equal(Object.keys(animationManifest.strikes).length, 8, "Catalog should expose eight isolated strikes");
 assert.equal(Object.keys(animationManifest.outcomes).length, 18, "Catalog should expose ten knockdowns and eight knockouts");
+assert.equal(Object.keys(animationManifest.characters).length, 2, "Catalog should expose one library per fighter");
+assert.equal(Object.keys(animationManifest.movements).length, 33, "Each fighter should expose 33 movements");
+assert.equal(Object.keys(animationManifest.support).length, 6, "Support atlases should be split into six movements");
 assert.equal(animationManifest.outcomes.headKnockdown.result, "knockdown");
 assert.equal(animationManifest.outcomes.bodyKnockdown.target, "body");
 assert.equal(animationManifest.outcomes.headKnockdownForward.variant, "forward-hands-and-knee");
@@ -41,16 +44,16 @@ assert.equal(animationManifest.outcomes.bodyKnockoutSupine.variant, "backward-su
 assert.equal(animationManifest.outcomes.bodyKnockoutSeatedSlump.variant, "seated-side-slump-body-finish");
 assert.equal(animationManifest.strikes.leftPunchBody.limb, "left-hand");
 assert.equal(animationManifest.strikes.leftPunchBody.target, "body");
-assert.match(animationManifest.strikes.leftPunchBody.file, /left-punch-body-v5\.png$/);
-assert.match(animationManifest.strikes.rightKickHead.file, /right-kick-head-v5\.png$/);
-assert.match(animationManifest.strikes.rightKickBody.file, /right-kick-body-v5\.png$/);
+assert.equal(animationManifest.strikes.leftPunchBody.input.p2, "Shift + I");
+assert.match(animationManifest.strikes.leftPunchBody.folder, /body\/left-punch$/);
+assert.match(animationManifest.strikes.rightKickHead.folder, /head\/right-kick$/);
+assert.match(animationManifest.strikes.rightKickBody.folder, /body\/right-kick$/);
 for (const id of ["leftPunchBody", "rightKickHead", "rightKickBody"]) {
-  assert.deepEqual(animationManifest.strikes[id].grid, {
-    columns: 5,
-    rows: 2,
-    fallbackWidth: 1920,
-    fallbackHeight: 682,
-  });
+  assert.equal(animationManifest.strikes[id].grid.columns, 5);
+  assert.equal(animationManifest.strikes[id].grid.rows, 2);
+  assert.equal(animationManifest.strikes[id].grid.frames, 10);
+  assert.equal(animationManifest.strikes[id].grid.fallbackWidth, 1920);
+  assert.equal(animationManifest.strikes[id].grid.fallbackHeight, 682);
 }
 
 class FakeClassList {
@@ -164,6 +167,11 @@ const menuButtons = [new FakeElement(), new FakeElement()];
 const windowListeners = new Map();
 const animationFrames = [];
 const imageSources = [];
+const animationSheetsBySource = new Map(
+  Object.values(animationManifest.characters).flatMap((character) => (
+    Object.values(character.sheets).map((sheet) => [sheet.src, sheet])
+  )),
+);
 
 global.document = {
   fullscreenElement: null,
@@ -199,16 +207,11 @@ global.Image = class FakeImage {
   }
 
   get naturalWidth() {
-    if (this.source?.includes("fighter-mma")) return 1774;
-    if (this.source?.includes("-v5.png")) return 1920;
-    return this.source?.includes("/animations/strikes/") ? 1536 : 1920;
+    return animationSheetsBySource.get(this.source)?.fallbackWidth ?? 0;
   }
 
   get naturalHeight() {
-    if (this.source?.includes("fighter-mma")) return 887;
-    if (this.source?.includes("-knock")) return 682;
-    if (this.source?.includes("-v5.png")) return 682;
-    return this.source?.includes("/animations/strikes/") ? 1023 : 1364;
+    return animationSheetsBySource.get(this.source)?.fallbackHeight ?? 0;
   }
 };
 
@@ -549,16 +552,14 @@ game.mode = "cpu";
 assert.equal(animationFrames.length, 1, "The game should schedule its animation loop");
 assert.equal(modeButtons[0].listeners.has("click"), true, "CPU mode should be interactive");
 assert.equal(modeButtons[2].listeners.has("click"), true, "Practice mode should be interactive");
-assert.equal(imageSources.length, 30, "All modular combat animation sheets should preload");
-for (const movement of Object.values(animationManifest.strikes)) {
-  assert(imageSources.includes(movement.file), `${movement.id} should preload its own sheet`);
+assert.equal(imageSources.length, 66, "All 33 movements for both fighters should preload");
+for (const [characterId, character] of Object.entries(animationManifest.characters)) {
+  for (const [movementId, sheet] of Object.entries(character.sheets)) {
+    assert(imageSources.includes(sheet.src), `${characterId}/${movementId} should preload its own sheet`);
+  }
 }
-for (const movement of Object.values(animationManifest.outcomes)) {
-  assert(imageSources.includes(movement.file), `${movement.id} should preload its own sheet`);
-}
-assert(imageSources.includes("/assets/animations/support/hit-reactions-v4.png"));
-assert(imageSources.includes("/assets/animations/support/footwork-v3.png"));
-assert(imageSources.includes("/assets/animations/support/guards-v3.png"));
+assert(imageSources.includes("/assets/characters/rook/animations/reactions/body-hit/sheet.png"));
+assert(imageSources.includes("/assets/characters/vex/animations/defense/high-guard/sheet.png"));
 
 modeButtons[2].dispatch("click");
 game.state = "fighting";
@@ -577,11 +578,11 @@ const sendKey = (type, code) => {
 };
 
 const tapFrames = new Map([
-  [130, "KeyU"],
-  [175, "KeyI"],
-  [235, "KeyJ"],
-  [305, "KeyK"],
-  [390, "KeyU"],
+  [130, "KeyT"],
+  [175, "KeyY"],
+  [235, "KeyG"],
+  [305, "KeyH"],
+  [390, "KeyT"],
 ]);
 
 let time = performance.now();

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "rook",
+  "displayName": "Rook",
+  "role": "Pressure Striker",
+  "palette": {
+    "primary": "#35f2e5",
+    "accent": "#d6ff7d"
+  },
+  "canonicalFacing": "right",
+  "movementList": "movement-list.json",
+  "animationRoot": "animations",
+  "movementCount": 33
+}

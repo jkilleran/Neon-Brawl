@@ -1,8 +1,8 @@
 # Neon Brawl MMA
 
-Prototipo de combate MMA super light para navegador. Conserva la estética neon del proyecto original, pero lleva el combate hacia una simulación ligera de striking: distancia, stamina, daño a cabeza y cuerpo, guardias, jabs, patadas y puntuación por asaltos.
+Neon Brawl is a lightweight browser MMA game built with Canvas and plain JavaScript. It combines arcade presentation with tactical distance, two-layer stamina, separate head/body health, guards, critical counters, knockdowns, knockouts, three-round scoring, and a practice mode.
 
-## Ejecutarlo en Visual Studio Code
+## Run locally in Visual Studio Code
 
 ```bash
 git clone https://github.com/jkilleran/Neon-Brawl.git
@@ -11,72 +11,61 @@ npm install
 npm run dev
 ```
 
-Abre la dirección que muestre la terminal, normalmente `http://localhost:5173`.
+Open the address printed by Vite, normally `http://localhost:5173`.
 
-## Controles
+## Controls
 
-| Acción | Jugador 1 | Jugador 2 |
+| Action | Player 1 / Rook | Player 2 / Vex |
 | --- | --- | --- |
-| Retroceder / avanzar | `A` / `D` | `←` / `→` |
-| Guardia alta | `W` | `↑` |
-| Guardia baja | `S` | `↓` |
-| Puño izquierdo | `U` | `N` |
-| Puño derecho | `I` | `M` |
-| Patada izquierda | `J` | `,` |
-| Patada derecha | `K` | `.` |
-| Modificador al cuerpo | Mantener `Espacio` + golpe | Mantener `Espacio` + golpe |
-| Pausa | `Esc` | `Esc` |
+| Advance | `D` | `←` |
+| Retreat | `A` | `→` |
+| High guard | `W` | `↑` |
+| Low guard | `S` | `↓` |
+| Left punch | `T` | `I` |
+| Right punch | `Y` | `O` |
+| Left kick | `G` | `K` |
+| Right kick | `H` | `L` |
+| Body modifier | Hold `Space` + strike | Hold `Shift` + strike |
+| Evade | `E` | `P` |
+| Pause | `Esc` | `Esc` |
 
-Sin modificador, los cuatro golpes apuntan a la cabeza. Mantén `Espacio` al presionar cualquiera de ellos para cambiar su trayectoria y animación hacia el cuerpo.
+Without a modifier, strikes target the head. Hold that player's modifier while pressing a strike key to use the body variant.
 
-Los derribos y el control en el suelo están temporalmente desactivados. Su implementación permanece en el motor detrás de `FEATURES.takedowns` para recuperarla cuando las animaciones de grappling estén listas.
+Takedowns and ground control remain disabled. Their prototype logic and legacy sprites are preserved for a future grappling animation pass.
 
-## Sistemas incluidos
+## Character sprite libraries
 
-- Daño independiente de cabeza y cuerpo
-- Modo `PRACTICE LAB` sin reloj, con cifras de daño y reinicio automático del dummy
-- Tres asaltos de 3 minutos
-- Daño de strikes reducido al 50%; los ataques al cuerpo reciben otro 15% de reducción
-- Coste de stamina al 100% al acertar limpio y al 150% al fallar, ser evadido o golpear la guardia
-- Stamina inmediata más límite de stamina a largo plazo en una sola barra
-- Fatiga acumulativa al lanzar golpes con la reserva baja; el límite mínimo es 35%
-- Recuperación parcial del límite de stamina entre asaltos
-- Golpe crítico al atacar quieto a un rival en movimiento, con stun de un segundo
-- Separación mínima de 168 px para impedir que los modelos se superpongan
-- Contacto garantizado para los ocho strikes hasta 178 px; fuera de esa distancia el golpe falla
-- Probabilidad exacta de 1 entre 2.2 de knockdown cuando conecta un golpe crítico
-- Knockdowns ilimitados: la cantidad acumulada nunca provoca un TKO automático
-- Cinco variantes recuperables de knockdown para cabeza y cinco para cuerpo
-- Cuatro animaciones independientes de knockout por cada zona, elegidas de forma uniforme
-- Presentación de KO en dos tiempos: primero se ve la caída y después aparece el resultado
-- Reacciones diferenciadas para bloqueo, golpe limpio y golpe crítico
-- Stamina que afecta velocidad, potencia y defensa
-- Guardia alta y baja contextual
-- Ocho variantes de ataque: puño/patada izquierda y derecha a cabeza o cuerpo
-- Diez frames por variante, con contacto, recuperación y retorno a guardia
-- Veinte frames de desplazamiento y veinte de guardias alta/baja
-- Diez frames de reacción al golpe para cabeza y diez para cuerpo
-- Reacción corporal con entrada y recuperación simétricas, sin cambios bruscos de escala
-- Colisiones anatómicas de cabeza y cuerpo con impacto en el punto exacto
-- Controles completos visibles desde el menú de pausa
-- Lógica de derribos y ground-and-pound preservada, pero desactivada
-- Knockdowns y finalizaciones por KO/TKO
-- Tres asaltos con puntuación 10-9 y decisión
-- Daño normal reducido a `0.40375 ×`; los críticos conservan `0.425 ×` antes de su multiplicador
-- Crítico de vulnerabilidad `1 / 3.5` con umbral por round: 45%, 65% y 75%
-- Cada crítico tiene `1 / 2.2` de probabilidad de producir knockdown
-- Rival controlado por computadora
-- Veintiséis hojas independientes con diez frames etiquetados: ocho ataques y dieciocho resultados
-- Dirección canónica y espejo determinista para que ambos luchadores golpeen hacia el rival
-- Indicador de guardia reflejado correctamente para el peleador de la derecha
-- Jab izquierdo al cuerpo y cross derecho al cuerpo con siluetas y rotaciones diferenciadas
-- Modelos v5 aprobados para patada derecha alta, patada derecha al cuerpo y puño izquierdo al cuerpo
-- Extremidad atacante bloqueada por movimiento para impedir cambios de mano o pierna entre frames
-- Celdas alfa aisladas para impedir pies, brazos o fragmentos flotantes entre frames
-- Catálogo modular en [`docs/animation-catalog.md`](docs/animation-catalog.md)
-- Reglas de balance en [`docs/gameplay-rules.md`](docs/gameplay-rules.md)
+Rook and Vex now have independent, self-contained sprite libraries:
 
-## Validación
+```text
+public/assets/characters/
+├── rook/
+│   ├── character.json
+│   ├── movement-list.json
+│   └── animations/...
+├── vex/
+│   ├── character.json
+│   ├── movement-list.json
+│   └── animations/...
+└── prototype-fighter/source-archive/original-assets/...
+```
+
+Each movement folder contains `movement.json`, the runtime `sheet.png`, and a `frames/` directory with individually named PNGs. This makes it possible to replace one frame or one complete movement for only one character.
+
+See [Character Sprite Library](docs/character-sprite-library.md) for maintenance workflows and [Animation Catalog](docs/animation-catalog.md) for the complete movement inventory.
+
+## Sprite commands
+
+```bash
+npm run sprites:list
+npm run sprites:validate
+npm run sprites:build -- rook leftPunchHead
+npm run sprites:catalog -- rook
+```
+
+After replacing an individual frame, rebuild only that movement with `sprites:build`, then run the project validation commands.
+
+## Validation
 
 ```bash
 npm run check
@@ -84,17 +73,35 @@ npm test
 npm run build
 ```
 
-## Actualizaciones por ZIP
+`npm run check` verifies the manifest, per-character catalogs, atlas dimensions, frame dimensions, alpha isolation, canonical facing, and movement continuity metadata.
 
-Las entregas locales se distribuyen como un ZIP que contiene uno o más parches Git numerados. Después de descargarlo, se descomprime en `~/Downloads`, se aplican en orden sobre `agent/mma-light-gameplay-v2` con `git am --3way`, se ejecutan las pruebas y se sube la misma rama. Este flujo no crea pull requests ni modifica `main`.
+## Gameplay highlights
 
-## Tecnología
+- Quick Fight, Local Sparring, and infinite-time Practice Lab
+- Three 3-minute rounds with 10-9 scoring
+- Separate head and body damage
+- Short-term stamina plus a recoverable long-term cap
+- Extra stamina cost for misses and blocked strikes
+- Clean, blocked, and critical visual reactions
+- Movement counters and round-dependent vulnerability criticals
+- Five head and five body knockdown variants
+- Four head and four body knockout variants
+- Minimum fighter spacing and assisted contact at valid strike distance
+- No automatic TKO based on accumulated knockdown count
+
+Exact balance values are documented in [Gameplay Rules](docs/gameplay-rules.md).
+
+## Local ZIP updates
+
+Local releases may be delivered as a ZIP containing numbered Git patches. Extract the package, apply the patches in order with `git am --3way` on `agent/mma-light-gameplay-v2`, run validation, and push that same branch. This workflow does not require a pull request or a change to `main`.
+
+## Technology
 
 - Canvas 2D
 - Web Audio API
-- JavaScript sin motor externo
-- Vite para desarrollo local
+- Plain JavaScript
+- Vite
 
-## Licencia
+## License
 
 MIT
