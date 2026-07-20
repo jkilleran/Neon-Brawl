@@ -38,11 +38,13 @@ The approved photograph is safe for phones, tablets, laptops, TVs, ultrawide mon
 The arena remains one static bitmap. A lightweight procedural pass is drawn immediately after the background and before fighters, particles, and the HUD. It adds four restrained ambient layers:
 
 1. slow cyan and magenta side-light breathing;
-2. a two-pixel cage-rail glow;
-3. twelve tiny audience lights with independent phases;
-4. one translucent floor reflection crossing the mat every 14 seconds.
+2. two slowly swaying light beams behind the cage;
+3. traveling light pulses along the upper rail and rear floor seam;
+4. twelve audience lights with independent cores and halos;
+5. one translucent floor reflection crossing the mat every 10 seconds;
+6. a restrained breathing glow around the center logo.
 
-This avoids additional network downloads, multi-frame image decoding, texture swaps, and frame synchronization. The existing Canvas already redraws for gameplay, so the animation adds only a small number of gradients and primitive shapes behind the fighters. When the operating system requests reduced motion, the light sweep is disabled and all ambient lighting becomes static.
+This avoids additional network downloads, multi-frame image decoding, texture swaps, and frame synchronization. The existing Canvas already redraws for gameplay, so the animation adds only a small number of gradients and primitive shapes behind the fighters. The lighting contrast is deliberately high enough to remain visible against the approved arena photograph while staying behind every fighter and HUD element. When the operating system requests reduced motion, the beams and light sweep are disabled and the remaining ambient lighting becomes static.
 
 The previous cyan upper-left and magenta lower-right viewport brackets were removed. They were interface decoration rather than part of the octagon artwork and could appear as disconnected corner pieces at some sizes.
 

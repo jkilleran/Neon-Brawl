@@ -45,7 +45,9 @@ assert.deepEqual(arenaMetadata.shadow.standingRadius, [76, 7], "Standing shadows
 assert.equal(arenaMetadata.shadow.standingBaselineOffsetY, -7, "Standing shadows should compensate for sprite bottom padding");
 assert.deepEqual(arenaMetadata.shadow.footContactOffsetsX, [-76, 62], "Each planted foot should have an independent contact shadow");
 assert.equal(arenaMetadata.ambientAnimation.bitmapFrames, 1, "The living arena should not download extra bitmap frames");
-assert.equal(arenaMetadata.ambientAnimation.cycleSeconds, 14, "Ambient motion should remain slow and subtle");
+assert.equal(arenaMetadata.ambientAnimation.cycleSeconds, 10, "Ambient motion should remain slow but clearly visible");
+assert(arenaMetadata.ambientAnimation.layers.includes("moving-light-beams"), "The arena should expose moving cage lighting");
+assert(arenaMetadata.ambientAnimation.layers.includes("traveling-rail-pulses"), "The arena should expose visible rail motion");
 assert.match(gameSource, /predictOnlineLocalInput/, "Both players should predict their own controls locally");
 assert.match(gameSource, /reconcileGuardPresentation/, "Online guards should have a snapshot-safe presentation layer");
 assert.match(gameSource, /queueOnlineSnapshot/, "The browser should coalesce snapshot bursts before rendering");
@@ -908,8 +910,10 @@ assert.match(stylesSource, /@container game \(max-width: 520px\)/, "Extra-small 
 assert.doesNotMatch(stylesSource, /\.game-viewport::before/, "The disconnected upper-left corner bracket should be removed");
 assert.doesNotMatch(stylesSource, /\.game-viewport::after/, "The disconnected lower-right corner bracket should be removed");
 assert.match(gameSource, /drawArenaAmbience\(context\)/, "The octagon should render a lightweight ambient pass");
-assert.match(gameSource, /ARENA_AMBIENT_CYCLE_SECONDS = 14/, "The ambient lighting cycle should be slow");
+assert.match(gameSource, /ARENA_AMBIENT_CYCLE_SECONDS = 10/, "The ambient lighting cycle should be visible without becoming distracting");
 assert.match(gameSource, /globalCompositeOperation = "screen"/, "Ambient light should blend without replacing the arena image");
+assert.match(gameSource, /drawLightBeam\(242, 430/, "The crowd should receive visible cyan and magenta light beams");
+assert.match(gameSource, /railPulseX/, "The upper rail should receive a traveling highlight");
 for (const [characterId, character] of Object.entries(animationManifest.characters)) {
   for (const [movementId, sheet] of Object.entries(character.sheets)) {
     assert(imageSources.includes(sheet.src), `${characterId}/${movementId} should preload its own sheet`);

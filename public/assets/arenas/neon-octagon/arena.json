@@ -37,9 +37,10 @@
   },
   "ambientAnimation": {
     "technique": "single-frame-procedural-overlay",
-    "cycleSeconds": 14,
+    "cycleSeconds": 10,
     "bitmapFrames": 1,
-    "layers": ["side-light-breathing", "rail-glow", "audience-sparkles", "floor-light-sweep"],
+    "layers": ["side-light-breathing", "moving-light-beams", "traveling-rail-pulses", "audience-sparkles", "floor-light-sweep", "logo-glow"],
+    "visibility": "clearly-perceptible-subtle",
     "reducedMotionBehavior": "static-lighting"
   }
 }
