@@ -148,18 +148,28 @@ canvas:focus-visible {
 
 .game-shell {
   position: relative;
-  overflow: hidden;
+  display: grid;
   width: 100%;
   margin-top: 18px;
   aspect-ratio: 16 / 9;
+  place-items: center;
+  overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  background: #080816;
+  background: #02030a;
   box-shadow: 0 30px 100px rgba(0, 0, 0, 0.5);
   isolation: isolate;
 }
 
-.game-shell::before,
-.game-shell::after {
+.game-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #080816;
+  isolation: isolate;
+}
+
+.game-viewport::before,
+.game-viewport::after {
   position: absolute;
   z-index: 8;
   width: 90px;
@@ -168,18 +178,37 @@ canvas:focus-visible {
   content: "";
 }
 
-.game-shell::before {
+.game-viewport::before {
   top: 8px;
   left: 8px;
   border-top: 2px solid var(--cyan);
   border-left: 2px solid var(--cyan);
 }
 
-.game-shell::after {
+.game-viewport::after {
   right: 8px;
   bottom: 8px;
   border-right: 2px solid var(--pink);
   border-bottom: 2px solid var(--pink);
+}
+
+.game-shell:fullscreen,
+.game-shell:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  aspect-ratio: auto;
+  border: 0;
+  background: #02030a;
+  box-shadow: none;
+}
+
+.game-shell:fullscreen .game-viewport,
+.game-shell:-webkit-full-screen .game-viewport {
+  position: relative;
+  inset: auto;
+  width: min(100vw, 177.778vh);
+  height: min(100vh, 56.25vw);
 }
 
 #game {
@@ -1531,15 +1560,6 @@ h1 em {
   .brand__name,
   .footer-note span:last-child {
     display: none;
-  }
-
-  .game-shell {
-    min-height: 420px;
-    aspect-ratio: auto;
-  }
-
-  #game {
-    object-fit: cover;
   }
 
   .menu-copy {

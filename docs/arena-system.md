@@ -29,6 +29,10 @@ This aligns the reference composition with the existing gameplay coordinates:
 
 The gameplay coordinates, hit zones, strike reach, minimum distance, and online snapshots therefore remain unchanged.
 
+The complete game viewport always remains 16:9. Regular layouts scale the viewport uniformly, and fullscreen centers the same 16:9 surface with letterboxing when the physical screen has a different aspect ratio. The background, HUD, fighters, effects, and menus therefore cannot stretch independently. The Canvas backing resolution scales up to 2× for high-density displays while all gameplay continues to use the fixed 1280 × 720 logical coordinate system.
+
+The approved photograph is safe for phones, tablets, laptops, TVs, ultrawide monitors, and portrait displays because its crop is calculated inside the logical Canvas and never from the physical screen ratio. The 1536 × 1024 source may look softer when enlarged to extreme 4K output, but it will not deform. A future higher-resolution arena can replace `arena.png` without changing the renderer or gameplay coordinates.
+
 ## Fighter shadows
 
 Every fighter renders a two-layer contact shadow before its sprite:
@@ -36,7 +40,7 @@ Every fighter renders a two-layer contact shadow before its sprite:
 1. a soft radial falloff for the broad floor shadow;
 2. a darker blurred core directly below the planted feet.
 
-The shadow moves with the fighter and automatically widens for attacks, knockdowns, and knockout poses. It is presentation-only and never participates in collision or network state.
+The normalized sprite cells retain approximately eight transparent pixels below the visible feet. Standing shadows compensate for that padding with a `-4` logical-pixel baseline offset, keeping their dark contact core directly beneath the planted feet. The shadow moves with the fighter and automatically widens for attacks, knockdowns, and knockout poses. It is presentation-only and never participates in collision or network state.
 
 ## Fallback
 

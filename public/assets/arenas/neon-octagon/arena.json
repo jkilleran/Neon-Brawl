@@ -27,8 +27,10 @@
   },
   "shadow": {
     "type": "dynamic-radial-contact",
-    "standingRadius": [70, 15],
-    "attackingRadius": [76, 15],
-    "groundedRadius": [112, 21]
+    "standingRadius": [70, 9],
+    "attackingRadius": [76, 10],
+    "groundedRadius": [112, 18],
+    "standingBaselineOffsetY": -4,
+    "groundedBaselineOffsetY": 2
   }
 }

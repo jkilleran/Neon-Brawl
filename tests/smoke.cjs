@@ -10,6 +10,7 @@ const markup = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8")
 const gameSource = fs.readFileSync(path.join(__dirname, "..", "game.js"), "utf8");
 const onlineServerSource = fs.readFileSync(path.join(__dirname, "..", "server.cjs"), "utf8");
 assert.match(markup, /pause-controls-grid/, "Pause menu should expose the complete controls");
+assert.match(markup, /id="game-viewport" class="game-viewport"/, "Canvas and overlays should share one responsive viewport");
 assert.match(markup, /WASD \+ TYGH/, "Pause menu should list Player 1 controls");
 assert.match(markup, /FLECHAS \+ IOKL/, "Pause menu should list Player 2 controls");
 assert.match(markup, /SPACE \/ SHIFT<\/kbd><span>mantener \+ cualquier golpe/, "Pause menu should explain the body modifier");
@@ -39,6 +40,8 @@ assert.deepEqual(
   [380, 900, 604],
   "Arena metadata should preserve the approved fighter composition",
 );
+assert.deepEqual(arenaMetadata.shadow.standingRadius, [70, 9], "Standing shadows should remain thin and grounded");
+assert.equal(arenaMetadata.shadow.standingBaselineOffsetY, -4, "Standing shadows should compensate for sprite bottom padding");
 assert.match(gameSource, /predictOnlineLocalInput/, "Both players should predict their own controls locally");
 assert.match(gameSource, /reconcileGuardPresentation/, "Online guards should have a snapshot-safe presentation layer");
 assert.match(gameSource, /queueOnlineSnapshot/, "The browser should coalesce snapshot bursts before rendering");
@@ -891,6 +894,8 @@ assert.equal(imageSources.length, 67, "The arena and all 33 movements for both f
 assert(imageSources.includes(arenaMetadata.runtimeAsset), "The approved arena plate should preload");
 assert.match(gameSource, /ARENA_VERTICAL_CROP_ANCHOR = 0\.35/, "Arena crop should preserve the approved composition");
 assert.match(gameSource, /drawFighterShadow\(context, drawX, drawY, scale\)/, "Every fighter should render a contact shadow");
+assert.match(gameSource, /shadowY = drawY \+ \(groundedOutcome \? 2 : -4\)/, "Standing shadows should touch the visible feet");
+assert.match(gameSource, /Math\.min\(2, \(cssWidth \* deviceScale\) \/ WIDTH\)/, "Canvas resolution should adapt to high-density screens");
 for (const [characterId, character] of Object.entries(animationManifest.characters)) {
   for (const [movementId, sheet] of Object.entries(character.sheets)) {
     assert(imageSources.includes(sheet.src), `${characterId}/${movementId} should preload its own sheet`);

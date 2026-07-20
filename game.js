@@ -38,8 +38,25 @@
   const onlineBack = document.querySelector("#online-back");
   const menuPanels = [...document.querySelectorAll("[data-menu-panel]")];
 
-  const WIDTH = canvas.width;
-  const HEIGHT = canvas.height;
+  const WIDTH = 1280;
+  const HEIGHT = 720;
+  let canvasRenderScale = 1;
+  const syncCanvasResolution = () => {
+    const measuredWidth = canvas.getBoundingClientRect?.().width;
+    const cssWidth = Number.isFinite(measuredWidth) && measuredWidth > 0 ? measuredWidth : WIDTH;
+    const deviceScale = Number.isFinite(globalThis.devicePixelRatio)
+      ? globalThis.devicePixelRatio
+      : 1;
+    const nextScale = Math.max(1, Math.min(2, (cssWidth * deviceScale) / WIDTH));
+    const backingWidth = Math.round(WIDTH * nextScale);
+    const backingHeight = Math.round(HEIGHT * nextScale);
+    if (canvas.width !== backingWidth || canvas.height !== backingHeight) {
+      canvas.width = backingWidth;
+      canvas.height = backingHeight;
+    }
+    canvasRenderScale = nextScale;
+  };
+  syncCanvasResolution();
   const FLOOR = 604;
   const COMBAT_CONFIG = globalThis.NEON_BRAWL_COMBAT_CONFIG;
   if (!COMBAT_CONFIG) throw new Error("Combat config must load before game.js");
@@ -950,15 +967,15 @@
     drawFighterShadow(context, drawX, drawY, scale = 1) {
       const groundedOutcome = this.knockdownTimer > 0 || this.finishAnimation;
       const shadowWidth = (groundedOutcome ? 112 : this.attack ? 76 : 70) * scale;
-      const shadowHeight = (groundedOutcome ? 21 : 15) * scale;
-      const shadowY = drawY + (groundedOutcome ? 9 : 7) * scale;
+      const shadowHeight = (groundedOutcome ? 18 : this.attack ? 10 : 9) * scale;
+      const shadowY = drawY + (groundedOutcome ? 2 : -4) * scale;
 
       context.save();
       context.translate(drawX, shadowY);
       context.scale(shadowWidth, shadowHeight);
       const shadowGradient = context.createRadialGradient(0, 0, 0.06, 0, 0, 1);
-      shadowGradient.addColorStop(0, "rgba(0, 0, 4, 0.62)");
-      shadowGradient.addColorStop(0.58, "rgba(0, 0, 5, 0.38)");
+      shadowGradient.addColorStop(0, "rgba(0, 0, 4, 0.68)");
+      shadowGradient.addColorStop(0.58, "rgba(0, 0, 5, 0.42)");
       shadowGradient.addColorStop(1, "rgba(0, 0, 5, 0)");
       context.fillStyle = shadowGradient;
       context.beginPath();
@@ -967,11 +984,11 @@
       context.restore();
 
       context.save();
-      context.globalAlpha = groundedOutcome ? 0.24 : 0.32;
+      context.globalAlpha = groundedOutcome ? 0.28 : 0.4;
       context.fillStyle = "#020208";
       context.filter = "blur(2px)";
       context.beginPath();
-      context.ellipse(drawX, shadowY - 1, shadowWidth * 0.52, shadowHeight * 0.34, 0, 0, Math.PI * 2);
+      context.ellipse(drawX, shadowY - 1, shadowWidth * 0.42, shadowHeight * 0.28, 0, 0, Math.PI * 2);
       context.fill();
       context.restore();
     }
@@ -2693,6 +2710,8 @@
     }
 
     draw() {
+      ctx.setTransform(canvasRenderScale, 0, 0, canvasRenderScale, 0, 0);
+      ctx.clearRect(0, 0, WIDTH, HEIGHT);
       ctx.save();
       if (this.shake > 0.1) ctx.translate(random(-this.shake, this.shake), random(-this.shake, this.shake));
       this.drawOctagon(ctx);
@@ -3257,7 +3276,9 @@
     game.sendOnlineInputNow(false);
     if (["fighting", "ground"].includes(game.state)) game.togglePause();
   });
+  window.addEventListener("resize", syncCanvasResolution);
   document.addEventListener?.("visibilitychange", () => game.syncOnlineBackgroundTicker());
+  document.addEventListener?.("fullscreenchange", syncCanvasResolution);
 
   document.querySelectorAll("[data-mode]").forEach((button) => {
     button.addEventListener("click", () => {

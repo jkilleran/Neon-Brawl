@@ -117,6 +117,7 @@ npm run build
 - Two-level mode selection that cleanly separates Local and Online play
 - Competitive HUD with condition-based head/body icons and one layered stamina meter
 - Dedicated Neon MMA arena plate with reference-aligned fighter placement and dynamic contact shadows
+- Aspect-safe 16:9 viewport, fullscreen letterboxing, and high-density Canvas rendering up to 2×
 - Quick Fight, Local Sparring, and infinite-time Practice Lab
 - Three 3-minute rounds with 10-9 scoring
 - Separate head and body damage

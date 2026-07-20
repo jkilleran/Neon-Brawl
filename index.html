@@ -39,11 +39,12 @@
       </header>
 
       <section id="game-shell" class="game-shell" aria-label="Juego Neon Brawl">
-        <canvas id="game" width="1280" height="720" tabindex="0">
-          Tu navegador no soporta Canvas.
-        </canvas>
+        <div id="game-viewport" class="game-viewport">
+          <canvas id="game" width="1280" height="720" tabindex="0">
+            Tu navegador no soporta Canvas.
+          </canvas>
 
-        <div id="menu-screen" class="screen screen--menu" data-menu-section="root">
+          <div id="menu-screen" class="screen screen--menu" data-menu-section="root">
           <div class="menu-copy">
             <p class="eyebrow"><span></span> MMA PROTOCOL // ALPHA</p>
             <h1>NEON<br /><em>BRAWL</em></h1>
@@ -257,19 +258,20 @@
           <strong id="round-title">FIGHT</strong>
         </div>
 
-        <div id="combat-controls" class="combat-controls is-hidden" aria-hidden="true">
-          <span><kbd>T</kbd> LEFT PUNCH</span>
-          <span><kbd>Y</kbd> RIGHT PUNCH</span>
-          <span><kbd>G</kbd> LEFT KICK</span>
-          <span><kbd>H</kbd> RIGHT KICK</span>
-          <span><kbd>SPACE +</kbd> BODY</span>
+          <div id="combat-controls" class="combat-controls is-hidden" aria-hidden="true">
+            <span><kbd>T</kbd> LEFT PUNCH</span>
+            <span><kbd>Y</kbd> RIGHT PUNCH</span>
+            <span><kbd>G</kbd> LEFT KICK</span>
+            <span><kbd>H</kbd> RIGHT KICK</span>
+            <span><kbd>SPACE +</kbd> BODY</span>
+          </div>
         </div>
       </section>
 
       <footer class="footer-note">
         <span><i></i> SYSTEM ONLINE</span>
         <p>ESC para pausar · Cada crítico tiene 1 de 2.2 de probabilidad de knockdown</p>
-        <span>BUILD 0.21.0 // NEON OCTAGON</span>
+        <span>BUILD 0.21.1 // RESPONSIVE OCTAGON</span>
       </footer>
     </main>
 
