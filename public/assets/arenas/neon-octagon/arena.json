@@ -34,5 +34,12 @@
     "groundedBaselineOffsetY": 2,
     "footContactOffsetsX": [-76, 62],
     "footContactRadius": [24, 3.5]
+  },
+  "ambientAnimation": {
+    "technique": "single-frame-procedural-overlay",
+    "cycleSeconds": 14,
+    "bitmapFrames": 1,
+    "layers": ["side-light-breathing", "rail-glow", "audience-sparkles", "floor-light-sweep"],
+    "reducedMotionBehavior": "static-lighting"
   }
 }

@@ -105,6 +105,22 @@
   };
   const ARENA_BACKGROUND_SRC = "/assets/arenas/neon-octagon/arena.png";
   const ARENA_VERTICAL_CROP_ANCHOR = 0.35;
+  const ARENA_AMBIENT_CYCLE_SECONDS = 14;
+  const ARENA_REDUCED_MOTION = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+  const ARENA_AUDIENCE_LIGHTS = Object.freeze([
+    Object.freeze({ x: 116, y: 196, size: 1.8, phase: 0.1 }),
+    Object.freeze({ x: 204, y: 128, size: 1.4, phase: 1.7 }),
+    Object.freeze({ x: 292, y: 220, size: 2.1, phase: 3.2 }),
+    Object.freeze({ x: 382, y: 154, size: 1.5, phase: 4.8 }),
+    Object.freeze({ x: 474, y: 236, size: 1.9, phase: 0.9 }),
+    Object.freeze({ x: 560, y: 182, size: 1.4, phase: 2.5 }),
+    Object.freeze({ x: 720, y: 188, size: 1.4, phase: 5.1 }),
+    Object.freeze({ x: 808, y: 230, size: 2, phase: 1.2 }),
+    Object.freeze({ x: 900, y: 146, size: 1.5, phase: 3.7 }),
+    Object.freeze({ x: 992, y: 218, size: 2.1, phase: 5.8 }),
+    Object.freeze({ x: 1082, y: 124, size: 1.4, phase: 2.1 }),
+    Object.freeze({ x: 1168, y: 194, size: 1.8, phase: 4.3 }),
+  ]);
 
   const ANIMATION_MANIFEST = globalThis.NEON_BRAWL_ANIMATIONS;
   if (!ANIMATION_MANIFEST) {
@@ -2818,10 +2834,78 @@
           WIDTH,
           HEIGHT,
         );
-        return;
+      } else {
+        this.drawLegacyOctagon(context);
       }
 
-      this.drawLegacyOctagon(context);
+      this.drawArenaAmbience(context);
+    }
+
+    drawArenaAmbience(context) {
+      const time = ARENA_REDUCED_MOTION ? 0 : this.elapsed;
+      const cycle = time * (Math.PI * 2 / ARENA_AMBIENT_CYCLE_SECONDS);
+      const cyanPulse = 0.78 + Math.sin(cycle) * 0.22;
+      const pinkPulse = 0.78 + Math.sin(cycle + Math.PI) * 0.22;
+
+      context.save();
+      context.globalCompositeOperation = "screen";
+
+      context.globalAlpha = 0.055 * cyanPulse;
+      const cyanAtmosphere = context.createRadialGradient(170, 350, 30, 170, 350, 560);
+      cyanAtmosphere.addColorStop(0, "rgba(45, 238, 255, 0.72)");
+      cyanAtmosphere.addColorStop(0.5, "rgba(23, 153, 255, 0.2)");
+      cyanAtmosphere.addColorStop(1, "rgba(0, 0, 0, 0)");
+      context.fillStyle = cyanAtmosphere;
+      context.fillRect(0, 80, WIDTH * 0.58, HEIGHT - 80);
+
+      context.globalAlpha = 0.055 * pinkPulse;
+      const pinkAtmosphere = context.createRadialGradient(WIDTH - 170, 350, 30, WIDTH - 170, 350, 560);
+      pinkAtmosphere.addColorStop(0, "rgba(255, 49, 170, 0.72)");
+      pinkAtmosphere.addColorStop(0.5, "rgba(210, 32, 193, 0.2)");
+      pinkAtmosphere.addColorStop(1, "rgba(0, 0, 0, 0)");
+      context.fillStyle = pinkAtmosphere;
+      context.fillRect(WIDTH * 0.42, 80, WIDTH * 0.58, HEIGHT - 80);
+
+      context.globalAlpha = 0.13;
+      const railGlow = context.createLinearGradient(170, 0, WIDTH - 170, 0);
+      railGlow.addColorStop(0, `rgba(53, 242, 229, ${0.48 * cyanPulse})`);
+      railGlow.addColorStop(0.46, "rgba(141, 92, 255, 0.18)");
+      railGlow.addColorStop(0.54, "rgba(141, 92, 255, 0.18)");
+      railGlow.addColorStop(1, `rgba(255, 59, 157, ${0.48 * pinkPulse})`);
+      context.fillStyle = railGlow;
+      context.fillRect(175, 151, WIDTH - 350, 2);
+
+      for (const light of ARENA_AUDIENCE_LIGHTS) {
+        const flicker = 0.45 + Math.sin(time * 1.6 + light.phase) * 0.25;
+        context.globalAlpha = ARENA_REDUCED_MOTION ? 0.07 : 0.045 + Math.max(0, flicker) * 0.07;
+        context.fillStyle = light.x < WIDTH / 2 ? "#35f2e5" : "#ff3b9d";
+        context.beginPath();
+        context.arc(light.x, light.y, light.size, 0, Math.PI * 2);
+        context.fill();
+      }
+
+      if (!ARENA_REDUCED_MOTION) {
+        const sweepProgress = (time % ARENA_AMBIENT_CYCLE_SECONDS) / ARENA_AMBIENT_CYCLE_SECONDS;
+        const sweepX = -280 + sweepProgress * (WIDTH + 560);
+        context.save();
+        context.beginPath();
+        context.moveTo(172, 404);
+        context.lineTo(WIDTH - 172, 404);
+        context.lineTo(WIDTH - 42, HEIGHT);
+        context.lineTo(42, HEIGHT);
+        context.closePath();
+        context.clip();
+        const floorSweep = context.createLinearGradient(sweepX - 180, 0, sweepX + 180, 0);
+        floorSweep.addColorStop(0, "rgba(255, 255, 255, 0)");
+        floorSweep.addColorStop(0.5, "rgba(184, 225, 255, 0.055)");
+        floorSweep.addColorStop(1, "rgba(255, 255, 255, 0)");
+        context.globalAlpha = 0.5;
+        context.fillStyle = floorSweep;
+        context.fillRect(sweepX - 180, 390, 360, HEIGHT - 390);
+        context.restore();
+      }
+
+      context.restore();
     }
 
     drawLegacyOctagon(context) {

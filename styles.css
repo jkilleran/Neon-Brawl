@@ -169,30 +169,6 @@ canvas:focus-visible {
   isolation: isolate;
 }
 
-.game-viewport::before,
-.game-viewport::after {
-  position: absolute;
-  z-index: 8;
-  width: 90px;
-  height: 90px;
-  pointer-events: none;
-  content: "";
-}
-
-.game-viewport::before {
-  top: 8px;
-  left: 8px;
-  border-top: 2px solid var(--cyan);
-  border-left: 2px solid var(--cyan);
-}
-
-.game-viewport::after {
-  right: 8px;
-  bottom: 8px;
-  border-right: 2px solid var(--pink);
-  border-bottom: 2px solid var(--pink);
-}
-
 .game-shell:fullscreen,
 .game-shell:-webkit-full-screen {
   width: 100vw;

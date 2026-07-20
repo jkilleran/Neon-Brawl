@@ -33,6 +33,19 @@ The complete game viewport always remains 16:9. Regular layouts scale the viewpo
 
 The approved photograph is safe for phones, tablets, laptops, TVs, ultrawide monitors, and portrait displays because its crop is calculated inside the logical Canvas and never from the physical screen ratio. The 1536 × 1024 source may look softer when enlarged to extreme 4K output, but it will not deform. A future higher-resolution arena can replace `arena.png` without changing the renderer or gameplay coordinates.
 
+## Living arena lighting
+
+The arena remains one static bitmap. A lightweight procedural pass is drawn immediately after the background and before fighters, particles, and the HUD. It adds four restrained ambient layers:
+
+1. slow cyan and magenta side-light breathing;
+2. a two-pixel cage-rail glow;
+3. twelve tiny audience lights with independent phases;
+4. one translucent floor reflection crossing the mat every 14 seconds.
+
+This avoids additional network downloads, multi-frame image decoding, texture swaps, and frame synchronization. The existing Canvas already redraws for gameplay, so the animation adds only a small number of gradients and primitive shapes behind the fighters. When the operating system requests reduced motion, the light sweep is disabled and all ambient lighting becomes static.
+
+The previous cyan upper-left and magenta lower-right viewport brackets were removed. They were interface decoration rather than part of the octagon artwork and could appear as disconnected corner pieces at some sizes.
+
 ## Fighter shadows
 
 Every fighter renders a three-part contact shadow before its sprite:
