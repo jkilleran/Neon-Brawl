@@ -6,11 +6,16 @@ The runtime arena is stored as an independent asset at:
 
 ```text
 public/assets/arenas/neon-octagon/
+├── crowd/
+│   ├── frame-01.webp
+│   ├── frame-02.webp
+│   └── frame-03.webp
+├── arena-foreground-v2.png
 ├── arena.json
 └── arena.png
 ```
 
-`arena.png` is the clean arena plate without fighters or HUD elements. `arena.json` records its source dimensions, viewport crop, fighter layout, and shadow configuration so the background can be replaced without searching through gameplay code.
+`arena-foreground-v2.png` is a transparent foreground containing the unchanged floor, cage mesh, rails, and posts. The three WebP files contain only the audience behind the fence. `arena.png` is the original complete plate and remains the loading/error fallback. `arena.json` records every layer, source dimension, viewport crop, fighter layout, and shadow configuration.
 
 ## Viewport composition
 
@@ -33,9 +38,17 @@ The complete game viewport always remains 16:9. Regular layouts scale the viewpo
 
 The approved photograph is safe for phones, tablets, laptops, TVs, ultrawide monitors, and portrait displays because its crop is calculated inside the logical Canvas and never from the physical screen ratio. The 1536 × 1024 source may look softer when enlarged to extreme 4K output, but it will not deform. A future higher-resolution arena can replace `arena.png` without changing the renderer or gameplay coordinates.
 
-## Living arena lighting
+## Layered audience animation
 
-The arena remains one static bitmap. A lightweight procedural pass is drawn immediately after the background and before fighters, particles, and the HUD. It adds four restrained ambient layers:
+The arena uses a fixed-over-moving layer stack:
+
+1. two adjacent crowd frames are drawn behind the cage with a smooth eased crossfade;
+2. the same transparent arena foreground is drawn over them every frame;
+3. lightweight procedural light is applied before fighters, particles, and the HUD.
+
+Only the audience changes. The floor, center logo, cage geometry, posts, mesh, camera, and arena illumination come from one immutable foreground, preventing the vibration that occurs when complete generated arena images are alternated. Each audience state lasts `1.8` seconds and loops continuously through three restrained poses. The complete compressed crowd payload is approximately 198 KB. When reduced motion is requested, the first crowd image remains static.
+
+The procedural pass adds six restrained ambient layers:
 
 1. slow cyan and magenta side-light breathing;
 2. two slowly swaying light beams behind the cage;
@@ -44,7 +57,7 @@ The arena remains one static bitmap. A lightweight procedural pass is drawn imme
 5. one translucent floor reflection crossing the mat every 10 seconds;
 6. a restrained breathing glow around the center logo.
 
-This avoids additional network downloads, multi-frame image decoding, texture swaps, and frame synchronization. The existing Canvas already redraws for gameplay, so the animation adds only a small number of gradients and primitive shapes behind the fighters. The lighting contrast is deliberately high enough to remain visible against the approved arena photograph while staying behind every fighter and HUD element. When the operating system requests reduced motion, the beams and light sweep are disabled and the remaining ambient lighting becomes static.
+The three crowd frames are decoded once and use the same 1536 × 1024 crop as the fixed foreground. Canvas performs only two crowd draws during a transition and one foreground draw; there are no videos, animated GIFs, per-pixel effects, or gameplay/network synchronization. The existing Canvas already redraws for gameplay. When the operating system requests reduced motion, the crowd, beams, and light sweep become static.
 
 The previous cyan upper-left and magenta lower-right viewport brackets were removed. They were interface decoration rather than part of the octagon artwork and could appear as disconnected corner pieces at some sizes.
 
@@ -60,4 +73,4 @@ The normalized sprite cells retain approximately eight transparent pixels below 
 
 ## Fallback
 
-The previous procedural arena remains available as `drawLegacyOctagon`. It is drawn only while the arena image is unavailable or has failed to load.
+The original complete `arena.png` is drawn until both the transparent foreground and at least one crowd image are ready. The previous procedural arena remains available as `drawLegacyOctagon` if that fallback also fails.

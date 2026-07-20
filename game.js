@@ -104,7 +104,14 @@
       ?? HUD_HEALTH_STATES.at(-1);
   };
   const ARENA_BACKGROUND_SRC = "/assets/arenas/neon-octagon/arena.png";
+  const ARENA_FOREGROUND_SRC = "/assets/arenas/neon-octagon/arena-foreground-v2.png";
+  const ARENA_CROWD_FRAME_SRCS = Object.freeze([
+    "/assets/arenas/neon-octagon/crowd/frame-01.webp",
+    "/assets/arenas/neon-octagon/crowd/frame-02.webp",
+    "/assets/arenas/neon-octagon/crowd/frame-03.webp",
+  ]);
   const ARENA_VERTICAL_CROP_ANCHOR = 0.35;
+  const ARENA_CROWD_FRAME_SECONDS = 1.8;
   const ARENA_AMBIENT_CYCLE_SECONDS = 10;
   const ARENA_REDUCED_MOTION = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
   const ARENA_AUDIENCE_LIGHTS = Object.freeze([
@@ -128,6 +135,13 @@
   }
   const arenaBackgroundImage = new Image();
   arenaBackgroundImage.src = ARENA_BACKGROUND_SRC;
+  const arenaForegroundImage = new Image();
+  arenaForegroundImage.src = ARENA_FOREGROUND_SRC;
+  const arenaCrowdImages = ARENA_CROWD_FRAME_SRCS.map((source) => {
+    const image = new Image();
+    image.src = source;
+    return image;
+  });
 
   function animationSheet({ src, columns, rows, frames, fallbackWidth, fallbackHeight }) {
     const image = new Image();
@@ -2804,37 +2818,72 @@
       context.restore();
     }
 
+    isArenaLayerReady(image) {
+      return image.complete && image.naturalWidth > 0 && image.naturalHeight > 0;
+    }
+
+    drawArenaLayer(context, image, alpha = 1) {
+      if (!this.isArenaLayerReady(image)) return false;
+      const sourceWidth = image.naturalWidth;
+      const sourceHeight = image.naturalHeight;
+      const targetAspect = WIDTH / HEIGHT;
+      const sourceAspect = sourceWidth / sourceHeight;
+      let cropX = 0;
+      let cropY = 0;
+      let cropWidth = sourceWidth;
+      let cropHeight = sourceHeight;
+
+      if (sourceAspect < targetAspect) {
+        cropHeight = sourceWidth / targetAspect;
+        cropY = (sourceHeight - cropHeight) * ARENA_VERTICAL_CROP_ANCHOR;
+      } else if (sourceAspect > targetAspect) {
+        cropWidth = sourceHeight * targetAspect;
+        cropX = (sourceWidth - cropWidth) / 2;
+      }
+
+      context.save();
+      const inheritedAlpha = Number.isFinite(context.globalAlpha) ? context.globalAlpha : 1;
+      context.globalAlpha = inheritedAlpha * clamp(alpha, 0, 1);
+      context.drawImage(
+        image,
+        cropX,
+        cropY,
+        cropWidth,
+        cropHeight,
+        0,
+        0,
+        WIDTH,
+        HEIGHT,
+      );
+      context.restore();
+      return true;
+    }
+
+    drawArenaCrowd(context) {
+      const firstFrame = arenaCrowdImages[0];
+      if (!this.isArenaLayerReady(firstFrame)) return false;
+      const allFramesReady = arenaCrowdImages.every((image) => this.isArenaLayerReady(image));
+      if (ARENA_REDUCED_MOTION || !allFramesReady) {
+        return this.drawArenaLayer(context, firstFrame);
+      }
+
+      const framePosition = (this.elapsed / ARENA_CROWD_FRAME_SECONDS) % arenaCrowdImages.length;
+      const frameIndex = Math.floor(framePosition);
+      const nextIndex = (frameIndex + 1) % arenaCrowdImages.length;
+      const linearMix = framePosition - frameIndex;
+      const smoothMix = linearMix * linearMix * (3 - 2 * linearMix);
+      this.drawArenaLayer(context, arenaCrowdImages[frameIndex]);
+      this.drawArenaLayer(context, arenaCrowdImages[nextIndex], smoothMix);
+      return true;
+    }
+
     drawOctagon(context) {
-      const sourceWidth = arenaBackgroundImage.naturalWidth;
-      const sourceHeight = arenaBackgroundImage.naturalHeight;
-      if (arenaBackgroundImage.complete && sourceWidth > 0 && sourceHeight > 0) {
-        const targetAspect = WIDTH / HEIGHT;
-        const sourceAspect = sourceWidth / sourceHeight;
-        let cropX = 0;
-        let cropY = 0;
-        let cropWidth = sourceWidth;
-        let cropHeight = sourceHeight;
-
-        if (sourceAspect < targetAspect) {
-          cropHeight = sourceWidth / targetAspect;
-          cropY = (sourceHeight - cropHeight) * ARENA_VERTICAL_CROP_ANCHOR;
-        } else if (sourceAspect > targetAspect) {
-          cropWidth = sourceHeight * targetAspect;
-          cropX = (sourceWidth - cropWidth) / 2;
-        }
-
-        context.drawImage(
-          arenaBackgroundImage,
-          cropX,
-          cropY,
-          cropWidth,
-          cropHeight,
-          0,
-          0,
-          WIDTH,
-          HEIGHT,
-        );
-      } else {
+      const foregroundReady = this.isArenaLayerReady(arenaForegroundImage);
+      const crowdReady = this.isArenaLayerReady(arenaCrowdImages[0]);
+      if (foregroundReady && crowdReady) {
+        this.drawArenaCrowd(context);
+        this.drawArenaLayer(context, arenaForegroundImage);
+      } else if (!this.drawArenaLayer(context, arenaBackgroundImage)) {
         this.drawLegacyOctagon(context);
       }
 
@@ -3319,16 +3368,6 @@
       const trackX = reverse ? x + labelSpace : x + 8;
       const trackWidth = width - labelSpace - 8;
       const labelX = reverse ? x + 10 : x + width - 10;
-
-      this.traceRoundedRect(context, x, y - 6, width, height + 12, 10);
-      context.fillStyle = "rgba(2, 3, 10, 0.92)";
-      context.fill();
-      context.strokeStyle = "rgba(1, 2, 7, 0.95)";
-      context.lineWidth = 4;
-      context.stroke();
-      context.strokeStyle = `${fighter.color}78`;
-      context.lineWidth = 1.5;
-      context.stroke();
 
       context.save();
       this.traceRoundedRect(context, trackX, y, trackWidth, height, height / 2);

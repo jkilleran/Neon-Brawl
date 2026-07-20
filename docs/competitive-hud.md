@@ -13,7 +13,7 @@ Each fighter panel contains:
 - fighter name and style;
 - a head-condition icon;
 - a body-condition icon;
-- one segmented stamina meter;
+- one continuous stamina meter;
 - round-win indicators.
 
 The center module contains the round clock, current round, game mode, and online latency when applicable.
@@ -40,8 +40,8 @@ Stamina is the only continuous fighter meter:
 - the amber marker identifies the current long-term cap;
 - fill direction mirrors for the right-side fighter;
 - meter color follows the fighter's cyan or magenta identity;
-- the capsule-shaped meter uses one continuous fill without decorative segmentation.
+- the meter uses one continuous clipped fill without an additional outer capsule or double border.
 
 ## Maintenance
 
-The thresholds are defined in `HUD_HEALTH_STATES` in `game.js`. Icon geometry is isolated in `drawHeadHealthGlyph` and `drawBodyHealthGlyph`; rounded panel geometry is shared through `traceRoundedRect`; panel composition is isolated in `drawHudFrame`, `drawFighterHud`, and `drawHealthStatusIcon`. These presentation functions do not modify combat state.
+The thresholds are defined in `HUD_HEALTH_STATES` in `game.js`. Icon geometry is isolated in `drawHeadHealthGlyph` and `drawBodyHealthGlyph`; rounded panel geometry is shared through `traceRoundedRect`; panel composition is isolated in `drawHudFrame`, `drawFighterHud`, `drawHealthStatusIcon`, and `drawStaminaBar`. These presentation functions do not modify combat state.

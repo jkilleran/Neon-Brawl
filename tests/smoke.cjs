@@ -44,7 +44,9 @@ assert.deepEqual(
 assert.deepEqual(arenaMetadata.shadow.standingRadius, [76, 7], "Standing shadows should remain thin and grounded");
 assert.equal(arenaMetadata.shadow.standingBaselineOffsetY, -7, "Standing shadows should compensate for sprite bottom padding");
 assert.deepEqual(arenaMetadata.shadow.footContactOffsetsX, [-76, 62], "Each planted foot should have an independent contact shadow");
-assert.equal(arenaMetadata.ambientAnimation.bitmapFrames, 1, "The living arena should not download extra bitmap frames");
+assert.equal(arenaMetadata.ambientAnimation.arenaBitmapFrames, 1, "The cage and floor must remain one fixed bitmap");
+assert.equal(arenaMetadata.ambientAnimation.crowdBitmapFrames, 3, "The audience should expose three restrained motion states");
+assert.equal(arenaMetadata.layers.crowd.transition, "smooth-crossfade", "Crowd frames should never hard-cut");
 assert.equal(arenaMetadata.ambientAnimation.cycleSeconds, 10, "Ambient motion should remain slow but clearly visible");
 assert(arenaMetadata.ambientAnimation.layers.includes("moving-light-beams"), "The arena should expose moving cage lighting");
 assert(arenaMetadata.ambientAnimation.layers.includes("traveling-rail-pulses"), "The arena should expose visible rail motion");
@@ -251,6 +253,16 @@ animationSheetsBySource.set(arenaMetadata.runtimeAsset, {
   fallbackWidth: arenaMetadata.source.width,
   fallbackHeight: arenaMetadata.source.height,
 });
+animationSheetsBySource.set(arenaMetadata.layers.foreground, {
+  fallbackWidth: arenaMetadata.source.width,
+  fallbackHeight: arenaMetadata.source.height,
+});
+for (const crowdFrame of arenaMetadata.layers.crowd.frames) {
+  animationSheetsBySource.set(crowdFrame, {
+    fallbackWidth: arenaMetadata.source.width,
+    fallbackHeight: arenaMetadata.source.height,
+  });
+}
 
 global.document = {
   fullscreenElement: null,
@@ -896,8 +908,12 @@ menuBackButtons[0].dispatch("click");
 assert.equal(selectors.get("#menu-screen").dataset.menuSection, "root");
 assert.equal(modeButtons[0].listeners.has("click"), true, "CPU mode should be interactive");
 assert.equal(modeButtons[2].listeners.has("click"), true, "Practice mode should be interactive");
-assert.equal(imageSources.length, 67, "The arena and all 33 movements for both fighters should preload");
+assert.equal(imageSources.length, 71, "The layered arena and all 33 movements for both fighters should preload");
 assert(imageSources.includes(arenaMetadata.runtimeAsset), "The approved arena plate should preload");
+assert(imageSources.includes(arenaMetadata.layers.foreground), "The fixed transparent arena layer should preload");
+for (const crowdFrame of arenaMetadata.layers.crowd.frames) {
+  assert(imageSources.includes(crowdFrame), `${crowdFrame} should preload`);
+}
 assert.match(gameSource, /ARENA_VERTICAL_CROP_ANCHOR = 0\.35/, "Arena crop should preserve the approved composition");
 assert.match(gameSource, /drawFighterShadow\(context, drawX, drawY, scale, facing\)/, "Every fighter should render a mirrored contact shadow");
 assert.match(gameSource, /shadowY = drawY \+ \(groundedOutcome \? 2 : -7\)/, "Standing shadows should touch the visible feet");
@@ -910,6 +926,14 @@ assert.match(stylesSource, /@container game \(max-width: 520px\)/, "Extra-small 
 assert.doesNotMatch(stylesSource, /\.game-viewport::before/, "The disconnected upper-left corner bracket should be removed");
 assert.doesNotMatch(stylesSource, /\.game-viewport::after/, "The disconnected lower-right corner bracket should be removed");
 assert.match(gameSource, /drawArenaAmbience\(context\)/, "The octagon should render a lightweight ambient pass");
+assert.match(gameSource, /ARENA_CROWD_FRAME_SECONDS = 1\.8/, "Crowd motion should use slow transitions");
+assert.match(gameSource, /smoothMix = linearMix \* linearMix \* \(3 - 2 \* linearMix\)/, "Crowd frames should crossfade without brightness jumps");
+assert.match(gameSource, /drawArenaCrowd\(context\)[\s\S]*drawArenaLayer\(context, arenaForegroundImage\)/, "The fixed arena should render over the changing crowd");
+assert.doesNotMatch(
+  gameSource,
+  /traceRoundedRect\(context, x, y - 6, width, height \+ 12, 10\)/,
+  "Stamina bars should not retain the heavy outer capsule",
+);
 assert.match(gameSource, /ARENA_AMBIENT_CYCLE_SECONDS = 10/, "The ambient lighting cycle should be visible without becoming distracting");
 assert.match(gameSource, /globalCompositeOperation = "screen"/, "Ambient light should blend without replacing the arena image");
 assert.match(gameSource, /drawLightBeam\(242, 430/, "The crowd should receive visible cyan and magenta light beams");

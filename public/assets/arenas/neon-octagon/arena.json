@@ -2,6 +2,20 @@
   "id": "neon-octagon",
   "name": "Neon MMA Octagon",
   "runtimeAsset": "/assets/arenas/neon-octagon/arena.png",
+  "layers": {
+    "fallback": "/assets/arenas/neon-octagon/arena.png",
+    "foreground": "/assets/arenas/neon-octagon/arena-foreground-v2.png",
+    "crowd": {
+      "frames": [
+        "/assets/arenas/neon-octagon/crowd/frame-01.webp",
+        "/assets/arenas/neon-octagon/crowd/frame-02.webp",
+        "/assets/arenas/neon-octagon/crowd/frame-03.webp"
+      ],
+      "frameDurationSeconds": 1.8,
+      "transition": "smooth-crossfade",
+      "reducedMotionBehavior": "first-frame"
+    }
+  },
   "source": {
     "width": 1536,
     "height": 1024,
@@ -36,9 +50,11 @@
     "footContactRadius": [24, 3.5]
   },
   "ambientAnimation": {
-    "technique": "single-frame-procedural-overlay",
+    "technique": "fixed-transparent-arena-over-crossfaded-crowd",
     "cycleSeconds": 10,
-    "bitmapFrames": 1,
+    "arenaBitmapFrames": 1,
+    "crowdBitmapFrames": 3,
+    "crowdPayloadKilobytes": 198,
     "layers": ["side-light-breathing", "moving-light-beams", "traveling-rail-pulses", "audience-sparkles", "floor-light-sweep", "logo-glow"],
     "visibility": "clearly-perceptible-subtle",
     "reducedMotionBehavior": "static-lighting"
