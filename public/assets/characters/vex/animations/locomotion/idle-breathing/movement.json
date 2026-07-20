@@ -1,0 +1,81 @@
+{
+  "id": "idleBreathing",
+  "label": "LOCOMOTION // IDLE BREATHING",
+  "category": "locomotion",
+  "target": null,
+  "result": null,
+  "variant": null,
+  "limb": null,
+  "supportLimb": null,
+  "input": null,
+  "folder": "animations/locomotion/idle-breathing",
+  "runtimeSheet": "animations/locomotion/idle-breathing/sheet.png",
+  "frameCount": 10,
+  "contactFrame": null,
+  "canonicalFacing": "right",
+  "mirrorForFacingLeft": true,
+  "grid": {
+    "columns": 5,
+    "rows": 2,
+    "frames": 10,
+    "fallbackWidth": 1920,
+    "fallbackHeight": 682,
+    "isolatedCells": true,
+    "minCellPadding": 6
+  },
+  "provenance": "generated-v1-subtle-combat-idle",
+  "verification": "visual-and-runtime",
+  "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/idle-breathing-v1.png",
+  "frames": [
+    {
+      "index": 1,
+      "label": "stance",
+      "file": "animations/locomotion/idle-breathing/frames/frame-01-stance.png"
+    },
+    {
+      "index": 2,
+      "label": "inhale-1",
+      "file": "animations/locomotion/idle-breathing/frames/frame-02-inhale-1.png"
+    },
+    {
+      "index": 3,
+      "label": "inhale-2",
+      "file": "animations/locomotion/idle-breathing/frames/frame-03-inhale-2.png"
+    },
+    {
+      "index": 4,
+      "label": "inhale-peak-1",
+      "file": "animations/locomotion/idle-breathing/frames/frame-04-inhale-peak-1.png"
+    },
+    {
+      "index": 5,
+      "label": "inhale-peak-2",
+      "file": "animations/locomotion/idle-breathing/frames/frame-05-inhale-peak-2.png"
+    },
+    {
+      "index": 6,
+      "label": "exhale-1",
+      "file": "animations/locomotion/idle-breathing/frames/frame-06-exhale-1.png"
+    },
+    {
+      "index": 7,
+      "label": "exhale-2",
+      "file": "animations/locomotion/idle-breathing/frames/frame-07-exhale-2.png"
+    },
+    {
+      "index": 8,
+      "label": "settle-1",
+      "file": "animations/locomotion/idle-breathing/frames/frame-08-settle-1.png"
+    },
+    {
+      "index": 9,
+      "label": "settle-2",
+      "file": "animations/locomotion/idle-breathing/frames/frame-09-settle-2.png"
+    },
+    {
+      "index": 10,
+      "label": "stance-return",
+      "file": "animations/locomotion/idle-breathing/frames/frame-10-stance-return.png"
+    }
+  ]
+}

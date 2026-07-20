@@ -89,7 +89,7 @@ public/assets/characters/
 
 Each movement folder contains `movement.json`, the runtime `sheet.png`, and a `frames/` directory with individually named PNGs. This makes it possible to replace one frame or one complete movement for only one character.
 
-See [Character Sprite Library](docs/character-sprite-library.md) for maintenance workflows and [Animation Catalog](docs/animation-catalog.md) for the complete movement inventory.
+See [Character Sprite Library](docs/character-sprite-library.md) for maintenance workflows, [Animation Catalog](docs/animation-catalog.md) for the complete movement inventory, and [Locomotion Animation System](docs/locomotion-system.md) for the playback and art contract.
 
 ## Sprite commands
 
@@ -118,6 +118,7 @@ npm run build
 - Competitive HUD with condition-based head/body icons and one layered stamina meter
 - Dedicated Neon MMA arena plate with reference-aligned fighter placement and dual-foot contact shadows
 - Fixed transparent cage and floor over a 2.1-second low/takeoff/jump-apex crowd loop with no procedural lighting pass
+- Ten-frame stationary breathing, fluid forward/backward combat shuffles, and animated high/low guard footwork
 - Aspect-safe 16:9 viewport, fullscreen letterboxing, high-density Canvas rendering up to 2×, and container-responsive menus
 - Quick Fight, Local Sparring, and infinite-time Practice Lab
 - Three 3-minute rounds with 10-9 scoring

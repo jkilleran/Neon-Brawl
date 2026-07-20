@@ -72,6 +72,10 @@
   const ONLINE_REMOTE_SMOOTHING_RATE = 24;
   const ONLINE_LOCAL_RECONCILIATION_RATE = 7;
   const GUARD_TRANSITION_RATE = COMBAT_CONFIG.guardTransitionRate;
+  const IDLE_ANIMATION_FPS = 5;
+  const FOOTWORK_ANIMATION_FPS = 11;
+  const GUARD_FOOTWORK_ANIMATION_FPS = 10;
+  const LOCOMOTION_SPEED_THRESHOLD = 18;
   const STAGE_LEFT = 105;
   const STAGE_RIGHT = WIDTH - 105;
   const FEATURES = Object.freeze({
@@ -1075,20 +1079,33 @@
       }
       const visibleGuard = this.guard ?? (this.guardBlend > 0 ? this.guardVisual : null);
       if (visibleGuard === "high") {
+        if (this.guard === "high" && this.guardBlend >= 0.92 && Math.abs(this.velocityX) > LOCOMOTION_SPEED_THRESHOLD) {
+          const cycle = Math.floor(this.animationTime * GUARD_FOOTWORK_ANIMATION_FPS) % 10;
+          const frame = this.velocityX * this.facing >= 0 ? cycle : (10 - cycle) % 10;
+          return { animation: "guardHighFootwork", frame };
+        }
         return { animation: "guardHigh", frame: clamp(Math.floor(this.guardBlend * 9), 0, 9) };
       }
       if (visibleGuard === "low") {
+        if (this.guard === "low" && this.guardBlend >= 0.92 && Math.abs(this.velocityX) > LOCOMOTION_SPEED_THRESHOLD) {
+          const cycle = Math.floor(this.animationTime * GUARD_FOOTWORK_ANIMATION_FPS) % 10;
+          const frame = this.velocityX * this.facing >= 0 ? cycle : (10 - cycle) % 10;
+          return { animation: "guardLowFootwork", frame };
+        }
         return { animation: "guardLow", frame: clamp(Math.floor(this.guardBlend * 9), 0, 9) };
       }
       if (this.evadeTimer > 0) return { animation: "footworkBackward", frame: 5 };
-      if (Math.abs(this.velocityX) > 18) {
-        const cycle = Math.floor(this.animationTime * 14) % 10;
+      if (Math.abs(this.velocityX) > LOCOMOTION_SPEED_THRESHOLD) {
+        const cycle = Math.floor(this.animationTime * FOOTWORK_ANIMATION_FPS) % 10;
         return {
           animation: this.velocityX * this.facing >= 0 ? "footworkForward" : "footworkBackward",
           frame: cycle,
         };
       }
-      return { animation: "footworkForward", frame: 0 };
+      return {
+        animation: "idleBreathing",
+        frame: Math.floor(this.animationTime * IDLE_ANIMATION_FPS) % 10,
+      };
     }
 
     drawStatus(context) {

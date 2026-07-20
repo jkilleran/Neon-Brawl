@@ -10,5 +10,5 @@
   "canonicalFacing": "right",
   "movementList": "movement-list.json",
   "animationRoot": "animations",
-  "movementCount": 33
+  "movementCount": 36
 }

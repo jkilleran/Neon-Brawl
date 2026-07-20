@@ -23,9 +23,9 @@
     "isolatedCells": true,
     "minCellPadding": 6
   },
-  "provenance": "split-from-approved-support-atlas",
+  "provenance": "generated-v4-fluid-forward-combat-shuffle",
   "verification": "visual-and-runtime",
-  "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/footwork-v3.png",
+  "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/footwork-forward-v4.png",
   "frames": [
     {
       "index": 1,

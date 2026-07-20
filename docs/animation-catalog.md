@@ -4,15 +4,15 @@ This document is the human-readable inventory for art, gameplay, and tests. `ani
 
 ## Catalog summary
 
-Each character currently owns 33 independent movements:
+Each character currently owns 36 independent movements:
 
 | Category | Count | Purpose |
 | --- | ---: | --- |
 | Strikes | 8 | Left/right punches and kicks, each with head/body variants |
 | Knockdowns | 10 | Five head and five body recoverable falls |
 | Knockouts | 8 | Four head and four body finishes |
-| Locomotion | 2 | Forward and backward footwork |
-| Defense | 2 | High and low guards |
+| Locomotion | 3 | Idle breathing plus forward and backward combat footwork |
+| Defense | 4 | Stationary high/low guards plus moving high/low guard shuffles |
 | Reactions | 2 | Clean head and body hit reactions |
 | Legacy | 1 | Disabled prototype ground sequence |
 
@@ -98,14 +98,17 @@ Knockout frames progress from guard to decisive impact, collapse, mat contact, s
 
 ## Support and legacy movements
 
-The former 20-frame combined atlases were split into independent 10-frame movements. This removes offsets from gameplay code and makes individual maintenance safer.
+Every support action is an independent 10-frame movement. Forward and backward movement now use dedicated fluid cycles, while guard transitions remain separate from guard locomotion so neither the torso nor the legs freeze.
 
 | Movement ID | Purpose | Movement folder |
 | --- | --- | --- |
+| `idleBreathing` | Subtle combat-ready breathing while stationary | `animations/locomotion/idle-breathing/` |
 | `footworkForward` | Forward step | `animations/locomotion/forward-step/` |
 | `footworkBackward` | Backward step and evade pose source | `animations/locomotion/backward-step/` |
 | `guardHigh` | High guard and high block reaction | `animations/defense/high-guard/` |
 | `guardLow` | Low guard and low block reaction | `animations/defense/low-guard/` |
+| `guardHighFootwork` | High guard with animated advancing/retreating legs | `animations/defense/high-guard-footwork/` |
+| `guardLowFootwork` | Low guard with animated advancing/retreating legs | `animations/defense/low-guard-footwork/` |
 | `hitReactionHead` | Clean/critical head recoil | `animations/reactions/head-hit/` |
 | `hitReactionBody` | Clean/critical body recoil | `animations/reactions/body-hit/` |
 | `legacyGround` | Preserved disabled grappling prototype | `animations/legacy/ground-sequence/` |
@@ -113,6 +116,8 @@ The former 20-frame combined atlases were split into independent 10-frame moveme
 ## Runtime selection
 
 `game.js` assigns `characterId: "rook"` to Player 1 and `characterId: "vex"` to Player 2. The renderer selects `ANIMATIONS[characterId][movementId]`. Both libraries use canonical right-facing artwork, and `facing` mirrors the selected frame toward the opponent.
+
+At runtime, stationary fighters loop `idleBreathing` at 5 fps. Normal footwork loops at 11 fps. Guard footwork loops at 10 fps and reverses the same coherent sequence when retreating, keeping the library compact without sacrificing directional motion.
 
 ## Verification
 

@@ -47,9 +47,9 @@ function assertIsolatedCells(characterId, movementId, sheet) {
 assert.equal(characterEntries.length, 2, "Catalog must expose the Rook and Vex sprite libraries");
 assert.equal(Object.keys(manifest.strikes).length, 8, "Catalog must expose eight strikes");
 assert.equal(Object.keys(manifest.outcomes).length, 18, "Catalog must expose ten knockdowns and eight knockouts");
-assert.equal(Object.keys(manifest.support).length, 6, "Catalog must expose six independent support movements");
+assert.equal(Object.keys(manifest.support).length, 9, "Catalog must expose nine independent support movements");
 assert.equal(Object.keys(manifest.legacy).length, 1, "Catalog must preserve the disabled legacy ground movement");
-assert.equal(movementEntries.length, 33, "Each character must expose 33 movements");
+assert.equal(movementEntries.length, 36, "Each character must expose 36 movements");
 
 for (const movement of Object.values(manifest.strikes)) {
   assert.equal(movement.frameCount, manifest.frameLimitPerMovement, `${movement.id} must use 10 frames`);
@@ -101,4 +101,4 @@ for (const [characterId, character] of characterEntries) {
   }
 }
 
-console.log("Animation catalog valid: 2 character libraries, 33 labeled movements each, isolated cells and canonical right-facing source.");
+console.log("Animation catalog valid: 2 character libraries, 36 labeled movements each, isolated cells and canonical right-facing source.");

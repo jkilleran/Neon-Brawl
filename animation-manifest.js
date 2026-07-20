@@ -66,6 +66,19 @@
     "stance-return",
   ]);
 
+  const IDLE_PHASES = Object.freeze([
+    "stance",
+    "inhale-1",
+    "inhale-2",
+    "inhale-peak-1",
+    "inhale-peak-2",
+    "exhale-1",
+    "exhale-2",
+    "settle-1",
+    "settle-2",
+    "stance-return",
+  ]);
+
   const GUARD_PHASES = Object.freeze([
     "stance",
     "guard-enter-1",
@@ -492,6 +505,8 @@
     frameLabels,
     archiveSource,
     archiveFrameOffset = 0,
+    archiveGrid = null,
+    provenance = "split-from-approved-support-atlas",
   }) => Object.freeze({
     id,
     label,
@@ -503,22 +518,34 @@
     sourceFacing: "right",
     mirrorForFacingLeft: true,
     continuityVerification: "frame-by-frame",
-    provenance: "split-from-approved-support-atlas",
+    provenance,
     verification: "visual-and-runtime",
     archiveSource,
     archiveFrameOffset,
-    archiveGrid: grid({ rows: 4, frames: 20, fallbackHeight: 1364 }),
+    archiveGrid: archiveGrid ?? grid({ rows: 4, frames: 20, fallbackHeight: 1364 }),
     grid: grid(),
   });
 
   const support = Object.freeze({
+    idleBreathing: supportMovement({
+      id: "idleBreathing",
+      label: "LOCOMOTION // IDLE BREATHING",
+      category: "locomotion",
+      folder: "animations/locomotion/idle-breathing",
+      frameLabels: IDLE_PHASES,
+      archiveSource: "animations/support/idle-breathing-v1.png",
+      archiveGrid: grid(),
+      provenance: "generated-v1-subtle-combat-idle",
+    }),
     footworkForward: supportMovement({
       id: "footworkForward",
       label: "FOOTWORK // FORWARD",
       category: "locomotion",
       folder: "animations/locomotion/forward-step",
       frameLabels: FOOTWORK_PHASES,
-      archiveSource: "animations/support/footwork-v3.png",
+      archiveSource: "animations/support/footwork-forward-v4.png",
+      archiveGrid: grid(),
+      provenance: "generated-v4-fluid-forward-combat-shuffle",
     }),
     footworkBackward: supportMovement({
       id: "footworkBackward",
@@ -526,8 +553,9 @@
       category: "locomotion",
       folder: "animations/locomotion/backward-step",
       frameLabels: FOOTWORK_PHASES,
-      archiveSource: "animations/support/footwork-v3.png",
-      archiveFrameOffset: 10,
+      archiveSource: "animations/support/footwork-backward-v4.png",
+      archiveGrid: grid(),
+      provenance: "generated-v4-fluid-backward-combat-shuffle",
     }),
     guardHigh: supportMovement({
       id: "guardHigh",
@@ -545,6 +573,26 @@
       frameLabels: GUARD_PHASES,
       archiveSource: "animations/support/guards-v3.png",
       archiveFrameOffset: 10,
+    }),
+    guardHighFootwork: supportMovement({
+      id: "guardHighFootwork",
+      label: "DEFENSE // HIGH GUARD FOOTWORK",
+      category: "defense",
+      folder: "animations/defense/high-guard-footwork",
+      frameLabels: FOOTWORK_PHASES,
+      archiveSource: "animations/support/high-guard-footwork-v1.png",
+      archiveGrid: grid(),
+      provenance: "generated-v1-high-guard-combat-shuffle",
+    }),
+    guardLowFootwork: supportMovement({
+      id: "guardLowFootwork",
+      label: "DEFENSE // LOW GUARD FOOTWORK",
+      category: "defense",
+      folder: "animations/defense/low-guard-footwork",
+      frameLabels: FOOTWORK_PHASES,
+      archiveSource: "animations/support/low-guard-footwork-v1.png",
+      archiveGrid: grid(),
+      provenance: "generated-v1-low-guard-combat-shuffle",
     }),
     hitReactionHead: supportMovement({
       id: "hitReactionHead",
@@ -646,7 +694,7 @@
   });
 
   const manifest = Object.freeze({
-    version: "9.0.0",
+    version: "10.0.0",
     assetSchemaVersion: "1.0.0",
     frameLimitPerMovement: 10,
     canonicalSourceFacing: "right",

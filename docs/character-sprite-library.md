@@ -23,8 +23,8 @@ public/assets/characters/
 │       ├── strikes/{head,body}/{left-punch,right-punch,left-kick,right-kick}/
 │       ├── knockdowns/{head,body}/<variant>/
 │       ├── knockouts/{head,body}/<variant>/
-│       ├── locomotion/{forward-step,backward-step}/
-│       ├── defense/{high-guard,low-guard}/
+│       ├── locomotion/{idle-breathing,forward-step,backward-step}/
+│       ├── defense/{high-guard,low-guard,high-guard-footwork,low-guard-footwork}/
 │       ├── reactions/{head-hit,body-hit}/
 │       └── legacy/ground-sequence/
 ├── vex/
@@ -79,6 +79,14 @@ npm run sprites:validate
 `sprites:list` prints registered characters and movement paths. `sprites:validate` checks all metadata, runtime sheets, and individual frames.
 
 Atlas extraction and rebuilding require ImageMagick (`magick` or `convert`). Validation, gameplay, tests, and normal development do not require it. On macOS, a maintainer can install the optional art tool with `brew install imagemagick`.
+
+Generated 5 × 2 transparent grids can be normalized to the canonical 1920 × 682 layout with:
+
+```bash
+npm run sprites:import -- <transparent-grid.png> <normalized-sheet.png>
+```
+
+The importer isolates all ten cells, trims transparent space, limits each fighter to a 330 × 310 presentation box, and aligns every pose to the shared baseline before the sheet is added to a movement folder.
 
 ## Replace one frame
 
@@ -164,7 +172,7 @@ Remove runtime references first, then remove the manifest entry and its characte
 6. Assign the new `characterId` to a `Fighter` configuration in `game.js`.
 7. Validate and test both facing directions.
 
-A registered character must currently provide all 33 movement IDs. This strict rule prevents a missing animation from appearing only during a rare outcome.
+A registered character must currently provide all 36 movement IDs. This strict rule prevents a missing animation from appearing only during a rare outcome.
 
 ## Regenerate metadata
 
