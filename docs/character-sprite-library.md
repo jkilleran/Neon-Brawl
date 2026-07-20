@@ -59,7 +59,7 @@ The files have distinct responsibilities:
 | `<movement>/movement.json` | Generated local metadata and exact frame list | No; regenerate |
 | `<movement>/frames/*.png` | Editable individual frame artwork | Yes |
 | `<movement>/sheet.png` | Runtime atlas built from the frame PNGs | Do not hand-edit when frames are authoritative |
-| `source-archive/original-assets/` | Preserved pre-migration sheets and old revisions | Preserve; do not use at runtime |
+| `source-archive/original-assets/` | Canonical pre-migration sheets referenced by movement metadata | Preserve referenced sources; remove superseded unreferenced revisions |
 
 `animation-manifest.js` plus the editable frame PNGs are the maintained source. JSON catalogs and runtime atlases are reproducible outputs.
 

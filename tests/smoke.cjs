@@ -6,6 +6,40 @@ const animationManifest = require("../animation-manifest.js");
 const arenaMetadata = require("../public/assets/arenas/neon-octagon/arena.json");
 const { OnlineMatchSimulation } = require("../online-simulation.cjs");
 
+const listRelativePngs = (root, directory = root) => fs.readdirSync(directory, { withFileTypes: true })
+  .flatMap((entry) => {
+    const absolutePath = path.join(directory, entry.name);
+    if (entry.isDirectory()) return listRelativePngs(root, absolutePath);
+    return entry.isFile() && entry.name.endsWith(".png")
+      ? [path.relative(root, absolutePath)]
+      : [];
+  });
+
+const archiveRoot = path.join(
+  __dirname,
+  "..",
+  "public",
+  "assets",
+  "characters",
+  "prototype-fighter",
+  "source-archive",
+  "original-assets",
+);
+const archivedPngs = listRelativePngs(archiveRoot).sort();
+const referencedArchivePngs = [...new Set(
+  Object.values(animationManifest.movements).map((movement) => movement.archiveSource),
+)].sort();
+assert.deepEqual(
+  archivedPngs,
+  referencedArchivePngs,
+  "The source archive should contain only canonical sheets referenced by movement metadata",
+);
+assert.equal(
+  fs.existsSync(path.join(__dirname, "..", "public", "assets", "arenas", "neon-octagon", "arena.png")),
+  false,
+  "The redundant complete arena plate should not return",
+);
+
 const markup = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 const gameSource = fs.readFileSync(path.join(__dirname, "..", "game.js"), "utf8");
 const stylesSource = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
@@ -34,7 +68,7 @@ assert.match(markup, /brillante = stamina actual · tenue = límite recuperable/
 assert.equal(combatConfig.snapshotHz, 30, "Server snapshots should use a bandwidth-safe 30 Hz cadence");
 assert.equal(combatConfig.simulationHz, 60, "The neutral server simulation should use a fixed 60 Hz step");
 assert.equal(combatConfig.guardTransitionRate, 6, "Guard transitions should expose all ten frames at 60 Hz");
-assert.equal(arenaMetadata.runtimeAsset, "/assets/arenas/neon-octagon/arena.png");
+assert.equal(arenaMetadata.runtimeAsset, "/assets/arenas/neon-octagon/arena-foreground-v2.png");
 assert.deepEqual(arenaMetadata.viewport.effectiveSourceCrop, { x: 0, y: 56, width: 1536, height: 864 });
 assert.deepEqual(
   [arenaMetadata.fighterLayout.rookSpawnX, arenaMetadata.fighterLayout.vexSpawnX, arenaMetadata.fighterLayout.floorY],
@@ -47,7 +81,12 @@ assert.deepEqual(arenaMetadata.shadow.footContactOffsetsX, [-76, 62], "Each plan
 assert.equal(arenaMetadata.ambientAnimation.arenaBitmapFrames, 1, "The cage and floor must remain one fixed bitmap");
 assert.equal(arenaMetadata.ambientAnimation.crowdBitmapFrames, 3, "The audience should expose three restrained motion states");
 assert.equal(arenaMetadata.layers.crowd.transition, "hold-then-smooth-crossfade", "Crowd states should be readable without hard cuts");
-assert.equal(arenaMetadata.ambientAnimation.cycleSeconds, 6, "The complete three-frame crowd loop should remain visible");
+assert.equal(arenaMetadata.ambientAnimation.cycleSeconds, 2.1, "The three crowd poses should read as one natural jump cycle");
+assert.deepEqual(
+  arenaMetadata.layers.crowd.frameLabels,
+  ["crowd-low", "crowd-takeoff", "crowd-jump-apex"],
+  "Crowd motion states should document the jump progression",
+);
 assert.equal(arenaMetadata.ambientAnimation.proceduralLighting, false, "The layered crowd should be the only arena animation");
 assert.deepEqual(
   arenaMetadata.ambientAnimation.layers,
@@ -912,7 +951,7 @@ menuBackButtons[0].dispatch("click");
 assert.equal(selectors.get("#menu-screen").dataset.menuSection, "root");
 assert.equal(modeButtons[0].listeners.has("click"), true, "CPU mode should be interactive");
 assert.equal(modeButtons[2].listeners.has("click"), true, "Practice mode should be interactive");
-assert.equal(imageSources.length, 71, "The layered arena and all 33 movements for both fighters should preload");
+assert.equal(imageSources.length, 70, "The layered arena and all 33 movements for both fighters should preload without the obsolete full plate");
 assert(imageSources.includes(arenaMetadata.runtimeAsset), "The approved arena plate should preload");
 assert(imageSources.includes(arenaMetadata.layers.foreground), "The fixed transparent arena layer should preload");
 for (const crowdFrame of arenaMetadata.layers.crowd.frames) {
@@ -930,7 +969,7 @@ assert.deepEqual(
   "A crowd state should be shown completely instead of remaining perpetually blended",
 );
 arenaDraws.length = 0;
-game.elapsed = 1.6;
+game.elapsed = 0.55;
 game.drawArenaCrowd(context);
 assert.deepEqual(
   arenaDraws.map(({ source }) => source),
@@ -938,7 +977,7 @@ assert.deepEqual(
   "Only the short transition window should blend adjacent crowd states",
 );
 arenaDraws.length = 0;
-game.elapsed = 2;
+game.elapsed = 0.7;
 game.drawArenaCrowd(context);
 assert.deepEqual(
   arenaDraws.map(({ source }) => source),
@@ -957,8 +996,8 @@ assert.match(stylesSource, /@container game \(max-width: 720px\)/, "Small game v
 assert.match(stylesSource, /@container game \(max-width: 520px\)/, "Extra-small game viewports should preserve usable dialogs");
 assert.doesNotMatch(stylesSource, /\.game-viewport::before/, "The disconnected upper-left corner bracket should be removed");
 assert.doesNotMatch(stylesSource, /\.game-viewport::after/, "The disconnected lower-right corner bracket should be removed");
-assert.match(gameSource, /ARENA_CROWD_FRAME_SECONDS = 2/, "Each crowd state should remain clearly visible");
-assert.match(gameSource, /ARENA_CROWD_BLEND_FRACTION = 0\.28/, "Crowd transitions should be brief and smooth");
+assert.match(gameSource, /ARENA_CROWD_FRAME_SECONDS = 0\.7/, "The crowd should complete a readable jump every 2.1 seconds");
+assert.match(gameSource, /ARENA_CROWD_BLEND_FRACTION = 0\.35/, "Crowd transitions should remain smooth at the faster cadence");
 assert.match(gameSource, /smoothMix = linearMix \* linearMix \* \(3 - 2 \* linearMix\)/, "Crowd frames should crossfade without brightness jumps");
 assert.match(gameSource, /drawArenaCrowd\(context\)[\s\S]*drawArenaLayer\(context, arenaForegroundImage\)/, "The fixed arena should render over the changing crowd");
 assert.match(

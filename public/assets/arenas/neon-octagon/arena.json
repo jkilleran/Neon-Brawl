@@ -1,19 +1,20 @@
 {
   "id": "neon-octagon",
   "name": "Neon MMA Octagon",
-  "runtimeAsset": "/assets/arenas/neon-octagon/arena.png",
+  "runtimeAsset": "/assets/arenas/neon-octagon/arena-foreground-v2.png",
   "layers": {
-    "fallback": "/assets/arenas/neon-octagon/arena.png",
     "foreground": "/assets/arenas/neon-octagon/arena-foreground-v2.png",
+    "fallback": "drawLegacyOctagon",
     "crowd": {
       "frames": [
         "/assets/arenas/neon-octagon/crowd/frame-01.webp",
         "/assets/arenas/neon-octagon/crowd/frame-02.webp",
         "/assets/arenas/neon-octagon/crowd/frame-03.webp"
       ],
-      "frameDurationSeconds": 2,
-      "holdFraction": 0.72,
-      "blendFraction": 0.28,
+      "frameLabels": ["crowd-low", "crowd-takeoff", "crowd-jump-apex"],
+      "frameDurationSeconds": 0.7,
+      "holdFraction": 0.65,
+      "blendFraction": 0.35,
       "transition": "hold-then-smooth-crossfade",
       "reducedMotionBehavior": "first-frame"
     }
@@ -53,10 +54,10 @@
   },
   "ambientAnimation": {
     "technique": "fixed-transparent-arena-over-crossfaded-crowd",
-    "cycleSeconds": 6,
+    "cycleSeconds": 2.1,
     "arenaBitmapFrames": 1,
     "crowdBitmapFrames": 3,
-    "crowdPayloadKilobytes": 198,
+    "crowdPayloadKilobytes": 212,
     "layers": ["crowd-hold", "crowd-crossfade", "fixed-arena-foreground"],
     "proceduralLighting": false,
     "visibility": "perceptible-crowd-motion",

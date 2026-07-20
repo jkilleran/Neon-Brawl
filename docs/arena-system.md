@@ -11,11 +11,10 @@ public/assets/arenas/neon-octagon/
 │   ├── frame-02.webp
 │   └── frame-03.webp
 ├── arena-foreground-v2.png
-├── arena.json
-└── arena.png
+└── arena.json
 ```
 
-`arena-foreground-v2.png` is a transparent foreground containing the unchanged floor, cage mesh, rails, and posts. The three WebP files contain only the audience behind the fence. `arena.png` is the original complete plate and remains the loading/error fallback. `arena.json` records every layer, source dimension, viewport crop, fighter layout, and shadow configuration.
+`arena-foreground-v2.png` is a transparent foreground containing the unchanged floor, cage mesh, rails, and posts. The three WebP files contain only the audience behind the fence. `arena.json` records every layer, source dimension, viewport crop, fighter layout, and shadow configuration. The obsolete complete arena plate was removed because it duplicated the foreground and first crowd state; `drawLegacyOctagon` provides a zero-download loading/error fallback.
 
 ## Viewport composition
 
@@ -46,9 +45,9 @@ The arena uses a fixed-over-moving layer stack:
 2. the same transparent arena foreground is drawn over them every frame;
 3. fighters, particles, and the HUD are drawn over the completed fixed arena.
 
-Only the audience changes. The floor, center logo, cage geometry, posts, mesh, camera, and arena illumination come from one immutable foreground, preventing the vibration that occurs when complete generated arena images are alternated. Each audience state lasts `2` seconds: it remains fully visible for the first 72% and crossfades during the final 28%. This makes the changed poses readable while preventing a hard cut. The complete three-state loop lasts six seconds. The compressed crowd payload is approximately 198 KB. When reduced motion is requested, the first crowd image remains static.
+Only the audience changes. The floor, center logo, cage geometry, posts, mesh, camera, and arena illumination come from one immutable foreground, preventing the vibration that occurs when complete generated arena images are alternated. The three labeled poses are `crowd-low`, `crowd-takeoff`, and `crowd-jump-apex`. Each lasts `0.7` seconds: it remains fully visible for the first 65% and crossfades during the final 35%. The complete jump loop lasts `2.1` seconds. Scattered groups lift their bodies and raise hands at irregular positions so the audience feels active without moving as one synchronized wall. The compressed crowd payload is approximately 212 KB. When reduced motion is requested, the low pose remains static.
 
-The three crowd frames are decoded once and use the same 1536 × 1024 crop as the fixed foreground. Canvas draws only one crowd bitmap during the 72% hold and temporarily draws the adjacent image during the short crossfade. There are no videos, animated GIFs, procedural light beams, audience sparkles, rail sweeps, per-pixel effects, or gameplay/network synchronization. This makes the crowd swap the only animated background work.
+The three crowd frames are decoded once and use the same 1536 × 1024 crop as the fixed foreground. Canvas draws only one crowd bitmap during the 65% hold and temporarily draws the adjacent image during the short crossfade. There are no videos, animated GIFs, procedural light beams, audience sparkles, rail sweeps, per-pixel effects, or gameplay/network synchronization. This makes the crowd swap the only animated background work.
 
 The previous cyan upper-left and magenta lower-right viewport brackets were removed. They were interface decoration rather than part of the octagon artwork and could appear as disconnected corner pieces at some sizes.
 
@@ -64,4 +63,4 @@ The normalized sprite cells retain approximately eight transparent pixels below 
 
 ## Fallback
 
-The original complete `arena.png` is drawn until both the transparent foreground and at least one crowd image are ready. The previous procedural arena remains available as `drawLegacyOctagon` if that fallback also fails.
+The lightweight procedural `drawLegacyOctagon` scene is drawn until both the transparent foreground and the first crowd image are ready. It is also the error fallback if either required layer cannot load.

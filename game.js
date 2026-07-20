@@ -103,7 +103,6 @@
     return HUD_HEALTH_STATES.find((state) => safeHealth >= state.minimum)
       ?? HUD_HEALTH_STATES.at(-1);
   };
-  const ARENA_BACKGROUND_SRC = "/assets/arenas/neon-octagon/arena.png";
   const ARENA_FOREGROUND_SRC = "/assets/arenas/neon-octagon/arena-foreground-v2.png";
   const ARENA_CROWD_FRAME_SRCS = Object.freeze([
     "/assets/arenas/neon-octagon/crowd/frame-01.webp",
@@ -111,16 +110,14 @@
     "/assets/arenas/neon-octagon/crowd/frame-03.webp",
   ]);
   const ARENA_VERTICAL_CROP_ANCHOR = 0.35;
-  const ARENA_CROWD_FRAME_SECONDS = 2;
-  const ARENA_CROWD_BLEND_FRACTION = 0.28;
+  const ARENA_CROWD_FRAME_SECONDS = 0.7;
+  const ARENA_CROWD_BLEND_FRACTION = 0.35;
   const ARENA_REDUCED_MOTION = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
 
   const ANIMATION_MANIFEST = globalThis.NEON_BRAWL_ANIMATIONS;
   if (!ANIMATION_MANIFEST) {
     throw new Error("Animation manifest must load before game.js");
   }
-  const arenaBackgroundImage = new Image();
-  arenaBackgroundImage.src = ARENA_BACKGROUND_SRC;
   const arenaForegroundImage = new Image();
   arenaForegroundImage.src = ARENA_FOREGROUND_SRC;
   const arenaCrowdImages = ARENA_CROWD_FRAME_SRCS.map((source) => {
@@ -2875,7 +2872,7 @@
       if (foregroundReady && crowdReady) {
         this.drawArenaCrowd(context);
         this.drawArenaLayer(context, arenaForegroundImage);
-      } else if (!this.drawArenaLayer(context, arenaBackgroundImage)) {
+      } else {
         this.drawLegacyOctagon(context);
       }
     }
