@@ -35,12 +35,13 @@ The approved photograph is safe for phones, tablets, laptops, TVs, ultrawide mon
 
 ## Fighter shadows
 
-Every fighter renders a two-layer contact shadow before its sprite:
+Every fighter renders a three-part contact shadow before its sprite:
 
 1. a soft radial falloff for the broad floor shadow;
-2. a darker blurred core directly below the planted feet.
+2. a darker blurred core below the fighter's stance;
+3. two compact contact ellipses aligned independently with the planted feet.
 
-The normalized sprite cells retain approximately eight transparent pixels below the visible feet. Standing shadows compensate for that padding with a `-4` logical-pixel baseline offset, keeping their dark contact core directly beneath the planted feet. The shadow moves with the fighter and automatically widens for attacks, knockdowns, and knockout poses. It is presentation-only and never participates in collision or network state.
+The normalized sprite cells retain approximately eight transparent pixels below the visible feet. Standing shadows compensate for that padding with a `-7` logical-pixel baseline offset. Their contact ellipses sit at `-76` and `+62` logical pixels from the fighter center and mirror with the fighter's facing direction. This preserves contact under both feet instead of placing one detached oval between them. The shadow moves with the fighter and automatically widens for attacks, knockdowns, and knockout poses. It is presentation-only and never participates in collision or network state.
 
 ## Fallback
 

@@ -896,7 +896,7 @@
       const destinationHeight = 350 * scale;
       const destinationWidth = destinationHeight * (frameWidth / frameHeight);
 
-      this.drawFighterShadow(context, drawX, drawY, scale);
+      this.drawFighterShadow(context, drawX, drawY, scale, facing);
 
       context.save();
       context.translate(drawX, drawY);
@@ -964,11 +964,11 @@
       if (!options.hideStatus) this.drawStatus(context);
     }
 
-    drawFighterShadow(context, drawX, drawY, scale = 1) {
+    drawFighterShadow(context, drawX, drawY, scale = 1, facing = 1) {
       const groundedOutcome = this.knockdownTimer > 0 || this.finishAnimation;
-      const shadowWidth = (groundedOutcome ? 112 : this.attack ? 76 : 70) * scale;
-      const shadowHeight = (groundedOutcome ? 18 : this.attack ? 10 : 9) * scale;
-      const shadowY = drawY + (groundedOutcome ? 2 : -4) * scale;
+      const shadowWidth = (groundedOutcome ? 112 : this.attack ? 82 : 76) * scale;
+      const shadowHeight = (groundedOutcome ? 18 : this.attack ? 8 : 7) * scale;
+      const shadowY = drawY + (groundedOutcome ? 2 : -7) * scale;
 
       context.save();
       context.translate(drawX, shadowY);
@@ -982,6 +982,28 @@
       context.arc(0, 0, 1, 0, Math.PI * 2);
       context.fill();
       context.restore();
+
+      if (!groundedOutcome) {
+        const footContactOffsets = [-76, 62];
+        for (const footOffset of footContactOffsets) {
+          context.save();
+          context.globalAlpha = 0.58;
+          context.fillStyle = "#010106";
+          context.filter = "blur(1.5px)";
+          context.beginPath();
+          context.ellipse(
+            drawX + footOffset * facing * scale,
+            shadowY,
+            24 * scale,
+            3.5 * scale,
+            0,
+            0,
+            Math.PI * 2,
+          );
+          context.fill();
+          context.restore();
+        }
+      }
 
       context.save();
       context.globalAlpha = groundedOutcome ? 0.28 : 0.4;

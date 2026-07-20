@@ -8,6 +8,7 @@ const { OnlineMatchSimulation } = require("../online-simulation.cjs");
 
 const markup = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 const gameSource = fs.readFileSync(path.join(__dirname, "..", "game.js"), "utf8");
+const stylesSource = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
 const onlineServerSource = fs.readFileSync(path.join(__dirname, "..", "server.cjs"), "utf8");
 assert.match(markup, /pause-controls-grid/, "Pause menu should expose the complete controls");
 assert.match(markup, /id="game-viewport" class="game-viewport"/, "Canvas and overlays should share one responsive viewport");
@@ -40,8 +41,9 @@ assert.deepEqual(
   [380, 900, 604],
   "Arena metadata should preserve the approved fighter composition",
 );
-assert.deepEqual(arenaMetadata.shadow.standingRadius, [70, 9], "Standing shadows should remain thin and grounded");
-assert.equal(arenaMetadata.shadow.standingBaselineOffsetY, -4, "Standing shadows should compensate for sprite bottom padding");
+assert.deepEqual(arenaMetadata.shadow.standingRadius, [76, 7], "Standing shadows should remain thin and grounded");
+assert.equal(arenaMetadata.shadow.standingBaselineOffsetY, -7, "Standing shadows should compensate for sprite bottom padding");
+assert.deepEqual(arenaMetadata.shadow.footContactOffsetsX, [-76, 62], "Each planted foot should have an independent contact shadow");
 assert.match(gameSource, /predictOnlineLocalInput/, "Both players should predict their own controls locally");
 assert.match(gameSource, /reconcileGuardPresentation/, "Online guards should have a snapshot-safe presentation layer");
 assert.match(gameSource, /queueOnlineSnapshot/, "The browser should coalesce snapshot bursts before rendering");
@@ -893,9 +895,14 @@ assert.equal(modeButtons[2].listeners.has("click"), true, "Practice mode should 
 assert.equal(imageSources.length, 67, "The arena and all 33 movements for both fighters should preload");
 assert(imageSources.includes(arenaMetadata.runtimeAsset), "The approved arena plate should preload");
 assert.match(gameSource, /ARENA_VERTICAL_CROP_ANCHOR = 0\.35/, "Arena crop should preserve the approved composition");
-assert.match(gameSource, /drawFighterShadow\(context, drawX, drawY, scale\)/, "Every fighter should render a contact shadow");
-assert.match(gameSource, /shadowY = drawY \+ \(groundedOutcome \? 2 : -4\)/, "Standing shadows should touch the visible feet");
+assert.match(gameSource, /drawFighterShadow\(context, drawX, drawY, scale, facing\)/, "Every fighter should render a mirrored contact shadow");
+assert.match(gameSource, /shadowY = drawY \+ \(groundedOutcome \? 2 : -7\)/, "Standing shadows should touch the visible feet");
+assert.match(gameSource, /footContactOffsets = \[-76, 62\]/, "Standing fighters should use two foot contact points");
 assert.match(gameSource, /Math\.min\(2, \(cssWidth \* deviceScale\) \/ WIDTH\)/, "Canvas resolution should adapt to high-density screens");
+assert.match(stylesSource, /container: game \/ inline-size/, "All overlays should respond to the rendered game viewport");
+assert.match(stylesSource, /@container game \(max-width: 1000px\)/, "Medium game viewports should use compact menus");
+assert.match(stylesSource, /@container game \(max-width: 720px\)/, "Small game viewports should use single-column menus");
+assert.match(stylesSource, /@container game \(max-width: 520px\)/, "Extra-small game viewports should preserve usable dialogs");
 for (const [characterId, character] of Object.entries(animationManifest.characters)) {
   for (const [movementId, sheet] of Object.entries(character.sheets)) {
     assert(imageSources.includes(sheet.src), `${characterId}/${movementId} should preload its own sheet`);

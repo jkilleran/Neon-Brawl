@@ -116,8 +116,8 @@ npm run build
 
 - Two-level mode selection that cleanly separates Local and Online play
 - Competitive HUD with condition-based head/body icons and one layered stamina meter
-- Dedicated Neon MMA arena plate with reference-aligned fighter placement and dynamic contact shadows
-- Aspect-safe 16:9 viewport, fullscreen letterboxing, and high-density Canvas rendering up to 2×
+- Dedicated Neon MMA arena plate with reference-aligned fighter placement and dual-foot contact shadows
+- Aspect-safe 16:9 viewport, fullscreen letterboxing, high-density Canvas rendering up to 2×, and container-responsive menus
 - Quick Fight, Local Sparring, and infinite-time Practice Lab
 - Three 3-minute rounds with 10-9 scoring
 - Separate head and body damage
@@ -135,6 +135,7 @@ npm run build
 Exact balance values are documented in [Gameplay Rules](docs/gameplay-rules.md).
 HUD presentation and health-state thresholds are documented in [Competitive HUD](docs/competitive-hud.md).
 Arena composition, fighter placement, and dynamic shadows are documented in [Arena System](docs/arena-system.md).
+Responsive behavior and compact menu layouts are documented in [Responsive Interface](docs/responsive-interface.md).
 
 ## Local ZIP updates
 
