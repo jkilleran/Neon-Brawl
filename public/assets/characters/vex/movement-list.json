@@ -1,0 +1,2720 @@
+{
+  "schemaVersion": "1.0.0",
+  "characterId": "vex",
+  "displayName": "Vex",
+  "canonicalFacing": "right",
+  "frameReplacementWorkflow": [
+    "Replace one PNG inside the movement frames directory.",
+    "Run: npm run sprites:build -- vex <movementId>",
+    "Run: npm run check"
+  ],
+  "movements": [
+    {
+      "id": "leftPunchHead",
+      "label": "LEFT PUNCH // HEAD",
+      "category": "strikes",
+      "target": "head",
+      "result": null,
+      "variant": null,
+      "limb": "left-hand",
+      "supportLimb": null,
+      "input": {
+        "p1": "T",
+        "p2": "I",
+        "bodyModifier": null
+      },
+      "folder": "animations/strikes/head/left-punch",
+      "runtimeSheet": "animations/strikes/head/left-punch/sheet.png",
+      "frameCount": 10,
+      "contactFrame": 6,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 4,
+        "rows": 3,
+        "frames": 10,
+        "fallbackWidth": 1536,
+        "fallbackHeight": 1023,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v3",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/strikes/left-punch-head-v3.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/strikes/head/left-punch/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "anticipation",
+          "file": "animations/strikes/head/left-punch/frames/frame-02-anticipation.png"
+        },
+        {
+          "index": 3,
+          "label": "load",
+          "file": "animations/strikes/head/left-punch/frames/frame-03-load.png"
+        },
+        {
+          "index": 4,
+          "label": "extension-1",
+          "file": "animations/strikes/head/left-punch/frames/frame-04-extension-1.png"
+        },
+        {
+          "index": 5,
+          "label": "extension-2",
+          "file": "animations/strikes/head/left-punch/frames/frame-05-extension-2.png"
+        },
+        {
+          "index": 6,
+          "label": "contact",
+          "file": "animations/strikes/head/left-punch/frames/frame-06-contact.png"
+        },
+        {
+          "index": 7,
+          "label": "recoil-1",
+          "file": "animations/strikes/head/left-punch/frames/frame-07-recoil-1.png"
+        },
+        {
+          "index": 8,
+          "label": "recoil-2",
+          "file": "animations/strikes/head/left-punch/frames/frame-08-recoil-2.png"
+        },
+        {
+          "index": 9,
+          "label": "recovery",
+          "file": "animations/strikes/head/left-punch/frames/frame-09-recovery.png"
+        },
+        {
+          "index": 10,
+          "label": "guard-return",
+          "file": "animations/strikes/head/left-punch/frames/frame-10-guard-return.png"
+        }
+      ]
+    },
+    {
+      "id": "rightPunchHead",
+      "label": "RIGHT PUNCH // HEAD",
+      "category": "strikes",
+      "target": "head",
+      "result": null,
+      "variant": null,
+      "limb": "right-hand",
+      "supportLimb": null,
+      "input": {
+        "p1": "Y",
+        "p2": "O",
+        "bodyModifier": null
+      },
+      "folder": "animations/strikes/head/right-punch",
+      "runtimeSheet": "animations/strikes/head/right-punch/sheet.png",
+      "frameCount": 10,
+      "contactFrame": 6,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 4,
+        "rows": 3,
+        "frames": 10,
+        "fallbackWidth": 1536,
+        "fallbackHeight": 1023,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v3",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/strikes/right-punch-head-v3.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/strikes/head/right-punch/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "anticipation",
+          "file": "animations/strikes/head/right-punch/frames/frame-02-anticipation.png"
+        },
+        {
+          "index": 3,
+          "label": "load",
+          "file": "animations/strikes/head/right-punch/frames/frame-03-load.png"
+        },
+        {
+          "index": 4,
+          "label": "extension-1",
+          "file": "animations/strikes/head/right-punch/frames/frame-04-extension-1.png"
+        },
+        {
+          "index": 5,
+          "label": "extension-2",
+          "file": "animations/strikes/head/right-punch/frames/frame-05-extension-2.png"
+        },
+        {
+          "index": 6,
+          "label": "contact",
+          "file": "animations/strikes/head/right-punch/frames/frame-06-contact.png"
+        },
+        {
+          "index": 7,
+          "label": "recoil-1",
+          "file": "animations/strikes/head/right-punch/frames/frame-07-recoil-1.png"
+        },
+        {
+          "index": 8,
+          "label": "recoil-2",
+          "file": "animations/strikes/head/right-punch/frames/frame-08-recoil-2.png"
+        },
+        {
+          "index": 9,
+          "label": "recovery",
+          "file": "animations/strikes/head/right-punch/frames/frame-09-recovery.png"
+        },
+        {
+          "index": 10,
+          "label": "guard-return",
+          "file": "animations/strikes/head/right-punch/frames/frame-10-guard-return.png"
+        }
+      ]
+    },
+    {
+      "id": "leftPunchBody",
+      "label": "LEFT PUNCH // BODY",
+      "category": "strikes",
+      "target": "body",
+      "result": null,
+      "variant": null,
+      "limb": "left-hand",
+      "supportLimb": null,
+      "input": {
+        "p1": "Space + T",
+        "p2": "Shift + I",
+        "bodyModifier": {
+          "p1": "Space",
+          "p2": "Shift"
+        }
+      },
+      "folder": "animations/strikes/body/left-punch",
+      "runtimeSheet": "animations/strikes/body/left-punch/sheet.png",
+      "frameCount": 10,
+      "contactFrame": 6,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "user-approved-v5-left-lead-body-jab",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/strikes/left-punch-body-v5.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/strikes/body/left-punch/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "anticipation",
+          "file": "animations/strikes/body/left-punch/frames/frame-02-anticipation.png"
+        },
+        {
+          "index": 3,
+          "label": "load",
+          "file": "animations/strikes/body/left-punch/frames/frame-03-load.png"
+        },
+        {
+          "index": 4,
+          "label": "extension-1",
+          "file": "animations/strikes/body/left-punch/frames/frame-04-extension-1.png"
+        },
+        {
+          "index": 5,
+          "label": "extension-2",
+          "file": "animations/strikes/body/left-punch/frames/frame-05-extension-2.png"
+        },
+        {
+          "index": 6,
+          "label": "contact",
+          "file": "animations/strikes/body/left-punch/frames/frame-06-contact.png"
+        },
+        {
+          "index": 7,
+          "label": "recoil-1",
+          "file": "animations/strikes/body/left-punch/frames/frame-07-recoil-1.png"
+        },
+        {
+          "index": 8,
+          "label": "recoil-2",
+          "file": "animations/strikes/body/left-punch/frames/frame-08-recoil-2.png"
+        },
+        {
+          "index": 9,
+          "label": "recovery",
+          "file": "animations/strikes/body/left-punch/frames/frame-09-recovery.png"
+        },
+        {
+          "index": 10,
+          "label": "guard-return",
+          "file": "animations/strikes/body/left-punch/frames/frame-10-guard-return.png"
+        }
+      ]
+    },
+    {
+      "id": "rightPunchBody",
+      "label": "RIGHT PUNCH // BODY",
+      "category": "strikes",
+      "target": "body",
+      "result": null,
+      "variant": null,
+      "limb": "right-hand",
+      "supportLimb": null,
+      "input": {
+        "p1": "Space + Y",
+        "p2": "Shift + O",
+        "bodyModifier": {
+          "p1": "Space",
+          "p2": "Shift"
+        }
+      },
+      "folder": "animations/strikes/body/right-punch",
+      "runtimeSheet": "animations/strikes/body/right-punch/sheet.png",
+      "frameCount": 10,
+      "contactFrame": 6,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 4,
+        "rows": 3,
+        "frames": 10,
+        "fallbackWidth": 1536,
+        "fallbackHeight": 1023,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v4-distinct-rear-body-cross",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/strikes/right-punch-body-v4.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/strikes/body/right-punch/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "anticipation",
+          "file": "animations/strikes/body/right-punch/frames/frame-02-anticipation.png"
+        },
+        {
+          "index": 3,
+          "label": "load",
+          "file": "animations/strikes/body/right-punch/frames/frame-03-load.png"
+        },
+        {
+          "index": 4,
+          "label": "extension-1",
+          "file": "animations/strikes/body/right-punch/frames/frame-04-extension-1.png"
+        },
+        {
+          "index": 5,
+          "label": "extension-2",
+          "file": "animations/strikes/body/right-punch/frames/frame-05-extension-2.png"
+        },
+        {
+          "index": 6,
+          "label": "contact",
+          "file": "animations/strikes/body/right-punch/frames/frame-06-contact.png"
+        },
+        {
+          "index": 7,
+          "label": "recoil-1",
+          "file": "animations/strikes/body/right-punch/frames/frame-07-recoil-1.png"
+        },
+        {
+          "index": 8,
+          "label": "recoil-2",
+          "file": "animations/strikes/body/right-punch/frames/frame-08-recoil-2.png"
+        },
+        {
+          "index": 9,
+          "label": "recovery",
+          "file": "animations/strikes/body/right-punch/frames/frame-09-recovery.png"
+        },
+        {
+          "index": 10,
+          "label": "guard-return",
+          "file": "animations/strikes/body/right-punch/frames/frame-10-guard-return.png"
+        }
+      ]
+    },
+    {
+      "id": "leftKickHead",
+      "label": "LEFT KICK // HEAD",
+      "category": "strikes",
+      "target": "head",
+      "result": null,
+      "variant": null,
+      "limb": "left-leg",
+      "supportLimb": "right-leg",
+      "input": {
+        "p1": "G",
+        "p2": "K",
+        "bodyModifier": null
+      },
+      "folder": "animations/strikes/head/left-kick",
+      "runtimeSheet": "animations/strikes/head/left-kick/sheet.png",
+      "frameCount": 10,
+      "contactFrame": 4,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 4,
+        "rows": 3,
+        "frames": 10,
+        "fallbackWidth": 1536,
+        "fallbackHeight": 1023,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v3",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/strikes/left-kick-head-v3.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/strikes/head/left-kick/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "anticipation",
+          "file": "animations/strikes/head/left-kick/frames/frame-02-anticipation.png"
+        },
+        {
+          "index": 3,
+          "label": "load",
+          "file": "animations/strikes/head/left-kick/frames/frame-03-load.png"
+        },
+        {
+          "index": 4,
+          "label": "contact",
+          "file": "animations/strikes/head/left-kick/frames/frame-04-contact.png"
+        },
+        {
+          "index": 5,
+          "label": "follow-through-1",
+          "file": "animations/strikes/head/left-kick/frames/frame-05-follow-through-1.png"
+        },
+        {
+          "index": 6,
+          "label": "follow-through-2",
+          "file": "animations/strikes/head/left-kick/frames/frame-06-follow-through-2.png"
+        },
+        {
+          "index": 7,
+          "label": "recoil-1",
+          "file": "animations/strikes/head/left-kick/frames/frame-07-recoil-1.png"
+        },
+        {
+          "index": 8,
+          "label": "recoil-2",
+          "file": "animations/strikes/head/left-kick/frames/frame-08-recoil-2.png"
+        },
+        {
+          "index": 9,
+          "label": "recovery",
+          "file": "animations/strikes/head/left-kick/frames/frame-09-recovery.png"
+        },
+        {
+          "index": 10,
+          "label": "guard-return",
+          "file": "animations/strikes/head/left-kick/frames/frame-10-guard-return.png"
+        }
+      ]
+    },
+    {
+      "id": "rightKickHead",
+      "label": "RIGHT KICK // HEAD",
+      "category": "strikes",
+      "target": "head",
+      "result": null,
+      "variant": null,
+      "limb": "right-leg",
+      "supportLimb": "left-leg",
+      "input": {
+        "p1": "H",
+        "p2": "L",
+        "bodyModifier": null
+      },
+      "folder": "animations/strikes/head/right-kick",
+      "runtimeSheet": "animations/strikes/head/right-kick/sheet.png",
+      "frameCount": 10,
+      "contactFrame": 6,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "user-approved-v5-continuous-right-high-kick",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/strikes/right-kick-head-v5.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/strikes/head/right-kick/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "anticipation",
+          "file": "animations/strikes/head/right-kick/frames/frame-02-anticipation.png"
+        },
+        {
+          "index": 3,
+          "label": "load",
+          "file": "animations/strikes/head/right-kick/frames/frame-03-load.png"
+        },
+        {
+          "index": 4,
+          "label": "extension-1",
+          "file": "animations/strikes/head/right-kick/frames/frame-04-extension-1.png"
+        },
+        {
+          "index": 5,
+          "label": "extension-2",
+          "file": "animations/strikes/head/right-kick/frames/frame-05-extension-2.png"
+        },
+        {
+          "index": 6,
+          "label": "contact",
+          "file": "animations/strikes/head/right-kick/frames/frame-06-contact.png"
+        },
+        {
+          "index": 7,
+          "label": "recoil-1",
+          "file": "animations/strikes/head/right-kick/frames/frame-07-recoil-1.png"
+        },
+        {
+          "index": 8,
+          "label": "recoil-2",
+          "file": "animations/strikes/head/right-kick/frames/frame-08-recoil-2.png"
+        },
+        {
+          "index": 9,
+          "label": "recovery",
+          "file": "animations/strikes/head/right-kick/frames/frame-09-recovery.png"
+        },
+        {
+          "index": 10,
+          "label": "guard-return",
+          "file": "animations/strikes/head/right-kick/frames/frame-10-guard-return.png"
+        }
+      ]
+    },
+    {
+      "id": "leftKickBody",
+      "label": "LEFT KICK // BODY",
+      "category": "strikes",
+      "target": "body",
+      "result": null,
+      "variant": null,
+      "limb": "left-leg",
+      "supportLimb": "right-leg",
+      "input": {
+        "p1": "Space + G",
+        "p2": "Shift + K",
+        "bodyModifier": {
+          "p1": "Space",
+          "p2": "Shift"
+        }
+      },
+      "folder": "animations/strikes/body/left-kick",
+      "runtimeSheet": "animations/strikes/body/left-kick/sheet.png",
+      "frameCount": 10,
+      "contactFrame": 6,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 4,
+        "rows": 3,
+        "frames": 10,
+        "fallbackWidth": 1536,
+        "fallbackHeight": 1023,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v3",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/strikes/left-kick-body-v3.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/strikes/body/left-kick/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "anticipation",
+          "file": "animations/strikes/body/left-kick/frames/frame-02-anticipation.png"
+        },
+        {
+          "index": 3,
+          "label": "load",
+          "file": "animations/strikes/body/left-kick/frames/frame-03-load.png"
+        },
+        {
+          "index": 4,
+          "label": "extension-1",
+          "file": "animations/strikes/body/left-kick/frames/frame-04-extension-1.png"
+        },
+        {
+          "index": 5,
+          "label": "extension-2",
+          "file": "animations/strikes/body/left-kick/frames/frame-05-extension-2.png"
+        },
+        {
+          "index": 6,
+          "label": "contact",
+          "file": "animations/strikes/body/left-kick/frames/frame-06-contact.png"
+        },
+        {
+          "index": 7,
+          "label": "recoil-1",
+          "file": "animations/strikes/body/left-kick/frames/frame-07-recoil-1.png"
+        },
+        {
+          "index": 8,
+          "label": "recoil-2",
+          "file": "animations/strikes/body/left-kick/frames/frame-08-recoil-2.png"
+        },
+        {
+          "index": 9,
+          "label": "recovery",
+          "file": "animations/strikes/body/left-kick/frames/frame-09-recovery.png"
+        },
+        {
+          "index": 10,
+          "label": "guard-return",
+          "file": "animations/strikes/body/left-kick/frames/frame-10-guard-return.png"
+        }
+      ]
+    },
+    {
+      "id": "rightKickBody",
+      "label": "RIGHT KICK // BODY",
+      "category": "strikes",
+      "target": "body",
+      "result": null,
+      "variant": null,
+      "limb": "right-leg",
+      "supportLimb": "left-leg",
+      "input": {
+        "p1": "Space + H",
+        "p2": "Shift + L",
+        "bodyModifier": {
+          "p1": "Space",
+          "p2": "Shift"
+        }
+      },
+      "folder": "animations/strikes/body/right-kick",
+      "runtimeSheet": "animations/strikes/body/right-kick/sheet.png",
+      "frameCount": 10,
+      "contactFrame": 6,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "user-approved-v5-continuous-right-body-kick",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/strikes/right-kick-body-v5.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/strikes/body/right-kick/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "anticipation",
+          "file": "animations/strikes/body/right-kick/frames/frame-02-anticipation.png"
+        },
+        {
+          "index": 3,
+          "label": "load",
+          "file": "animations/strikes/body/right-kick/frames/frame-03-load.png"
+        },
+        {
+          "index": 4,
+          "label": "extension-1",
+          "file": "animations/strikes/body/right-kick/frames/frame-04-extension-1.png"
+        },
+        {
+          "index": 5,
+          "label": "extension-2",
+          "file": "animations/strikes/body/right-kick/frames/frame-05-extension-2.png"
+        },
+        {
+          "index": 6,
+          "label": "contact",
+          "file": "animations/strikes/body/right-kick/frames/frame-06-contact.png"
+        },
+        {
+          "index": 7,
+          "label": "recoil-1",
+          "file": "animations/strikes/body/right-kick/frames/frame-07-recoil-1.png"
+        },
+        {
+          "index": 8,
+          "label": "recoil-2",
+          "file": "animations/strikes/body/right-kick/frames/frame-08-recoil-2.png"
+        },
+        {
+          "index": 9,
+          "label": "recovery",
+          "file": "animations/strikes/body/right-kick/frames/frame-09-recovery.png"
+        },
+        {
+          "index": 10,
+          "label": "guard-return",
+          "file": "animations/strikes/body/right-kick/frames/frame-10-guard-return.png"
+        }
+      ]
+    },
+    {
+      "id": "headKnockdown",
+      "label": "HEAD KNOCKDOWN",
+      "category": "knockdowns",
+      "target": "head",
+      "result": "knockdown",
+      "variant": "backward-side-fall",
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/knockdowns/head/backward-side-fall",
+      "runtimeSheet": "animations/knockdowns/head/backward-side-fall/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v1-neon-mma-continuity",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/head-knockdown-v1.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/knockdowns/head/backward-side-fall/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "impact",
+          "file": "animations/knockdowns/head/backward-side-fall/frames/frame-02-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "balance-break",
+          "file": "animations/knockdowns/head/backward-side-fall/frames/frame-03-balance-break.png"
+        },
+        {
+          "index": 4,
+          "label": "legs-buckle",
+          "file": "animations/knockdowns/head/backward-side-fall/frames/frame-04-legs-buckle.png"
+        },
+        {
+          "index": 5,
+          "label": "fall",
+          "file": "animations/knockdowns/head/backward-side-fall/frames/frame-05-fall.png"
+        },
+        {
+          "index": 6,
+          "label": "mat-contact",
+          "file": "animations/knockdowns/head/backward-side-fall/frames/frame-06-mat-contact.png"
+        },
+        {
+          "index": 7,
+          "label": "stunned",
+          "file": "animations/knockdowns/head/backward-side-fall/frames/frame-07-stunned.png"
+        },
+        {
+          "index": 8,
+          "label": "brace",
+          "file": "animations/knockdowns/head/backward-side-fall/frames/frame-08-brace.png"
+        },
+        {
+          "index": 9,
+          "label": "kneeling-rise",
+          "file": "animations/knockdowns/head/backward-side-fall/frames/frame-09-kneeling-rise.png"
+        },
+        {
+          "index": 10,
+          "label": "guard-return",
+          "file": "animations/knockdowns/head/backward-side-fall/frames/frame-10-guard-return.png"
+        }
+      ]
+    },
+    {
+      "id": "bodyKnockdown",
+      "label": "BODY KNOCKDOWN",
+      "category": "knockdowns",
+      "target": "body",
+      "result": "knockdown",
+      "variant": "side-roll-recovery",
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/knockdowns/body/side-roll-recovery",
+      "runtimeSheet": "animations/knockdowns/body/side-roll-recovery/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v1-neon-mma-continuity",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/body-knockdown-v1.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/knockdowns/body/side-roll-recovery/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "impact",
+          "file": "animations/knockdowns/body/side-roll-recovery/frames/frame-02-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "balance-break",
+          "file": "animations/knockdowns/body/side-roll-recovery/frames/frame-03-balance-break.png"
+        },
+        {
+          "index": 4,
+          "label": "legs-buckle",
+          "file": "animations/knockdowns/body/side-roll-recovery/frames/frame-04-legs-buckle.png"
+        },
+        {
+          "index": 5,
+          "label": "fall",
+          "file": "animations/knockdowns/body/side-roll-recovery/frames/frame-05-fall.png"
+        },
+        {
+          "index": 6,
+          "label": "mat-contact",
+          "file": "animations/knockdowns/body/side-roll-recovery/frames/frame-06-mat-contact.png"
+        },
+        {
+          "index": 7,
+          "label": "stunned",
+          "file": "animations/knockdowns/body/side-roll-recovery/frames/frame-07-stunned.png"
+        },
+        {
+          "index": 8,
+          "label": "brace",
+          "file": "animations/knockdowns/body/side-roll-recovery/frames/frame-08-brace.png"
+        },
+        {
+          "index": 9,
+          "label": "kneeling-rise",
+          "file": "animations/knockdowns/body/side-roll-recovery/frames/frame-09-kneeling-rise.png"
+        },
+        {
+          "index": 10,
+          "label": "guard-return",
+          "file": "animations/knockdowns/body/side-roll-recovery/frames/frame-10-guard-return.png"
+        }
+      ]
+    },
+    {
+      "id": "headKnockdownForward",
+      "label": "HEAD KNOCKDOWN // FORWARD",
+      "category": "knockdowns",
+      "target": "head",
+      "result": "knockdown",
+      "variant": "forward-hands-and-knee",
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/knockdowns/head/forward-hands-and-knee",
+      "runtimeSheet": "animations/knockdowns/head/forward-hands-and-knee/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v1-neon-mma-continuity",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/head-knockdown-forward-v2.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/knockdowns/head/forward-hands-and-knee/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "impact",
+          "file": "animations/knockdowns/head/forward-hands-and-knee/frames/frame-02-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "balance-break",
+          "file": "animations/knockdowns/head/forward-hands-and-knee/frames/frame-03-balance-break.png"
+        },
+        {
+          "index": 4,
+          "label": "legs-buckle",
+          "file": "animations/knockdowns/head/forward-hands-and-knee/frames/frame-04-legs-buckle.png"
+        },
+        {
+          "index": 5,
+          "label": "fall",
+          "file": "animations/knockdowns/head/forward-hands-and-knee/frames/frame-05-fall.png"
+        },
+        {
+          "index": 6,
+          "label": "mat-contact",
+          "file": "animations/knockdowns/head/forward-hands-and-knee/frames/frame-06-mat-contact.png"
+        },
+        {
+          "index": 7,
+          "label": "stunned",
+          "file": "animations/knockdowns/head/forward-hands-and-knee/frames/frame-07-stunned.png"
+        },
+        {
+          "index": 8,
+          "label": "brace",
+          "file": "animations/knockdowns/head/forward-hands-and-knee/frames/frame-08-brace.png"
+        },
+        {
+          "index": 9,
+          "label": "kneeling-rise",
+          "file": "animations/knockdowns/head/forward-hands-and-knee/frames/frame-09-kneeling-rise.png"
+        },
+        {
+          "index": 10,
+          "label": "guard-return",
+          "file": "animations/knockdowns/head/forward-hands-and-knee/frames/frame-10-guard-return.png"
+        }
+      ]
+    },
+    {
+      "id": "bodyKnockdownKneel",
+      "label": "BODY KNOCKDOWN // KNEEL",
+      "category": "knockdowns",
+      "target": "body",
+      "result": "knockdown",
+      "variant": "double-knee-solar-plexus",
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/knockdowns/body/double-knee-solar-plexus",
+      "runtimeSheet": "animations/knockdowns/body/double-knee-solar-plexus/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v1-neon-mma-continuity",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/body-knockdown-kneel-v2.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/knockdowns/body/double-knee-solar-plexus/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "impact",
+          "file": "animations/knockdowns/body/double-knee-solar-plexus/frames/frame-02-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "balance-break",
+          "file": "animations/knockdowns/body/double-knee-solar-plexus/frames/frame-03-balance-break.png"
+        },
+        {
+          "index": 4,
+          "label": "legs-buckle",
+          "file": "animations/knockdowns/body/double-knee-solar-plexus/frames/frame-04-legs-buckle.png"
+        },
+        {
+          "index": 5,
+          "label": "fall",
+          "file": "animations/knockdowns/body/double-knee-solar-plexus/frames/frame-05-fall.png"
+        },
+        {
+          "index": 6,
+          "label": "mat-contact",
+          "file": "animations/knockdowns/body/double-knee-solar-plexus/frames/frame-06-mat-contact.png"
+        },
+        {
+          "index": 7,
+          "label": "stunned",
+          "file": "animations/knockdowns/body/double-knee-solar-plexus/frames/frame-07-stunned.png"
+        },
+        {
+          "index": 8,
+          "label": "brace",
+          "file": "animations/knockdowns/body/double-knee-solar-plexus/frames/frame-08-brace.png"
+        },
+        {
+          "index": 9,
+          "label": "kneeling-rise",
+          "file": "animations/knockdowns/body/double-knee-solar-plexus/frames/frame-09-kneeling-rise.png"
+        },
+        {
+          "index": 10,
+          "label": "guard-return",
+          "file": "animations/knockdowns/body/double-knee-solar-plexus/frames/frame-10-guard-return.png"
+        }
+      ]
+    },
+    {
+      "id": "headKnockdownSeated",
+      "label": "HEAD KNOCKDOWN // ROTATIONAL SEATED",
+      "category": "knockdowns",
+      "target": "head",
+      "result": "knockdown",
+      "variant": "rotational-seated-recovery",
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/knockdowns/head/rotational-seated",
+      "runtimeSheet": "animations/knockdowns/head/rotational-seated/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v3-rotational-seated-head-knockdown",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/head-knockdown-seated-v3.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/knockdowns/head/rotational-seated/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "impact",
+          "file": "animations/knockdowns/head/rotational-seated/frames/frame-02-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "balance-break",
+          "file": "animations/knockdowns/head/rotational-seated/frames/frame-03-balance-break.png"
+        },
+        {
+          "index": 4,
+          "label": "legs-buckle",
+          "file": "animations/knockdowns/head/rotational-seated/frames/frame-04-legs-buckle.png"
+        },
+        {
+          "index": 5,
+          "label": "fall",
+          "file": "animations/knockdowns/head/rotational-seated/frames/frame-05-fall.png"
+        },
+        {
+          "index": 6,
+          "label": "mat-contact",
+          "file": "animations/knockdowns/head/rotational-seated/frames/frame-06-mat-contact.png"
+        },
+        {
+          "index": 7,
+          "label": "stunned",
+          "file": "animations/knockdowns/head/rotational-seated/frames/frame-07-stunned.png"
+        },
+        {
+          "index": 8,
+          "label": "brace",
+          "file": "animations/knockdowns/head/rotational-seated/frames/frame-08-brace.png"
+        },
+        {
+          "index": 9,
+          "label": "kneeling-rise",
+          "file": "animations/knockdowns/head/rotational-seated/frames/frame-09-kneeling-rise.png"
+        },
+        {
+          "index": 10,
+          "label": "guard-return",
+          "file": "animations/knockdowns/head/rotational-seated/frames/frame-10-guard-return.png"
+        }
+      ]
+    },
+    {
+      "id": "bodyKnockdownSeated",
+      "label": "BODY KNOCKDOWN // BACKWARD SEATED",
+      "category": "knockdowns",
+      "target": "body",
+      "result": "knockdown",
+      "variant": "backward-seated-body-recovery",
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/knockdowns/body/backward-seated",
+      "runtimeSheet": "animations/knockdowns/body/backward-seated/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v3-backward-seated-body-knockdown",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/body-knockdown-seated-v3.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/knockdowns/body/backward-seated/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "impact",
+          "file": "animations/knockdowns/body/backward-seated/frames/frame-02-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "balance-break",
+          "file": "animations/knockdowns/body/backward-seated/frames/frame-03-balance-break.png"
+        },
+        {
+          "index": 4,
+          "label": "legs-buckle",
+          "file": "animations/knockdowns/body/backward-seated/frames/frame-04-legs-buckle.png"
+        },
+        {
+          "index": 5,
+          "label": "fall",
+          "file": "animations/knockdowns/body/backward-seated/frames/frame-05-fall.png"
+        },
+        {
+          "index": 6,
+          "label": "mat-contact",
+          "file": "animations/knockdowns/body/backward-seated/frames/frame-06-mat-contact.png"
+        },
+        {
+          "index": 7,
+          "label": "stunned",
+          "file": "animations/knockdowns/body/backward-seated/frames/frame-07-stunned.png"
+        },
+        {
+          "index": 8,
+          "label": "brace",
+          "file": "animations/knockdowns/body/backward-seated/frames/frame-08-brace.png"
+        },
+        {
+          "index": 9,
+          "label": "kneeling-rise",
+          "file": "animations/knockdowns/body/backward-seated/frames/frame-09-kneeling-rise.png"
+        },
+        {
+          "index": 10,
+          "label": "guard-return",
+          "file": "animations/knockdowns/body/backward-seated/frames/frame-10-guard-return.png"
+        }
+      ]
+    },
+    {
+      "id": "headKnockdownShoulderRoll",
+      "label": "HEAD KNOCKDOWN // SHOULDER ROLL",
+      "category": "knockdowns",
+      "target": "head",
+      "result": "knockdown",
+      "variant": "corkscrew-shoulder-roll-recovery",
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/knockdowns/head/corkscrew-shoulder-roll",
+      "runtimeSheet": "animations/knockdowns/head/corkscrew-shoulder-roll/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v4-corkscrew-shoulder-roll-head-knockdown",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/head-knockdown-shoulder-roll-v4.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "impact",
+          "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-02-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "balance-break",
+          "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-03-balance-break.png"
+        },
+        {
+          "index": 4,
+          "label": "legs-buckle",
+          "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-04-legs-buckle.png"
+        },
+        {
+          "index": 5,
+          "label": "fall",
+          "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-05-fall.png"
+        },
+        {
+          "index": 6,
+          "label": "mat-contact",
+          "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-06-mat-contact.png"
+        },
+        {
+          "index": 7,
+          "label": "stunned",
+          "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-07-stunned.png"
+        },
+        {
+          "index": 8,
+          "label": "brace",
+          "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-08-brace.png"
+        },
+        {
+          "index": 9,
+          "label": "kneeling-rise",
+          "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-09-kneeling-rise.png"
+        },
+        {
+          "index": 10,
+          "label": "guard-return",
+          "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-10-guard-return.png"
+        }
+      ]
+    },
+    {
+      "id": "headKnockdownKneeDrop",
+      "label": "HEAD KNOCKDOWN // DELAYED KNEE DROP",
+      "category": "knockdowns",
+      "target": "head",
+      "result": "knockdown",
+      "variant": "delayed-one-knee-recovery",
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/knockdowns/head/delayed-one-knee",
+      "runtimeSheet": "animations/knockdowns/head/delayed-one-knee/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v5-delayed-one-knee-head-knockdown",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/head-knockdown-knee-drop-v5.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/knockdowns/head/delayed-one-knee/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "impact",
+          "file": "animations/knockdowns/head/delayed-one-knee/frames/frame-02-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "balance-break",
+          "file": "animations/knockdowns/head/delayed-one-knee/frames/frame-03-balance-break.png"
+        },
+        {
+          "index": 4,
+          "label": "legs-buckle",
+          "file": "animations/knockdowns/head/delayed-one-knee/frames/frame-04-legs-buckle.png"
+        },
+        {
+          "index": 5,
+          "label": "fall",
+          "file": "animations/knockdowns/head/delayed-one-knee/frames/frame-05-fall.png"
+        },
+        {
+          "index": 6,
+          "label": "mat-contact",
+          "file": "animations/knockdowns/head/delayed-one-knee/frames/frame-06-mat-contact.png"
+        },
+        {
+          "index": 7,
+          "label": "stunned",
+          "file": "animations/knockdowns/head/delayed-one-knee/frames/frame-07-stunned.png"
+        },
+        {
+          "index": 8,
+          "label": "brace",
+          "file": "animations/knockdowns/head/delayed-one-knee/frames/frame-08-brace.png"
+        },
+        {
+          "index": 9,
+          "label": "kneeling-rise",
+          "file": "animations/knockdowns/head/delayed-one-knee/frames/frame-09-kneeling-rise.png"
+        },
+        {
+          "index": 10,
+          "label": "guard-return",
+          "file": "animations/knockdowns/head/delayed-one-knee/frames/frame-10-guard-return.png"
+        }
+      ]
+    },
+    {
+      "id": "bodyKnockdownElbowFold",
+      "label": "BODY KNOCKDOWN // ELBOW HIP FOLD",
+      "category": "knockdowns",
+      "target": "body",
+      "result": "knockdown",
+      "variant": "compact-liver-elbow-hip-recovery",
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/knockdowns/body/compact-liver-elbow-hip",
+      "runtimeSheet": "animations/knockdowns/body/compact-liver-elbow-hip/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v4-compact-liver-elbow-hip-knockdown",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/body-knockdown-elbow-fold-v4.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/knockdowns/body/compact-liver-elbow-hip/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "impact",
+          "file": "animations/knockdowns/body/compact-liver-elbow-hip/frames/frame-02-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "balance-break",
+          "file": "animations/knockdowns/body/compact-liver-elbow-hip/frames/frame-03-balance-break.png"
+        },
+        {
+          "index": 4,
+          "label": "legs-buckle",
+          "file": "animations/knockdowns/body/compact-liver-elbow-hip/frames/frame-04-legs-buckle.png"
+        },
+        {
+          "index": 5,
+          "label": "fall",
+          "file": "animations/knockdowns/body/compact-liver-elbow-hip/frames/frame-05-fall.png"
+        },
+        {
+          "index": 6,
+          "label": "mat-contact",
+          "file": "animations/knockdowns/body/compact-liver-elbow-hip/frames/frame-06-mat-contact.png"
+        },
+        {
+          "index": 7,
+          "label": "stunned",
+          "file": "animations/knockdowns/body/compact-liver-elbow-hip/frames/frame-07-stunned.png"
+        },
+        {
+          "index": 8,
+          "label": "brace",
+          "file": "animations/knockdowns/body/compact-liver-elbow-hip/frames/frame-08-brace.png"
+        },
+        {
+          "index": 9,
+          "label": "kneeling-rise",
+          "file": "animations/knockdowns/body/compact-liver-elbow-hip/frames/frame-09-kneeling-rise.png"
+        },
+        {
+          "index": 10,
+          "label": "guard-return",
+          "file": "animations/knockdowns/body/compact-liver-elbow-hip/frames/frame-10-guard-return.png"
+        }
+      ]
+    },
+    {
+      "id": "bodyKnockdownThreePoint",
+      "label": "BODY KNOCKDOWN // THREE POINT",
+      "category": "knockdowns",
+      "target": "body",
+      "result": "knockdown",
+      "variant": "solar-plexus-three-point-recovery",
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/knockdowns/body/solar-plexus-three-point",
+      "runtimeSheet": "animations/knockdowns/body/solar-plexus-three-point/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v5-solar-plexus-three-point-knockdown",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/body-knockdown-three-point-v5.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/knockdowns/body/solar-plexus-three-point/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "impact",
+          "file": "animations/knockdowns/body/solar-plexus-three-point/frames/frame-02-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "balance-break",
+          "file": "animations/knockdowns/body/solar-plexus-three-point/frames/frame-03-balance-break.png"
+        },
+        {
+          "index": 4,
+          "label": "legs-buckle",
+          "file": "animations/knockdowns/body/solar-plexus-three-point/frames/frame-04-legs-buckle.png"
+        },
+        {
+          "index": 5,
+          "label": "fall",
+          "file": "animations/knockdowns/body/solar-plexus-three-point/frames/frame-05-fall.png"
+        },
+        {
+          "index": 6,
+          "label": "mat-contact",
+          "file": "animations/knockdowns/body/solar-plexus-three-point/frames/frame-06-mat-contact.png"
+        },
+        {
+          "index": 7,
+          "label": "stunned",
+          "file": "animations/knockdowns/body/solar-plexus-three-point/frames/frame-07-stunned.png"
+        },
+        {
+          "index": 8,
+          "label": "brace",
+          "file": "animations/knockdowns/body/solar-plexus-three-point/frames/frame-08-brace.png"
+        },
+        {
+          "index": 9,
+          "label": "kneeling-rise",
+          "file": "animations/knockdowns/body/solar-plexus-three-point/frames/frame-09-kneeling-rise.png"
+        },
+        {
+          "index": 10,
+          "label": "guard-return",
+          "file": "animations/knockdowns/body/solar-plexus-three-point/frames/frame-10-guard-return.png"
+        }
+      ]
+    },
+    {
+      "id": "headKnockout",
+      "label": "HEAD KNOCKOUT",
+      "category": "knockouts",
+      "target": "head",
+      "result": "knockout",
+      "variant": "supine-finish",
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/knockouts/head/supine-finish",
+      "runtimeSheet": "animations/knockouts/head/supine-finish/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v1-neon-mma-continuity",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/head-knockout-v1.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/knockouts/head/supine-finish/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "decisive-impact",
+          "file": "animations/knockouts/head/supine-finish/frames/frame-02-decisive-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "balance-lost",
+          "file": "animations/knockouts/head/supine-finish/frames/frame-03-balance-lost.png"
+        },
+        {
+          "index": 4,
+          "label": "collapse",
+          "file": "animations/knockouts/head/supine-finish/frames/frame-04-collapse.png"
+        },
+        {
+          "index": 5,
+          "label": "mat-contact",
+          "file": "animations/knockouts/head/supine-finish/frames/frame-05-mat-contact.png"
+        },
+        {
+          "index": 6,
+          "label": "settle",
+          "file": "animations/knockouts/head/supine-finish/frames/frame-06-settle.png"
+        },
+        {
+          "index": 7,
+          "label": "motionless-1",
+          "file": "animations/knockouts/head/supine-finish/frames/frame-07-motionless-1.png"
+        },
+        {
+          "index": 8,
+          "label": "motionless-2",
+          "file": "animations/knockouts/head/supine-finish/frames/frame-08-motionless-2.png"
+        },
+        {
+          "index": 9,
+          "label": "motionless-3",
+          "file": "animations/knockouts/head/supine-finish/frames/frame-09-motionless-3.png"
+        },
+        {
+          "index": 10,
+          "label": "final-ko-pose",
+          "file": "animations/knockouts/head/supine-finish/frames/frame-10-final-ko-pose.png"
+        }
+      ]
+    },
+    {
+      "id": "bodyKnockout",
+      "label": "BODY KNOCKOUT",
+      "category": "knockouts",
+      "target": "body",
+      "result": "knockout",
+      "variant": "curled-side-finish",
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/knockouts/body/curled-side-finish",
+      "runtimeSheet": "animations/knockouts/body/curled-side-finish/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v1-neon-mma-continuity",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/body-knockout-v1.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/knockouts/body/curled-side-finish/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "decisive-impact",
+          "file": "animations/knockouts/body/curled-side-finish/frames/frame-02-decisive-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "balance-lost",
+          "file": "animations/knockouts/body/curled-side-finish/frames/frame-03-balance-lost.png"
+        },
+        {
+          "index": 4,
+          "label": "collapse",
+          "file": "animations/knockouts/body/curled-side-finish/frames/frame-04-collapse.png"
+        },
+        {
+          "index": 5,
+          "label": "mat-contact",
+          "file": "animations/knockouts/body/curled-side-finish/frames/frame-05-mat-contact.png"
+        },
+        {
+          "index": 6,
+          "label": "settle",
+          "file": "animations/knockouts/body/curled-side-finish/frames/frame-06-settle.png"
+        },
+        {
+          "index": 7,
+          "label": "motionless-1",
+          "file": "animations/knockouts/body/curled-side-finish/frames/frame-07-motionless-1.png"
+        },
+        {
+          "index": 8,
+          "label": "motionless-2",
+          "file": "animations/knockouts/body/curled-side-finish/frames/frame-08-motionless-2.png"
+        },
+        {
+          "index": 9,
+          "label": "motionless-3",
+          "file": "animations/knockouts/body/curled-side-finish/frames/frame-09-motionless-3.png"
+        },
+        {
+          "index": 10,
+          "label": "final-ko-pose",
+          "file": "animations/knockouts/body/curled-side-finish/frames/frame-10-final-ko-pose.png"
+        }
+      ]
+    },
+    {
+      "id": "headKnockoutProne",
+      "label": "HEAD KNOCKOUT // FORWARD PRONE",
+      "category": "knockouts",
+      "target": "head",
+      "result": "knockout",
+      "variant": "forward-prone-finish",
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/knockouts/head/forward-prone-finish",
+      "runtimeSheet": "animations/knockouts/head/forward-prone-finish/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v2-forward-prone-head-knockout",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/head-knockout-prone-v2.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/knockouts/head/forward-prone-finish/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "decisive-impact",
+          "file": "animations/knockouts/head/forward-prone-finish/frames/frame-02-decisive-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "balance-lost",
+          "file": "animations/knockouts/head/forward-prone-finish/frames/frame-03-balance-lost.png"
+        },
+        {
+          "index": 4,
+          "label": "collapse",
+          "file": "animations/knockouts/head/forward-prone-finish/frames/frame-04-collapse.png"
+        },
+        {
+          "index": 5,
+          "label": "mat-contact",
+          "file": "animations/knockouts/head/forward-prone-finish/frames/frame-05-mat-contact.png"
+        },
+        {
+          "index": 6,
+          "label": "settle",
+          "file": "animations/knockouts/head/forward-prone-finish/frames/frame-06-settle.png"
+        },
+        {
+          "index": 7,
+          "label": "motionless-1",
+          "file": "animations/knockouts/head/forward-prone-finish/frames/frame-07-motionless-1.png"
+        },
+        {
+          "index": 8,
+          "label": "motionless-2",
+          "file": "animations/knockouts/head/forward-prone-finish/frames/frame-08-motionless-2.png"
+        },
+        {
+          "index": 9,
+          "label": "motionless-3",
+          "file": "animations/knockouts/head/forward-prone-finish/frames/frame-09-motionless-3.png"
+        },
+        {
+          "index": 10,
+          "label": "final-ko-pose",
+          "file": "animations/knockouts/head/forward-prone-finish/frames/frame-10-final-ko-pose.png"
+        }
+      ]
+    },
+    {
+      "id": "bodyKnockoutProne",
+      "label": "BODY KNOCKOUT // KNEELING PRONE",
+      "category": "knockouts",
+      "target": "body",
+      "result": "knockout",
+      "variant": "kneeling-prone-body-finish",
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/knockouts/body/kneeling-prone-finish",
+      "runtimeSheet": "animations/knockouts/body/kneeling-prone-finish/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v2-kneeling-prone-body-knockout",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/body-knockout-prone-v2.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/knockouts/body/kneeling-prone-finish/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "decisive-impact",
+          "file": "animations/knockouts/body/kneeling-prone-finish/frames/frame-02-decisive-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "balance-lost",
+          "file": "animations/knockouts/body/kneeling-prone-finish/frames/frame-03-balance-lost.png"
+        },
+        {
+          "index": 4,
+          "label": "collapse",
+          "file": "animations/knockouts/body/kneeling-prone-finish/frames/frame-04-collapse.png"
+        },
+        {
+          "index": 5,
+          "label": "mat-contact",
+          "file": "animations/knockouts/body/kneeling-prone-finish/frames/frame-05-mat-contact.png"
+        },
+        {
+          "index": 6,
+          "label": "settle",
+          "file": "animations/knockouts/body/kneeling-prone-finish/frames/frame-06-settle.png"
+        },
+        {
+          "index": 7,
+          "label": "motionless-1",
+          "file": "animations/knockouts/body/kneeling-prone-finish/frames/frame-07-motionless-1.png"
+        },
+        {
+          "index": 8,
+          "label": "motionless-2",
+          "file": "animations/knockouts/body/kneeling-prone-finish/frames/frame-08-motionless-2.png"
+        },
+        {
+          "index": 9,
+          "label": "motionless-3",
+          "file": "animations/knockouts/body/kneeling-prone-finish/frames/frame-09-motionless-3.png"
+        },
+        {
+          "index": 10,
+          "label": "final-ko-pose",
+          "file": "animations/knockouts/body/kneeling-prone-finish/frames/frame-10-final-ko-pose.png"
+        }
+      ]
+    },
+    {
+      "id": "headKnockoutSide",
+      "label": "HEAD KNOCKOUT // SPINNING SIDE",
+      "category": "knockouts",
+      "target": "head",
+      "result": "knockout",
+      "variant": "spinning-side-finish",
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/knockouts/head/spinning-side-finish",
+      "runtimeSheet": "animations/knockouts/head/spinning-side-finish/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v3-spinning-side-head-knockout",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/head-knockout-side-v3.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/knockouts/head/spinning-side-finish/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "decisive-impact",
+          "file": "animations/knockouts/head/spinning-side-finish/frames/frame-02-decisive-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "balance-lost",
+          "file": "animations/knockouts/head/spinning-side-finish/frames/frame-03-balance-lost.png"
+        },
+        {
+          "index": 4,
+          "label": "collapse",
+          "file": "animations/knockouts/head/spinning-side-finish/frames/frame-04-collapse.png"
+        },
+        {
+          "index": 5,
+          "label": "mat-contact",
+          "file": "animations/knockouts/head/spinning-side-finish/frames/frame-05-mat-contact.png"
+        },
+        {
+          "index": 6,
+          "label": "settle",
+          "file": "animations/knockouts/head/spinning-side-finish/frames/frame-06-settle.png"
+        },
+        {
+          "index": 7,
+          "label": "motionless-1",
+          "file": "animations/knockouts/head/spinning-side-finish/frames/frame-07-motionless-1.png"
+        },
+        {
+          "index": 8,
+          "label": "motionless-2",
+          "file": "animations/knockouts/head/spinning-side-finish/frames/frame-08-motionless-2.png"
+        },
+        {
+          "index": 9,
+          "label": "motionless-3",
+          "file": "animations/knockouts/head/spinning-side-finish/frames/frame-09-motionless-3.png"
+        },
+        {
+          "index": 10,
+          "label": "final-ko-pose",
+          "file": "animations/knockouts/head/spinning-side-finish/frames/frame-10-final-ko-pose.png"
+        }
+      ]
+    },
+    {
+      "id": "headKnockoutKneeCollapse",
+      "label": "HEAD KNOCKOUT // DELAYED KNEE COLLAPSE",
+      "category": "knockouts",
+      "target": "head",
+      "result": "knockout",
+      "variant": "delayed-double-knee-side-finish",
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/knockouts/head/delayed-double-knee-side",
+      "runtimeSheet": "animations/knockouts/head/delayed-double-knee-side/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v4-delayed-double-knee-head-knockout",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/head-knockout-knee-collapse-v4.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/knockouts/head/delayed-double-knee-side/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "decisive-impact",
+          "file": "animations/knockouts/head/delayed-double-knee-side/frames/frame-02-decisive-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "balance-lost",
+          "file": "animations/knockouts/head/delayed-double-knee-side/frames/frame-03-balance-lost.png"
+        },
+        {
+          "index": 4,
+          "label": "collapse",
+          "file": "animations/knockouts/head/delayed-double-knee-side/frames/frame-04-collapse.png"
+        },
+        {
+          "index": 5,
+          "label": "mat-contact",
+          "file": "animations/knockouts/head/delayed-double-knee-side/frames/frame-05-mat-contact.png"
+        },
+        {
+          "index": 6,
+          "label": "settle",
+          "file": "animations/knockouts/head/delayed-double-knee-side/frames/frame-06-settle.png"
+        },
+        {
+          "index": 7,
+          "label": "motionless-1",
+          "file": "animations/knockouts/head/delayed-double-knee-side/frames/frame-07-motionless-1.png"
+        },
+        {
+          "index": 8,
+          "label": "motionless-2",
+          "file": "animations/knockouts/head/delayed-double-knee-side/frames/frame-08-motionless-2.png"
+        },
+        {
+          "index": 9,
+          "label": "motionless-3",
+          "file": "animations/knockouts/head/delayed-double-knee-side/frames/frame-09-motionless-3.png"
+        },
+        {
+          "index": 10,
+          "label": "final-ko-pose",
+          "file": "animations/knockouts/head/delayed-double-knee-side/frames/frame-10-final-ko-pose.png"
+        }
+      ]
+    },
+    {
+      "id": "bodyKnockoutSupine",
+      "label": "BODY KNOCKOUT // SUPINE",
+      "category": "knockouts",
+      "target": "body",
+      "result": "knockout",
+      "variant": "backward-supine-body-finish",
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/knockouts/body/backward-supine-finish",
+      "runtimeSheet": "animations/knockouts/body/backward-supine-finish/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v3-backward-supine-body-knockout",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/body-knockout-supine-v3.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/knockouts/body/backward-supine-finish/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "decisive-impact",
+          "file": "animations/knockouts/body/backward-supine-finish/frames/frame-02-decisive-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "balance-lost",
+          "file": "animations/knockouts/body/backward-supine-finish/frames/frame-03-balance-lost.png"
+        },
+        {
+          "index": 4,
+          "label": "collapse",
+          "file": "animations/knockouts/body/backward-supine-finish/frames/frame-04-collapse.png"
+        },
+        {
+          "index": 5,
+          "label": "mat-contact",
+          "file": "animations/knockouts/body/backward-supine-finish/frames/frame-05-mat-contact.png"
+        },
+        {
+          "index": 6,
+          "label": "settle",
+          "file": "animations/knockouts/body/backward-supine-finish/frames/frame-06-settle.png"
+        },
+        {
+          "index": 7,
+          "label": "motionless-1",
+          "file": "animations/knockouts/body/backward-supine-finish/frames/frame-07-motionless-1.png"
+        },
+        {
+          "index": 8,
+          "label": "motionless-2",
+          "file": "animations/knockouts/body/backward-supine-finish/frames/frame-08-motionless-2.png"
+        },
+        {
+          "index": 9,
+          "label": "motionless-3",
+          "file": "animations/knockouts/body/backward-supine-finish/frames/frame-09-motionless-3.png"
+        },
+        {
+          "index": 10,
+          "label": "final-ko-pose",
+          "file": "animations/knockouts/body/backward-supine-finish/frames/frame-10-final-ko-pose.png"
+        }
+      ]
+    },
+    {
+      "id": "bodyKnockoutSeatedSlump",
+      "label": "BODY KNOCKOUT // SEATED SLUMP",
+      "category": "knockouts",
+      "target": "body",
+      "result": "knockout",
+      "variant": "seated-side-slump-body-finish",
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/knockouts/body/seated-side-slump",
+      "runtimeSheet": "animations/knockouts/body/seated-side-slump/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "generated-v4-seated-side-slump-body-knockout",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/body-knockout-seated-slump-v4.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "guard",
+          "file": "animations/knockouts/body/seated-side-slump/frames/frame-01-guard.png"
+        },
+        {
+          "index": 2,
+          "label": "decisive-impact",
+          "file": "animations/knockouts/body/seated-side-slump/frames/frame-02-decisive-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "balance-lost",
+          "file": "animations/knockouts/body/seated-side-slump/frames/frame-03-balance-lost.png"
+        },
+        {
+          "index": 4,
+          "label": "collapse",
+          "file": "animations/knockouts/body/seated-side-slump/frames/frame-04-collapse.png"
+        },
+        {
+          "index": 5,
+          "label": "mat-contact",
+          "file": "animations/knockouts/body/seated-side-slump/frames/frame-05-mat-contact.png"
+        },
+        {
+          "index": 6,
+          "label": "settle",
+          "file": "animations/knockouts/body/seated-side-slump/frames/frame-06-settle.png"
+        },
+        {
+          "index": 7,
+          "label": "motionless-1",
+          "file": "animations/knockouts/body/seated-side-slump/frames/frame-07-motionless-1.png"
+        },
+        {
+          "index": 8,
+          "label": "motionless-2",
+          "file": "animations/knockouts/body/seated-side-slump/frames/frame-08-motionless-2.png"
+        },
+        {
+          "index": 9,
+          "label": "motionless-3",
+          "file": "animations/knockouts/body/seated-side-slump/frames/frame-09-motionless-3.png"
+        },
+        {
+          "index": 10,
+          "label": "final-ko-pose",
+          "file": "animations/knockouts/body/seated-side-slump/frames/frame-10-final-ko-pose.png"
+        }
+      ]
+    },
+    {
+      "id": "footworkForward",
+      "label": "FOOTWORK // FORWARD",
+      "category": "locomotion",
+      "target": null,
+      "result": null,
+      "variant": null,
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/locomotion/forward-step",
+      "runtimeSheet": "animations/locomotion/forward-step/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "split-from-approved-support-atlas",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/footwork-v3.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "stance",
+          "file": "animations/locomotion/forward-step/frames/frame-01-stance.png"
+        },
+        {
+          "index": 2,
+          "label": "weight-shift",
+          "file": "animations/locomotion/forward-step/frames/frame-02-weight-shift.png"
+        },
+        {
+          "index": 3,
+          "label": "step-start",
+          "file": "animations/locomotion/forward-step/frames/frame-03-step-start.png"
+        },
+        {
+          "index": 4,
+          "label": "step-1",
+          "file": "animations/locomotion/forward-step/frames/frame-04-step-1.png"
+        },
+        {
+          "index": 5,
+          "label": "step-2",
+          "file": "animations/locomotion/forward-step/frames/frame-05-step-2.png"
+        },
+        {
+          "index": 6,
+          "label": "step-3",
+          "file": "animations/locomotion/forward-step/frames/frame-06-step-3.png"
+        },
+        {
+          "index": 7,
+          "label": "plant",
+          "file": "animations/locomotion/forward-step/frames/frame-07-plant.png"
+        },
+        {
+          "index": 8,
+          "label": "stabilize-1",
+          "file": "animations/locomotion/forward-step/frames/frame-08-stabilize-1.png"
+        },
+        {
+          "index": 9,
+          "label": "stabilize-2",
+          "file": "animations/locomotion/forward-step/frames/frame-09-stabilize-2.png"
+        },
+        {
+          "index": 10,
+          "label": "stance-return",
+          "file": "animations/locomotion/forward-step/frames/frame-10-stance-return.png"
+        }
+      ]
+    },
+    {
+      "id": "footworkBackward",
+      "label": "FOOTWORK // BACKWARD",
+      "category": "locomotion",
+      "target": null,
+      "result": null,
+      "variant": null,
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/locomotion/backward-step",
+      "runtimeSheet": "animations/locomotion/backward-step/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "split-from-approved-support-atlas",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/footwork-v3.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "stance",
+          "file": "animations/locomotion/backward-step/frames/frame-01-stance.png"
+        },
+        {
+          "index": 2,
+          "label": "weight-shift",
+          "file": "animations/locomotion/backward-step/frames/frame-02-weight-shift.png"
+        },
+        {
+          "index": 3,
+          "label": "step-start",
+          "file": "animations/locomotion/backward-step/frames/frame-03-step-start.png"
+        },
+        {
+          "index": 4,
+          "label": "step-1",
+          "file": "animations/locomotion/backward-step/frames/frame-04-step-1.png"
+        },
+        {
+          "index": 5,
+          "label": "step-2",
+          "file": "animations/locomotion/backward-step/frames/frame-05-step-2.png"
+        },
+        {
+          "index": 6,
+          "label": "step-3",
+          "file": "animations/locomotion/backward-step/frames/frame-06-step-3.png"
+        },
+        {
+          "index": 7,
+          "label": "plant",
+          "file": "animations/locomotion/backward-step/frames/frame-07-plant.png"
+        },
+        {
+          "index": 8,
+          "label": "stabilize-1",
+          "file": "animations/locomotion/backward-step/frames/frame-08-stabilize-1.png"
+        },
+        {
+          "index": 9,
+          "label": "stabilize-2",
+          "file": "animations/locomotion/backward-step/frames/frame-09-stabilize-2.png"
+        },
+        {
+          "index": 10,
+          "label": "stance-return",
+          "file": "animations/locomotion/backward-step/frames/frame-10-stance-return.png"
+        }
+      ]
+    },
+    {
+      "id": "guardHigh",
+      "label": "DEFENSE // HIGH GUARD",
+      "category": "defense",
+      "target": null,
+      "result": null,
+      "variant": null,
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/defense/high-guard",
+      "runtimeSheet": "animations/defense/high-guard/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "split-from-approved-support-atlas",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/guards-v3.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "stance",
+          "file": "animations/defense/high-guard/frames/frame-01-stance.png"
+        },
+        {
+          "index": 2,
+          "label": "guard-enter-1",
+          "file": "animations/defense/high-guard/frames/frame-02-guard-enter-1.png"
+        },
+        {
+          "index": 3,
+          "label": "guard-enter-2",
+          "file": "animations/defense/high-guard/frames/frame-03-guard-enter-2.png"
+        },
+        {
+          "index": 4,
+          "label": "guard-enter-3",
+          "file": "animations/defense/high-guard/frames/frame-04-guard-enter-3.png"
+        },
+        {
+          "index": 5,
+          "label": "guard-set",
+          "file": "animations/defense/high-guard/frames/frame-05-guard-set.png"
+        },
+        {
+          "index": 6,
+          "label": "guard-hold",
+          "file": "animations/defense/high-guard/frames/frame-06-guard-hold.png"
+        },
+        {
+          "index": 7,
+          "label": "guard-release-1",
+          "file": "animations/defense/high-guard/frames/frame-07-guard-release-1.png"
+        },
+        {
+          "index": 8,
+          "label": "guard-release-2",
+          "file": "animations/defense/high-guard/frames/frame-08-guard-release-2.png"
+        },
+        {
+          "index": 9,
+          "label": "guard-release-3",
+          "file": "animations/defense/high-guard/frames/frame-09-guard-release-3.png"
+        },
+        {
+          "index": 10,
+          "label": "stance-return",
+          "file": "animations/defense/high-guard/frames/frame-10-stance-return.png"
+        }
+      ]
+    },
+    {
+      "id": "guardLow",
+      "label": "DEFENSE // LOW GUARD",
+      "category": "defense",
+      "target": null,
+      "result": null,
+      "variant": null,
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/defense/low-guard",
+      "runtimeSheet": "animations/defense/low-guard/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "split-from-approved-support-atlas",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/guards-v3.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "stance",
+          "file": "animations/defense/low-guard/frames/frame-01-stance.png"
+        },
+        {
+          "index": 2,
+          "label": "guard-enter-1",
+          "file": "animations/defense/low-guard/frames/frame-02-guard-enter-1.png"
+        },
+        {
+          "index": 3,
+          "label": "guard-enter-2",
+          "file": "animations/defense/low-guard/frames/frame-03-guard-enter-2.png"
+        },
+        {
+          "index": 4,
+          "label": "guard-enter-3",
+          "file": "animations/defense/low-guard/frames/frame-04-guard-enter-3.png"
+        },
+        {
+          "index": 5,
+          "label": "guard-set",
+          "file": "animations/defense/low-guard/frames/frame-05-guard-set.png"
+        },
+        {
+          "index": 6,
+          "label": "guard-hold",
+          "file": "animations/defense/low-guard/frames/frame-06-guard-hold.png"
+        },
+        {
+          "index": 7,
+          "label": "guard-release-1",
+          "file": "animations/defense/low-guard/frames/frame-07-guard-release-1.png"
+        },
+        {
+          "index": 8,
+          "label": "guard-release-2",
+          "file": "animations/defense/low-guard/frames/frame-08-guard-release-2.png"
+        },
+        {
+          "index": 9,
+          "label": "guard-release-3",
+          "file": "animations/defense/low-guard/frames/frame-09-guard-release-3.png"
+        },
+        {
+          "index": 10,
+          "label": "stance-return",
+          "file": "animations/defense/low-guard/frames/frame-10-stance-return.png"
+        }
+      ]
+    },
+    {
+      "id": "hitReactionHead",
+      "label": "REACTION // HEAD HIT",
+      "category": "reactions",
+      "target": null,
+      "result": null,
+      "variant": null,
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/reactions/head-hit",
+      "runtimeSheet": "animations/reactions/head-hit/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "split-from-approved-support-atlas",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/hit-reactions-v4.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "stance",
+          "file": "animations/reactions/head-hit/frames/frame-01-stance.png"
+        },
+        {
+          "index": 2,
+          "label": "impact",
+          "file": "animations/reactions/head-hit/frames/frame-02-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "recoil-1",
+          "file": "animations/reactions/head-hit/frames/frame-03-recoil-1.png"
+        },
+        {
+          "index": 4,
+          "label": "recoil-2",
+          "file": "animations/reactions/head-hit/frames/frame-04-recoil-2.png"
+        },
+        {
+          "index": 5,
+          "label": "recoil-peak",
+          "file": "animations/reactions/head-hit/frames/frame-05-recoil-peak.png"
+        },
+        {
+          "index": 6,
+          "label": "stabilize-1",
+          "file": "animations/reactions/head-hit/frames/frame-06-stabilize-1.png"
+        },
+        {
+          "index": 7,
+          "label": "stabilize-2",
+          "file": "animations/reactions/head-hit/frames/frame-07-stabilize-2.png"
+        },
+        {
+          "index": 8,
+          "label": "recovery-1",
+          "file": "animations/reactions/head-hit/frames/frame-08-recovery-1.png"
+        },
+        {
+          "index": 9,
+          "label": "recovery-2",
+          "file": "animations/reactions/head-hit/frames/frame-09-recovery-2.png"
+        },
+        {
+          "index": 10,
+          "label": "stance-return",
+          "file": "animations/reactions/head-hit/frames/frame-10-stance-return.png"
+        }
+      ]
+    },
+    {
+      "id": "hitReactionBody",
+      "label": "REACTION // BODY HIT",
+      "category": "reactions",
+      "target": null,
+      "result": null,
+      "variant": null,
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/reactions/body-hit",
+      "runtimeSheet": "animations/reactions/body-hit/sheet.png",
+      "frameCount": 10,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "frames": 10,
+        "fallbackWidth": 1920,
+        "fallbackHeight": 682,
+        "isolatedCells": true,
+        "minCellPadding": 6
+      },
+      "provenance": "split-from-approved-support-atlas",
+      "verification": "visual-and-runtime",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/hit-reactions-v4.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "stance",
+          "file": "animations/reactions/body-hit/frames/frame-01-stance.png"
+        },
+        {
+          "index": 2,
+          "label": "impact",
+          "file": "animations/reactions/body-hit/frames/frame-02-impact.png"
+        },
+        {
+          "index": 3,
+          "label": "recoil-1",
+          "file": "animations/reactions/body-hit/frames/frame-03-recoil-1.png"
+        },
+        {
+          "index": 4,
+          "label": "recoil-2",
+          "file": "animations/reactions/body-hit/frames/frame-04-recoil-2.png"
+        },
+        {
+          "index": 5,
+          "label": "recoil-peak",
+          "file": "animations/reactions/body-hit/frames/frame-05-recoil-peak.png"
+        },
+        {
+          "index": 6,
+          "label": "stabilize-1",
+          "file": "animations/reactions/body-hit/frames/frame-06-stabilize-1.png"
+        },
+        {
+          "index": 7,
+          "label": "stabilize-2",
+          "file": "animations/reactions/body-hit/frames/frame-07-stabilize-2.png"
+        },
+        {
+          "index": 8,
+          "label": "recovery-1",
+          "file": "animations/reactions/body-hit/frames/frame-08-recovery-1.png"
+        },
+        {
+          "index": 9,
+          "label": "recovery-2",
+          "file": "animations/reactions/body-hit/frames/frame-09-recovery-2.png"
+        },
+        {
+          "index": 10,
+          "label": "stance-return",
+          "file": "animations/reactions/body-hit/frames/frame-10-stance-return.png"
+        }
+      ]
+    },
+    {
+      "id": "legacyGround",
+      "label": "LEGACY // GROUND SEQUENCE",
+      "category": "legacy",
+      "target": null,
+      "result": null,
+      "variant": null,
+      "limb": null,
+      "supportLimb": null,
+      "input": null,
+      "folder": "animations/legacy/ground-sequence",
+      "runtimeSheet": "animations/legacy/ground-sequence/sheet.png",
+      "frameCount": 8,
+      "contactFrame": null,
+      "canonicalFacing": "right",
+      "mirrorForFacingLeft": true,
+      "grid": {
+        "columns": 4,
+        "rows": 2,
+        "frames": 8,
+        "fallbackWidth": 1774,
+        "fallbackHeight": 887,
+        "isolatedCells": false,
+        "minCellPadding": 0
+      },
+      "provenance": "original-prototype-sheet",
+      "verification": "runtime-only-disabled-feature",
+      "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/fighter-mma-sprites.png",
+      "frames": [
+        {
+          "index": 1,
+          "label": "entry",
+          "file": "animations/legacy/ground-sequence/frames/frame-01-entry.png"
+        },
+        {
+          "index": 2,
+          "label": "transition",
+          "file": "animations/legacy/ground-sequence/frames/frame-02-transition.png"
+        },
+        {
+          "index": 3,
+          "label": "top-control",
+          "file": "animations/legacy/ground-sequence/frames/frame-03-top-control.png"
+        },
+        {
+          "index": 4,
+          "label": "ground-strike",
+          "file": "animations/legacy/ground-sequence/frames/frame-04-ground-strike.png"
+        },
+        {
+          "index": 5,
+          "label": "defense",
+          "file": "animations/legacy/ground-sequence/frames/frame-05-defense.png"
+        },
+        {
+          "index": 6,
+          "label": "escape",
+          "file": "animations/legacy/ground-sequence/frames/frame-06-escape.png"
+        },
+        {
+          "index": 7,
+          "label": "stand-up",
+          "file": "animations/legacy/ground-sequence/frames/frame-07-stand-up.png"
+        },
+        {
+          "index": 8,
+          "label": "reset",
+          "file": "animations/legacy/ground-sequence/frames/frame-08-reset.png"
+        }
+      ]
+    }
+  ]
+}

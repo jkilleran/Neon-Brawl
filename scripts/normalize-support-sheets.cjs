@@ -7,6 +7,10 @@ const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
 const root = path.join(__dirname, "..");
+const archiveRoot = path.join(
+  root,
+  "public/assets/characters/prototype-fighter/source-archive/original-assets",
+);
 const cellWidth = 384;
 const cellHeight = 341;
 const targetMaxHeight = 310;
@@ -100,8 +104,8 @@ function componentsFor(source, job) {
 }
 
 function normalize(job) {
-  const source = path.join(root, job.source);
-  const output = path.join(root, job.output);
+  const source = path.join(archiveRoot, job.source.replace(/^public\/assets\//, ""));
+  const output = path.join(archiveRoot, job.output.replace(/^public\/assets\//, ""));
   const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "neon-brawl-support-"));
 
   try {

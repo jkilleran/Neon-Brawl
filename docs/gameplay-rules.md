@@ -1,96 +1,98 @@
-# Reglas de gameplay
+# Gameplay Rules
 
-Este documento registra el balance táctico de Neon Brawl. Los valores ejecutables viven en `GAMEPLAY_RULES`, dentro de `game.js`.
+This document records the current Neon Brawl balance. Executable values live in `GAMEPLAY_RULES` inside `game.js`.
 
-## Asaltos
+## Match format
 
-- Tres asaltos.
-- Cada asalto dura 180 segundos (`3:00`).
-- La decisión mantiene el sistema 10-9 existente.
+- A regulation match has three rounds.
+- Each round lasts 180 seconds (`3:00`).
+- Decisions use the existing 10-9 scoring system.
+- Accumulated knockdown count is a statistic and scoring input; it never triggers an automatic TKO.
 
-## Modo práctica
+## Post-fight scorecard
 
-- `PRACTICE LAB` no tiene límite de tiempo ni termina por KO/TKO.
-- Cada impacto muestra su daño final con dos decimales sobre el punto de contacto.
-- Los números identifican también impactos `BLOCK` y `CRIT`.
-- Al agotarse la salud de cabeza o cuerpo, el dummy recupera automáticamente salud y stamina después de una pausa breve.
+Every completed CPU, local, or online match stores a separate record for each round. The final screen displays, for both fighters:
 
-## Daño y coste de ataques
+- judge score for the round;
+- strikes thrown;
+- clean/critical strikes landed;
+- strikes missed or evaded;
+- strikes absorbed by the matching guard;
+- landing accuracy;
+- total damage;
+- round result or finish method.
 
-- Todo strike normal o bloqueado de pie aplica `0.40375 ×` su daño base, una reducción adicional del 5% respecto al balance anterior de `0.425 ×`.
-- Los golpes críticos conservan la escala anterior de `0.425 ×`; después se aplica su multiplicador crítico de `1.75`. Por eso esta reducción no cambia el daño final de un crítico.
-- Los strikes al cuerpo aplican además `0.85 ×`, un 15% menos que los strikes equivalentes a la cabeza.
-- Un strike que conecta limpio o crítico consume `1.0 ×` su coste base de stamina.
-- Un strike fallado, evadido o bloqueado consume `1.5 ×` en total: `1.0 ×` al lanzarlo y `0.5 ×` como penalización por ineficiencia.
-- El daño final todavía considera distancia, stamina actual, límite de stamina y situación de counter.
+Blocked strikes are tracked independently and do not count as landed. A strike interrupted before contact counts as missed. Decision rounds preserve the current 10-9 scoring rule. A finish round is recorded as 10-8 for summary purposes and retains the actual KO method in the result column.
 
-## Stamina en dos capas
+## Practice Lab
 
-La misma barra representa dos valores:
+- Practice has no time limit and cannot end through KO/TKO.
+- Every impact displays final damage to two decimal places at the contact point.
+- Indicators distinguish `BLOCK` and `CRIT` results.
+- Depleting head or body health schedules a short automatic dummy reset.
 
-- Tramo brillante: stamina inmediata disponible.
-- Tramo tenue: límite máximo al que puede recuperarse la stamina inmediata.
-- Zona oscura: stamina perdida a largo plazo.
+## Damage and stamina cost
 
-Cada strike reduce ligeramente el límite. Lanzar golpes por debajo del 35% de la reserva acelera la pérdida y vaciarla añade una penalización inmediata. El límite nunca baja de 35%. Entre asaltos se recuperan cuatro puntos del límite; no se restaura automáticamente a 100.
+- A normal standing strike uses `0.40375 ×` base damage.
+- Critical strikes preserve `0.425 ×` base damage before the critical multiplier.
+- Body strikes receive an additional `0.85 ×` multiplier.
+- A clean or critical strike costs `1.0 ×` its base stamina value.
+- A missed, evaded, or blocked strike costs `1.5 ×` total: the normal initial cost plus a `0.5 ×` inefficiency penalty.
+- Final damage also considers range, current stamina, long-term stamina capacity, and counter conditions.
 
-## Golpe crítico
+## Two-layer stamina
 
-Un impacto puede convertirse en crítico por cualquiera de estas dos rutas, siempre que no choque con la guardia correcta.
+One bar displays two related values:
 
-### Crítico por movimiento
+- Bright segment: immediately available stamina.
+- Dim segment: the long-term cap that short-term stamina can recover to.
+- Dark segment: long-term stamina already lost.
 
-Se cumplen las dos condiciones:
+Every strike slightly lowers the cap. Throwing below 35% of the current reserve accelerates long-term loss, and fully emptying the bar adds an immediate penalty. The long-term cap cannot fall below 35%. A fighter recovers four cap points between rounds; the cap does not automatically return to 100.
 
-1. El atacante inicia el strike prácticamente quieto (`≤ 38 px/s`).
-2. El rival se mueve al recibirlo (`≥ 70 px/s`).
+## Critical hits
 
-### Crítico por vulnerabilidad
+An unblocked impact becomes critical through either route below.
 
-- Se consulta únicamente la barra correspondiente al objetivo del strike: cabeza para golpes a la cabeza y cuerpo para golpes al cuerpo.
-- El umbral depende del asalto: por debajo de `45%` en el round 1, `65%` en el round 2 y `75%` en el round 3.
-- Al cruzar el umbral correspondiente antes del impacto, el golpe realiza una tirada de `1 / 3.5` (`2 / 7`, aproximadamente `28.57%`) aunque no se cumpla la condición de movimiento.
-- Una barra de cuerpo baja no vuelve crítico un golpe a la cabeza, ni viceversa.
-- El límite es estricto: una barra exactamente en `45%`, `65%` o `75%` todavía no activa la tirada de su round.
+### Movement counter
 
-El crítico multiplica el daño resultante por `1.75`, aplica un stun de un segundo, aumenta el retroceso, las partículas, el hit-stop, el flash y el movimiento de cámara.
+Both conditions must be true:
 
-Cada crítico no bloqueado realiza después una sola tirada de knockdown con probabilidad `1 / 2.2` (`5 / 11`, aproximadamente `45.45%`). Si la tirada tiene éxito, una segunda selección reparte de forma uniforme las cinco variantes disponibles para la zona impactada. En modo práctica no interrumpe la sesión con un knockdown.
+1. The attacker begins the strike nearly stationary (`≤ 38 px/s`).
+2. The target is moving at impact (`≥ 70 px/s`).
 
-La cantidad de knockdowns se conserva únicamente como estadística y puntuación: no existe un límite y nunca produce un TKO automático. La pelea termina por daño cuando la salud de cabeza o cuerpo llega a cero.
+### Health vulnerability
 
-## Distancia y contacto
+- Only the health bar targeted by the strike is checked.
+- The required threshold changes by round: below `45%` in round 1, `65%` in round 2, and `75%` in round 3.
+- Below the applicable threshold, the strike has a `1 / 3.5` chance (`2 / 7`, about `28.57%`) to become critical even without the movement-counter condition.
+- Low body health cannot make a head strike vulnerable-critical, and low head health cannot affect a body strike.
+- Thresholds are strict. Exactly `45%`, `65%`, or `75%` does not enable that round's vulnerability roll.
 
-- La separación mínima entre los centros de los peleadores es `168 px`; el motor corrige cualquier acercamiento menor para evitar superposición visual.
-- Todos los strikes conectan con su zona anatómica si el rival está a `178 px` o menos durante los frames activos.
-- A partir de `179 px` el strike falla y recibe la penalización de stamina por ineficiencia.
-- La asistencia solo decide si existe contacto; el número y los efectos se colocan en la superficie exacta de cabeza o cuerpo.
+A critical multiplies damage by `1.75`, applies one second of stun, and increases knockback, particles, hit-stop, flash, and camera movement.
 
-## Knockdown y knockout
+Each unblocked critical then performs one knockdown roll at `1 / 2.2` (`5 / 11`, about `45.45%`). A successful roll uniformly selects one of the five knockdown movements for the impacted zone. Practice mode does not interrupt the session with a knockdown.
 
-- `headKnockdown`: impacto de cabeza, pérdida de balance, caída, recuperación y vuelta a guardia.
-- `headKnockdownForward`: giro de cabeza, tropiezo hacia delante, manos/rodilla, recuperación y guardia.
-- `headKnockdownSeated`: rotación por impacto, caída sentada/lateral, apoyo, recuperación y guardia.
-- `headKnockdownShoulderRoll`: caída en espiral sobre hombro/cadera, rodamiento, tres apoyos y recuperación.
-- `headKnockdownKneeDrop`: reacción retardada, caída vertical a una rodilla, apoyo de palma y recuperación.
-- `bodyKnockdown`: reacción a costillas/abdomen, caída protegiendo el cuerpo y recuperación.
-- `bodyKnockdownKneel`: impacto al plexo, caída sobre ambas rodillas, apoyo y recuperación.
-- `bodyKnockdownSeated`: pérdida de aire, retroceso, caída sentada, apoyo y recuperación.
-- `bodyKnockdownElbowFold`: pliegue compacto al hígado, caída sobre codo/cadera y recuperación.
-- `bodyKnockdownThreePoint`: golpe al plexo, paso inestable, caída a rodilla/pie/palma y recuperación.
-- `headKnockout`: colapso por golpe de cabeza y pose final inmóvil.
-- `headKnockoutProne`: colapso frontal por golpe de cabeza y final boca abajo inmóvil.
-- `headKnockoutSide`: giro, caída lateral directa y final inmóvil sobre el costado.
-- `headKnockoutKneeCollapse`: pausa retardada, caída sobre ambas rodillas, vuelco lateral y final inmóvil.
-- `bodyKnockout`: colapso plegado por golpe corporal, pose final inmóvil y resultado `BODY K.O.`.
-- `bodyKnockoutProne`: caída de rodillas por golpe corporal, colapso frontal plegado y final inmóvil.
-- `bodyKnockoutSupine`: retroceso, caída sentada y final completamente boca arriba.
-- `bodyKnockoutSeatedSlump`: caída sentada protegiendo el hígado y desplome lateral final.
-- Cada knockdown selecciona uniformemente una de cinco variantes de su zona. Cada knockout selecciona uniformemente una de cuatro variantes de su zona.
-- El banner de resultado se retrasa `1.15 s` para dejar visible la caída; la pantalla final aparece después de completar la secuencia.
+## Distance and contact
 
-## Lectura visual del impacto
+- Fighter centers remain at least `168 px` apart to prevent visual overlap.
+- All standing strikes can connect with the correct anatomical zone at `178 px` or less during active frames.
+- At `179 px` or more, a strike misses and receives the stamina inefficiency penalty.
+- Contact assistance only decides whether a hit exists; impact markers and damage values use the resolved head/body surface point.
 
-- `BLOCKED`: retroceso corto dentro de la animación de guardia, partículas y cámara mínimas.
-- `CLEAN HIT`: reacción normal de cabeza o cuerpo y efectos medios.
-- `CRITICAL HIT`: reacción prolongada con desplazamiento y rotación adicionales, destello blanco y efectos máximos.
+## Knockdowns and knockouts
+
+- Five recoverable head knockdowns and five recoverable body knockdowns are selected uniformly by zone.
+- Four head knockout finishes and four body knockout finishes are selected uniformly by zone.
+- A body finish uses the `BODY K.O.` presentation.
+- The result banner waits `1.15 s`, allowing the fall to play before the result appears.
+- The final result screen appears after the finish sequence.
+- There is no maximum number of knockdowns before a damage-based finish.
+
+The complete visual variant list is maintained in [Animation Catalog](animation-catalog.md).
+
+## Impact readability
+
+- `BLOCKED`: short guard recoil, minimal particles, and minimal camera response.
+- `CLEAN HIT`: zone-specific reaction with medium effects.
+- `CRITICAL HIT`: prolonged reaction, added displacement/rotation, white flash, and maximum effects.

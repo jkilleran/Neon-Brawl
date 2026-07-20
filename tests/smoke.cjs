@@ -1,19 +1,106 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const combatConfig = require("../combat-config.js");
 const animationManifest = require("../animation-manifest.js");
+const arenaMetadata = require("../public/assets/arenas/neon-octagon/arena.json");
+const { OnlineMatchSimulation } = require("../online-simulation.cjs");
+
+const listRelativePngs = (root, directory = root) => fs.readdirSync(directory, { withFileTypes: true })
+  .flatMap((entry) => {
+    const absolutePath = path.join(directory, entry.name);
+    if (entry.isDirectory()) return listRelativePngs(root, absolutePath);
+    return entry.isFile() && entry.name.endsWith(".png")
+      ? [path.relative(root, absolutePath)]
+      : [];
+  });
+
+const archiveRoot = path.join(
+  __dirname,
+  "..",
+  "public",
+  "assets",
+  "characters",
+  "prototype-fighter",
+  "source-archive",
+  "original-assets",
+);
+const archivedPngs = listRelativePngs(archiveRoot).sort();
+const referencedArchivePngs = [...new Set(
+  Object.values(animationManifest.movements).map((movement) => movement.archiveSource),
+)].sort();
+assert.deepEqual(
+  archivedPngs,
+  referencedArchivePngs,
+  "The source archive should contain only canonical sheets referenced by movement metadata",
+);
+assert.equal(
+  fs.existsSync(path.join(__dirname, "..", "public", "assets", "arenas", "neon-octagon", "arena.png")),
+  false,
+  "The redundant complete arena plate should not return",
+);
 
 const markup = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 const gameSource = fs.readFileSync(path.join(__dirname, "..", "game.js"), "utf8");
+const stylesSource = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
+const onlineServerSource = fs.readFileSync(path.join(__dirname, "..", "server.cjs"), "utf8");
 assert.match(markup, /pause-controls-grid/, "Pause menu should expose the complete controls");
+assert.match(markup, /id="game-viewport" class="game-viewport"/, "Canvas and overlays should share one responsive viewport");
 assert.match(markup, /WASD \+ TYGH/, "Pause menu should list Player 1 controls");
 assert.match(markup, /FLECHAS \+ IOKL/, "Pause menu should list Player 2 controls");
 assert.match(markup, /SPACE \/ SHIFT<\/kbd><span>mantener \+ cualquier golpe/, "Pause menu should explain the body modifier");
-assert.match(markup, /animation-manifest\.js[\s\S]*game\.js/, "Animation manifest must load before the game");
+assert.match(markup, /combat-config\.js[\s\S]*animation-manifest\.js[\s\S]*game\.js/, "Shared combat config and animation manifest must load before the game");
 assert.match(markup, /Tres asaltos de 3 minutos/, "Menu should explain round duration");
+assert.match(markup, /data-menu-target="local"/, "Main menu should expose the local category");
+assert.match(markup, /data-menu-target="online"/, "Main menu should expose the online category");
+assert.match(markup, /data-menu-panel="local"[\s\S]*data-mode="cpu"[\s\S]*data-mode="practice"/, "Local category should contain local game modes");
+assert.match(markup, /data-menu-panel="online"[\s\S]*data-mode="online"/, "Online category should contain online game modes");
 assert.match(markup, /data-mode="practice"/, "Menu should expose practice mode");
+assert.match(markup, /data-mode="online"/, "Menu should expose online mode");
+assert.match(markup, /BUSCANDO PARTIDA AHORA MISMO/, "Online lobby should show live matchmaking presence");
+assert.match(markup, /id="online-latency"[\s\S]*SERVER RTT/, "Online lobby should show server round-trip latency");
+assert.match(markup, /id="online-connect-button"[\s\S]*CONECTAR/, "Online lobby should expose explicit connection state");
+assert.match(markup, /id="online-outgoing-challenge"[\s\S]*RETO ENVIADO/, "Online lobby should show outgoing challenge state");
+assert.match(markup, /id="result-scorecard"/, "Result screen should expose the per-round scorecard");
+assert.match(markup, /online-client\.js[\s\S]*game\.js/, "Online client must load before the game");
 assert.match(markup, /Sin reloj · daño visible por golpe/, "Practice mode should explain its damage display");
 assert.match(markup, /brillante = stamina actual · tenue = límite recuperable/, "Pause menu should explain both stamina layers");
+assert.equal(combatConfig.snapshotHz, 30, "Server snapshots should use a bandwidth-safe 30 Hz cadence");
+assert.equal(combatConfig.simulationHz, 60, "The neutral server simulation should use a fixed 60 Hz step");
+assert.equal(combatConfig.guardTransitionRate, 6, "Guard transitions should expose all ten frames at 60 Hz");
+assert.equal(arenaMetadata.runtimeAsset, "/assets/arenas/neon-octagon/arena-foreground-v2.png");
+assert.deepEqual(arenaMetadata.viewport.effectiveSourceCrop, { x: 0, y: 56, width: 1536, height: 864 });
+assert.deepEqual(
+  [arenaMetadata.fighterLayout.rookSpawnX, arenaMetadata.fighterLayout.vexSpawnX, arenaMetadata.fighterLayout.floorY],
+  [380, 900, 604],
+  "Arena metadata should preserve the approved fighter composition",
+);
+assert.deepEqual(arenaMetadata.shadow.standingRadius, [76, 7], "Standing shadows should remain thin and grounded");
+assert.equal(arenaMetadata.shadow.standingBaselineOffsetY, -7, "Standing shadows should compensate for sprite bottom padding");
+assert.deepEqual(arenaMetadata.shadow.footContactOffsetsX, [-76, 62], "Each planted foot should have an independent contact shadow");
+assert.equal(arenaMetadata.ambientAnimation.arenaBitmapFrames, 1, "The cage and floor must remain one fixed bitmap");
+assert.equal(arenaMetadata.ambientAnimation.crowdBitmapFrames, 3, "The audience should expose three restrained motion states");
+assert.equal(arenaMetadata.layers.crowd.transition, "hold-then-smooth-crossfade", "Crowd states should be readable without hard cuts");
+assert.equal(arenaMetadata.ambientAnimation.cycleSeconds, 2.1, "The three crowd poses should read as one natural jump cycle");
+assert.deepEqual(
+  arenaMetadata.layers.crowd.frameLabels,
+  ["crowd-low", "crowd-takeoff", "crowd-jump-apex"],
+  "Crowd motion states should document the jump progression",
+);
+assert.equal(arenaMetadata.ambientAnimation.proceduralLighting, false, "The layered crowd should be the only arena animation");
+assert.deepEqual(
+  arenaMetadata.ambientAnimation.layers,
+  ["crowd-hold", "crowd-crossfade", "fixed-arena-foreground"],
+  "Arena animation should not retain procedural light layers",
+);
+assert.match(gameSource, /predictOnlineLocalInput/, "Both players should predict their own controls locally");
+assert.match(gameSource, /reconcileGuardPresentation/, "Online guards should have a snapshot-safe presentation layer");
+assert.match(gameSource, /queueOnlineSnapshot/, "The browser should coalesce snapshot bursts before rendering");
+assert.match(onlineServerSource, /authority: "server"/, "The Node service should own authoritative match state");
+assert.match(onlineServerSource, /const serializedPayload = JSON\.stringify\(payload\)/, "The server should serialize each shared snapshot only once");
+assert.match(gameSource, /ONLINE_MAX_EXTRAPOLATION_SECONDS = 0\.2/, "Remote motion extrapolation should be bounded");
+assert.match(gameSource, /sendOnlineInputNow/, "Guest controls should support immediate input delivery");
+assert.match(onlineServerSource, /MAX_REALTIME_BUFFER_BYTES = 24 \* 1024/, "The relay should shed stale snapshots early");
 assert.match(
   gameSource,
   /context\.translate\(this\.x, guardY\);[\s\S]*context\.scale\(this\.facing, 1\);[\s\S]*context\.arc\(22, 0, 48/,
@@ -21,6 +108,9 @@ assert.match(
 );
 assert.equal(Object.keys(animationManifest.strikes).length, 8, "Catalog should expose eight isolated strikes");
 assert.equal(Object.keys(animationManifest.outcomes).length, 18, "Catalog should expose ten knockdowns and eight knockouts");
+assert.equal(Object.keys(animationManifest.characters).length, 2, "Catalog should expose one library per fighter");
+assert.equal(Object.keys(animationManifest.movements).length, 33, "Each fighter should expose 33 movements");
+assert.equal(Object.keys(animationManifest.support).length, 6, "Support atlases should be split into six movements");
 assert.equal(animationManifest.outcomes.headKnockdown.result, "knockdown");
 assert.equal(animationManifest.outcomes.bodyKnockdown.target, "body");
 assert.equal(animationManifest.outcomes.headKnockdownForward.variant, "forward-hands-and-knee");
@@ -41,16 +131,16 @@ assert.equal(animationManifest.outcomes.bodyKnockoutSupine.variant, "backward-su
 assert.equal(animationManifest.outcomes.bodyKnockoutSeatedSlump.variant, "seated-side-slump-body-finish");
 assert.equal(animationManifest.strikes.leftPunchBody.limb, "left-hand");
 assert.equal(animationManifest.strikes.leftPunchBody.target, "body");
-assert.match(animationManifest.strikes.leftPunchBody.file, /left-punch-body-v5\.png$/);
-assert.match(animationManifest.strikes.rightKickHead.file, /right-kick-head-v5\.png$/);
-assert.match(animationManifest.strikes.rightKickBody.file, /right-kick-body-v5\.png$/);
+assert.equal(animationManifest.strikes.leftPunchBody.input.p2, "Shift + I");
+assert.match(animationManifest.strikes.leftPunchBody.folder, /body\/left-punch$/);
+assert.match(animationManifest.strikes.rightKickHead.folder, /head\/right-kick$/);
+assert.match(animationManifest.strikes.rightKickBody.folder, /body\/right-kick$/);
 for (const id of ["leftPunchBody", "rightKickHead", "rightKickBody"]) {
-  assert.deepEqual(animationManifest.strikes[id].grid, {
-    columns: 5,
-    rows: 2,
-    fallbackWidth: 1920,
-    fallbackHeight: 682,
-  });
+  assert.equal(animationManifest.strikes[id].grid.columns, 5);
+  assert.equal(animationManifest.strikes[id].grid.rows, 2);
+  assert.equal(animationManifest.strikes[id].grid.frames, 10);
+  assert.equal(animationManifest.strikes[id].grid.fallbackWidth, 1920);
+  assert.equal(animationManifest.strikes[id].grid.fallbackHeight, 682);
 }
 
 class FakeClassList {
@@ -146,9 +236,28 @@ const make = (selector) => {
   "#result-kicker",
   "#result-title",
   "#result-copy",
+  "#result-scorecard",
   "#sound-button",
   "#sound-icon",
   "#combat-controls",
+  "#online-screen",
+  "#online-connect-form",
+  "#online-name",
+  "#online-connect-button",
+  "#online-presence",
+  "#online-status",
+  "#online-latency",
+  "#online-latency-value",
+  "#online-latency-quality",
+  "#online-player-count",
+  "#online-player-list",
+  "#online-challenge",
+  "#online-challenger-name",
+  "#online-outgoing-challenge",
+  "#online-outgoing-name",
+  "#online-accept",
+  "#online-decline",
+  "#online-back",
   "#resume-button",
   "#rematch-button",
   "#fullscreen-button",
@@ -159,20 +268,57 @@ const modeButtons = [
   new FakeElement({ mode: "cpu" }),
   new FakeElement({ mode: "local" }),
   new FakeElement({ mode: "practice" }),
+  new FakeElement({ mode: "online" }),
 ];
+const menuPanels = [
+  new FakeElement({ menuPanel: "root" }),
+  new FakeElement({ menuPanel: "local" }),
+  new FakeElement({ menuPanel: "online" }),
+];
+menuPanels[1].classList.add("is-hidden");
+menuPanels[2].classList.add("is-hidden");
+const menuCategoryButtons = [
+  new FakeElement({ menuTarget: "local" }),
+  new FakeElement({ menuTarget: "online" }),
+];
+const menuBackButtons = [new FakeElement(), new FakeElement()];
 const menuButtons = [new FakeElement(), new FakeElement()];
+selectors.get("#menu-screen").dataset.menuSection = "root";
 const windowListeners = new Map();
 const animationFrames = [];
 const imageSources = [];
+const animationSheetsBySource = new Map(
+  Object.values(animationManifest.characters).flatMap((character) => (
+    Object.values(character.sheets).map((sheet) => [sheet.src, sheet])
+  )),
+);
+animationSheetsBySource.set(arenaMetadata.runtimeAsset, {
+  fallbackWidth: arenaMetadata.source.width,
+  fallbackHeight: arenaMetadata.source.height,
+});
+animationSheetsBySource.set(arenaMetadata.layers.foreground, {
+  fallbackWidth: arenaMetadata.source.width,
+  fallbackHeight: arenaMetadata.source.height,
+});
+for (const crowdFrame of arenaMetadata.layers.crowd.frames) {
+  animationSheetsBySource.set(crowdFrame, {
+    fallbackWidth: arenaMetadata.source.width,
+    fallbackHeight: arenaMetadata.source.height,
+  });
+}
 
 global.document = {
   fullscreenElement: null,
+  hidden: false,
   querySelector(selector) {
     assert(selectors.has(selector), `Missing fake element for ${selector}`);
     return selectors.get(selector);
   },
   querySelectorAll(selector) {
     if (selector === "[data-mode]") return modeButtons;
+    if (selector === "[data-menu-panel]") return menuPanels;
+    if (selector === "[data-menu-target]") return menuCategoryButtons;
+    if (selector === "[data-menu-back]") return menuBackButtons;
     if (selector === ".menu-button") return menuButtons;
     return [];
   },
@@ -199,16 +345,11 @@ global.Image = class FakeImage {
   }
 
   get naturalWidth() {
-    if (this.source?.includes("fighter-mma")) return 1774;
-    if (this.source?.includes("-v5.png")) return 1920;
-    return this.source?.includes("/animations/strikes/") ? 1536 : 1920;
+    return animationSheetsBySource.get(this.source)?.fallbackWidth ?? 0;
   }
 
   get naturalHeight() {
-    if (this.source?.includes("fighter-mma")) return 887;
-    if (this.source?.includes("-knock")) return 682;
-    if (this.source?.includes("-v5.png")) return 682;
-    return this.source?.includes("/animations/strikes/") ? 1023 : 1364;
+    return animationSheetsBySource.get(this.source)?.fallbackHeight ?? 0;
   }
 };
 
@@ -216,7 +357,234 @@ global.requestAnimationFrame = (callback) => {
   animationFrames.push(callback);
 };
 
-const { game, ATTACKS } = require("../game.js");
+const { game, ATTACKS, getHudHealthState } = require("../game.js");
+
+assert.equal(getHudHealthState(100).tier, "stable", "Healthy fighters should show a calm status icon");
+assert.equal(getHudHealthState(69).tier, "worn", "Moderate damage should turn the status icon yellow");
+assert.equal(getHudHealthState(44).tier, "danger", "Heavy damage should turn the status icon orange");
+assert.equal(getHudHealthState(19).tier, "critical", "Critical damage should turn the status icon red");
+assert.equal(getHudHealthState(Number.NaN).tier, "critical", "Invalid health must fail safely as critical");
+
+for (const [attackId, serverDefinition] of Object.entries(combatConfig.attacks)) {
+  for (const [field, value] of Object.entries(serverDefinition)) {
+    assert.equal(
+      ATTACKS[attackId][field],
+      value,
+      `${attackId}.${field} must share one browser/server combat definition`,
+    );
+  }
+}
+
+const dispatchWindowKey = (type, code) => {
+  for (const listener of windowListeners.get(type) || []) {
+    listener({ code, repeat: false, preventDefault() {} });
+  }
+};
+game.mode = "online";
+game.onlineRole = "player2";
+dispatchWindowKey("keydown", "KeyA");
+assert.equal(game.getOnlineKeyboardInput().move, -1, "Online A must always send screen-left movement");
+dispatchWindowKey("keyup", "KeyA");
+dispatchWindowKey("keydown", "KeyD");
+assert.equal(game.getOnlineKeyboardInput().move, 1, "Online D must always send screen-right movement");
+dispatchWindowKey("keyup", "KeyD");
+
+game.fighterOne.resetRound(380, 1);
+game.fighterTwo.resetRound(900, -1);
+game.online = { latencyMs: 160, jitterMs: 18 };
+game.state = "fighting";
+
+game.predictOnlineLocalInput({
+  ...game.emptyInput(),
+  leftPunch: true,
+}, 43);
+assert.equal(game.fighterTwo.attack.type, "leftPunchHead", "A guest strike should animate immediately");
+assert.equal(game.onlinePredictedAttack.sequence, 43, "Predicted strikes must retain their input sequence");
+game.onlinePredictedAttack.elapsed = 0.18;
+game.onlineLastAcknowledgedInput = 43;
+game.reconcilePredictedAttack({
+  ...game.onlinePredictedAttack.attack,
+  elapsed: 0.04,
+});
+assert(
+  game.fighterTwo.attack.elapsed >= 0.18,
+  "An authoritative snapshot must not rewind a predicted strike animation",
+);
+game.reconcilePredictedAttack(null);
+assert.equal(game.onlinePredictedAttack, null, "A completed host strike should clear its prediction");
+assert.equal(game.fighterTwo.attack, null, "Host completion should not leave a phantom strike");
+
+game.predictOnlineLocalInput({
+  ...game.emptyInput(),
+  rightPunch: true,
+}, 44);
+game.fighterTwo.stun = 0.2;
+game.reconcilePredictedAttack(null);
+assert.equal(game.onlinePredictedAttack, null, "Authoritative stun should cancel an invalid prediction");
+assert.equal(game.fighterTwo.attack, null, "A cancelled prediction should not leave a phantom strike");
+game.fighterTwo.stun = 0;
+
+game.fighterTwo.x = 900;
+game.fighterTwo.velocityX = 0;
+game.onlinePositionTargets.fighterTwo = null;
+dispatchWindowKey("keydown", "KeyA");
+game.updateOnlineLocalPrediction(1 / 60);
+dispatchWindowKey("keyup", "KeyA");
+assert(game.fighterTwo.x < 900, "The challenged player should see advancing movement immediately");
+
+game.fighterTwo.x = 900;
+game.fighterTwo.velocityX = 0;
+game.onlinePositionTargets.fighterTwo = { x: 850, velocityX: 0, age: 0 };
+game.onlineLastControlChangeSequence = 50;
+game.onlineLastAcknowledgedInput = 49;
+game.updateOnlineLocalPrediction(1 / 60);
+assert.equal(
+  game.fighterTwo.x,
+  900,
+  "A stale snapshot must not pull against a newer local direction change",
+);
+game.onlineLastAcknowledgedInput = 50;
+game.updateOnlineLocalPrediction(1 / 60);
+assert(
+  game.fighterTwo.x < 900 && game.fighterTwo.x > 850,
+  "Guest reconciliation should correct position smoothly instead of teleporting",
+);
+
+game.onlineRole = "player1";
+game.fighterOne.resetRound(380, 1);
+game.fighterTwo.resetRound(900, -1);
+game.state = "fighting";
+game.onlinePredictedAttack = null;
+dispatchWindowKey("keydown", "KeyD");
+game.updateOnlineLocalPrediction(1 / 60);
+dispatchWindowKey("keyup", "KeyD");
+assert(game.fighterOne.x > 380, "The challenger should see its advancing movement immediately");
+game.fighterOne.x = 380;
+game.fighterOne.velocityX = 0;
+game.predictOnlineLocalInput({ ...game.emptyInput(), rightPunch: true }, 51);
+assert.equal(game.fighterOne.attack.type, "rightPunchHead", "The challenger should use the same local prediction path");
+game.onlinePredictedAttack = null;
+game.fighterOne.attack = null;
+
+const neutralSnapshot = new OnlineMatchSimulation().snapshot();
+neutralSnapshot.inputAcknowledgements = { player1: 51, player2: 44 };
+game.onlineLastSnapshot = -1;
+game.onlineLastAcknowledgedInput = 0;
+game.applyOnlineSnapshot({ sequence: 1, snapshot: neutralSnapshot });
+assert.equal(game.onlineLastAcknowledgedInput, 51, "Rook should consume its own server acknowledgement");
+game.onlineRole = "player2";
+game.onlineLastSnapshot = -1;
+game.onlineLastAcknowledgedInput = 0;
+game.applyOnlineSnapshot({ sequence: 1, snapshot: neutralSnapshot });
+assert.equal(game.onlineLastAcknowledgedInput, 44, "Vex should consume its own server acknowledgement");
+
+game.onlineRole = "player1";
+game.mode = "online";
+game.state = "fighting";
+game.onlinePredictedAttack = null;
+game.onlineLastSnapshot = 1;
+game.fighterOne.guard = "high";
+game.fighterOne.guardVisual = "high";
+game.fighterOne.guardBlend = 0.8;
+dispatchWindowKey("keydown", "KeyW");
+const staleGuardSnapshot = new OnlineMatchSimulation().snapshot();
+staleGuardSnapshot.state = "fighting";
+staleGuardSnapshot.fighterOne.guard = null;
+staleGuardSnapshot.fighterOne.guardVisual = null;
+staleGuardSnapshot.fighterOne.guardBlend = 0;
+game.applyOnlineSnapshot({ sequence: 2, snapshot: staleGuardSnapshot });
+assert.equal(game.fighterOne.guard, "high", "A stale snapshot must not drop the locally held guard");
+assert.equal(game.fighterOne.guardBlend, 0.8, "A stale snapshot must not rewind the local guard animation");
+
+game.fighterOne.guardBlend = 1;
+dispatchWindowKey("keyup", "KeyW");
+staleGuardSnapshot.fighterOne.guard = "high";
+staleGuardSnapshot.fighterOne.guardVisual = "high";
+staleGuardSnapshot.fighterOne.guardBlend = 0.4;
+game.applyOnlineSnapshot({ sequence: 3, snapshot: staleGuardSnapshot });
+assert.equal(game.fighterOne.guard, null, "A stale snapshot must not re-raise a locally released guard");
+assert.equal(game.fighterOne.guardBlend, 1, "Guard release should continue from the visible pose without jumping");
+game.updateOnlineLocalPrediction(1 / 60);
+assert(game.fighterOne.guardBlend < 1 && game.fighterOne.guardBlend > 0, "Guard release should animate smoothly");
+
+const completedAttack = {
+  type: "leftPunchHead",
+  elapsed: 0.34,
+  connected: false,
+  inefficientPenaltyApplied: false,
+  facing: 1,
+  stationaryStart: true,
+};
+game.fighterOne.attack = null;
+game.fighterOne.guard = "high";
+game.fighterOne.guardVisual = "high";
+game.fighterOne.guardBlend = 0.6;
+game.onlinePredictedAttack = {
+  sequence: 70,
+  type: "leftPunchHead",
+  attack: completedAttack,
+  elapsed: 0.34,
+  totalDuration: 0.34,
+  completed: true,
+  acknowledged: true,
+  acknowledgedElapsed: 0.2,
+  authoritySeen: true,
+};
+dispatchWindowKey("keydown", "KeyW");
+const delayedRecoverySnapshot = new OnlineMatchSimulation().snapshot();
+delayedRecoverySnapshot.state = "fighting";
+delayedRecoverySnapshot.inputAcknowledgements.player1 = 70;
+delayedRecoverySnapshot.fighterOne.attack = { ...completedAttack, elapsed: 0.25 };
+delayedRecoverySnapshot.fighterOne.guard = null;
+delayedRecoverySnapshot.fighterOne.guardVisual = null;
+delayedRecoverySnapshot.fighterOne.guardBlend = 0;
+game.onlineLastSnapshot = 9;
+game.applyOnlineSnapshot({ sequence: 10, snapshot: delayedRecoverySnapshot });
+assert.equal(game.fighterOne.attack, null, "A delayed recovery snapshot must not replay a completed strike");
+assert.equal(game.fighterOne.guard, "high", "Guard should resume immediately after the predicted strike completes");
+assert.equal(game.fighterOne.guardBlend, 0.6, "Strike recovery snapshots must not restart the guard transition");
+dispatchWindowKey("keyup", "KeyW");
+game.onlinePredictedAttack = null;
+
+const queuedOlder = { sequence: 11, snapshot: staleGuardSnapshot };
+const queuedNewer = { sequence: 12, snapshot: staleGuardSnapshot };
+game.onlinePendingSnapshot = null;
+game.queueOnlineSnapshot(queuedNewer);
+game.queueOnlineSnapshot(queuedOlder);
+assert.equal(game.onlinePendingSnapshot.sequence, 12, "Snapshot bursts should retain only the newest state");
+game.onlinePendingSnapshot = null;
+
+game.onlineRole = null;
+game.mode = "cpu";
+game.state = "menu";
+
+const safeReplicaX = game.fighterTwo.x;
+game.applyFighterSnapshot(game.fighterTwo, {
+  x: null,
+  facing: null,
+  attack: { type: "missingAttack", elapsed: null },
+  knockdownAnimation: "missingAnimation",
+  finishAnimation: { animation: "missingAnimation", elapsed: null, duration: null },
+});
+assert.equal(game.fighterTwo.x, safeReplicaX, "Invalid snapshot coordinates must not move a replica off canvas");
+assert.equal(game.fighterTwo.facing, -1, "Invalid right-side facing must recover to the canonical orientation");
+assert.equal(game.fighterTwo.attack, null, "Unknown remote attacks must not break rendering");
+assert.equal(game.fighterTwo.finishAnimation, null, "Unknown remote finish animations must be discarded");
+assert.doesNotThrow(
+  () => game.fighterTwo.draw(context, { animation: "missingAnimation", frame: Number.NaN, facing: 0 }),
+  "A malformed visual state must fall back to an idle sprite instead of hiding the fighter",
+);
+
+game.handleOnlineWelcome({ name: "Johan" });
+assert.equal(selectors.get("#online-status").textContent, "CONECTADO // JOHAN");
+assert.equal(selectors.get("#online-connect-button").textContent, "CONECTADO");
+assert.equal(selectors.get("#online-connect-button").disabled, true);
+game.showOutgoingChallenge({ name: "Friend" });
+assert.equal(selectors.get("#online-outgoing-name").textContent, "Friend");
+assert.equal(selectors.get("#online-outgoing-challenge").classList.contains("is-hidden"), false);
+assert.match(selectors.get("#online-status").textContent, /RETO ENVIADO A FRIEND/);
+game.handleChallengeDeclined({ name: "Friend" });
+assert.equal(selectors.get("#online-outgoing-challenge").classList.contains("is-hidden"), true);
 
 assert.deepEqual(globalThis.NEON_BRAWL_GAMEPLAY_RULES, {
   roundTimeSeconds: 180,
@@ -244,6 +612,12 @@ assert.match(gameSource, /critical\s*\? GAMEPLAY_RULES\.criticalStrikeDamageScal
 assert.match(gameSource, /severity: critical \? "critical" : "clean"/, "Clean and critical hits should use distinct reactions");
 assert.match(gameSource, /target\.blockReaction = \{/, "Blocked strikes should trigger a subtle guard reaction");
 assert.match(gameSource, /drawStaminaBar\(context, fighter/, "HUD should draw short and long-term stamina together");
+assert.match(gameSource, /drawHealthStatusIcon\(context, "head"/, "HUD should represent head health with an icon");
+assert.match(gameSource, /drawHealthStatusIcon\(context, "body"/, "HUD should represent body health with an icon");
+assert.doesNotMatch(gameSource, /traceRoundedRect\(context, panelX, panelY, panelWidth, panelHeight, 15\)/, "Fighter HUD information should not sit inside large exterior frames");
+assert.match(gameSource, /context\.arc\(centerX, centerY, 22/, "Health status badges should use circular illustrated geometry");
+assert.doesNotMatch(gameSource, /this\.drawBar\(context[\s\S]{0,120}displayHead/, "HUD should not expose a direct head-health bar");
+assert.doesNotMatch(gameSource, /this\.drawBar\(context[\s\S]{0,120}displayBody/, "HUD should not expose a direct body-health bar");
 assert.match(gameSource, /this\.mode !== "practice"[\s\S]*this\.timer/, "Practice mode should not consume the timer");
 assert.match(gameSource, /spawnDamageNumber\(/, "Practice impacts should show numeric damage");
 assert.doesNotMatch(gameSource, /knockdownsSuffered\s*>=/, "Knockdown count must not trigger a TKO");
@@ -275,6 +649,8 @@ attacker.attack.elapsed = ATTACKS.leftPunchHead.startup
   + ATTACKS.leftPunchHead.recovery;
 attacker.updateAttack(1 / 60, defender);
 assert.equal(attacker.stamina, 92.5, "A missed strike should spend 150% stamina in total");
+assert.equal(attacker.roundStats.thrown, 1, "Starting a standing strike should count as thrown");
+assert.equal(attacker.roundStats.missed, 1, "A strike with no contact should count as missed");
 
 attacker.resetMatchStamina();
 attacker.resetRound(400, 1);
@@ -307,6 +683,8 @@ game.resolveAttack(attacker, defender, ATTACKS.leftPunchHead, { x: 480, y: 350 }
 assert(defender.blockReaction, "Matching guard should trigger a block reaction");
 assert.equal(defender.hitReaction, null, "Blocked strike should not play a clean reaction");
 assert.equal(attacker.stamina, 92.5, "A blocked strike should spend 150% stamina in total");
+assert.equal(attacker.roundStats.blocked, 1, "A guarded strike should be tracked separately from a clean landing");
+assert.equal(attacker.roundStats.landed, 0, "A guarded strike should not count as landed");
 
 attacker.resetRound(400, 1);
 defender.resetRound(491, -1);
@@ -546,19 +924,97 @@ defender.update(0.9, game.emptyInput(), attacker);
 assert.equal(defender.bodyHealth, 100, "The practice dummy should recover after the reset delay");
 game.mode = "cpu";
 
+attacker.resetRound(400, 1);
+defender.resetRound(568, -1);
+attacker.roundStats = { thrown: 12, landed: 7, missed: 3, blocked: 2, critical: 1, headLanded: 5, bodyLanded: 2 };
+defender.roundStats = { thrown: 9, landed: 4, missed: 4, blocked: 1, critical: 0, headLanded: 3, bodyLanded: 1 };
+attacker.roundDamage = 28.25;
+defender.roundDamage = 16.5;
+game.roundHistory = [];
+game.recordedRounds.clear();
+game.round = 1;
+game.recordRound({ winner: attacker, method: "DECISION", scoreOne: 10, scoreTwo: 9 });
+game.renderScorecard();
+assert.match(selectors.get("#result-scorecard").innerHTML, /12/);
+assert.match(selectors.get("#result-scorecard").innerHTML, /28\.25/);
+assert.match(selectors.get("#result-scorecard").innerHTML, /10/);
+assert.match(selectors.get("#result-scorecard").innerHTML, /9/);
+
 assert.equal(animationFrames.length, 1, "The game should schedule its animation loop");
+assert.equal(menuCategoryButtons[0].listeners.has("click"), true, "Local category should be interactive");
+assert.equal(menuCategoryButtons[1].listeners.has("click"), true, "Online category should be interactive");
+menuCategoryButtons[0].dispatch("click");
+assert.equal(selectors.get("#menu-screen").dataset.menuSection, "local");
+assert.equal(menuPanels[0].classList.contains("is-hidden"), true, "Opening Local should hide category selection");
+assert.equal(menuPanels[1].classList.contains("is-hidden"), false, "Opening Local should show local modes");
+menuBackButtons[0].dispatch("click");
+assert.equal(selectors.get("#menu-screen").dataset.menuSection, "root");
 assert.equal(modeButtons[0].listeners.has("click"), true, "CPU mode should be interactive");
 assert.equal(modeButtons[2].listeners.has("click"), true, "Practice mode should be interactive");
-assert.equal(imageSources.length, 30, "All modular combat animation sheets should preload");
-for (const movement of Object.values(animationManifest.strikes)) {
-  assert(imageSources.includes(movement.file), `${movement.id} should preload its own sheet`);
+assert.equal(imageSources.length, 70, "The layered arena and all 33 movements for both fighters should preload without the obsolete full plate");
+assert(imageSources.includes(arenaMetadata.runtimeAsset), "The approved arena plate should preload");
+assert(imageSources.includes(arenaMetadata.layers.foreground), "The fixed transparent arena layer should preload");
+for (const crowdFrame of arenaMetadata.layers.crowd.frames) {
+  assert(imageSources.includes(crowdFrame), `${crowdFrame} should preload`);
 }
-for (const movement of Object.values(animationManifest.outcomes)) {
-  assert(imageSources.includes(movement.file), `${movement.id} should preload its own sheet`);
+const arenaDraws = [];
+const originalDrawImage = context.drawImage;
+context.globalAlpha = 1;
+context.drawImage = (image) => arenaDraws.push({ source: image.source, alpha: context.globalAlpha });
+game.elapsed = 0;
+game.drawArenaCrowd(context);
+assert.deepEqual(
+  arenaDraws.map(({ source }) => source),
+  [arenaMetadata.layers.crowd.frames[0]],
+  "A crowd state should be shown completely instead of remaining perpetually blended",
+);
+arenaDraws.length = 0;
+game.elapsed = 0.55;
+game.drawArenaCrowd(context);
+assert.deepEqual(
+  arenaDraws.map(({ source }) => source),
+  arenaMetadata.layers.crowd.frames.slice(0, 2),
+  "Only the short transition window should blend adjacent crowd states",
+);
+arenaDraws.length = 0;
+game.elapsed = 0.7;
+game.drawArenaCrowd(context);
+assert.deepEqual(
+  arenaDraws.map(({ source }) => source),
+  [arenaMetadata.layers.crowd.frames[1]],
+  "The next crowd image should replace the previous state completely",
+);
+context.drawImage = originalDrawImage;
+assert.match(gameSource, /ARENA_VERTICAL_CROP_ANCHOR = 0\.35/, "Arena crop should preserve the approved composition");
+assert.match(gameSource, /drawFighterShadow\(context, drawX, drawY, scale, facing\)/, "Every fighter should render a mirrored contact shadow");
+assert.match(gameSource, /shadowY = drawY \+ \(groundedOutcome \? 2 : -7\)/, "Standing shadows should touch the visible feet");
+assert.match(gameSource, /footContactOffsets = \[-76, 62\]/, "Standing fighters should use two foot contact points");
+assert.match(gameSource, /Math\.min\(2, \(cssWidth \* deviceScale\) \/ WIDTH\)/, "Canvas resolution should adapt to high-density screens");
+assert.match(stylesSource, /container: game \/ inline-size/, "All overlays should respond to the rendered game viewport");
+assert.match(stylesSource, /@container game \(max-width: 1000px\)/, "Medium game viewports should use compact menus");
+assert.match(stylesSource, /@container game \(max-width: 720px\)/, "Small game viewports should use single-column menus");
+assert.match(stylesSource, /@container game \(max-width: 520px\)/, "Extra-small game viewports should preserve usable dialogs");
+assert.doesNotMatch(stylesSource, /\.game-viewport::before/, "The disconnected upper-left corner bracket should be removed");
+assert.doesNotMatch(stylesSource, /\.game-viewport::after/, "The disconnected lower-right corner bracket should be removed");
+assert.match(gameSource, /ARENA_CROWD_FRAME_SECONDS = 0\.7/, "The crowd should complete a readable jump every 2.1 seconds");
+assert.match(gameSource, /ARENA_CROWD_BLEND_FRACTION = 0\.35/, "Crowd transitions should remain smooth at the faster cadence");
+assert.match(gameSource, /smoothMix = linearMix \* linearMix \* \(3 - 2 \* linearMix\)/, "Crowd frames should crossfade without brightness jumps");
+assert.match(gameSource, /drawArenaCrowd\(context\)[\s\S]*drawArenaLayer\(context, arenaForegroundImage\)/, "The fixed arena should render over the changing crowd");
+assert.match(
+  gameSource,
+  /traceRoundedRect\(context, x, y - 6, width, height \+ 12, 10\)/,
+  "The intended stamina capsule should remain intact",
+);
+assert.doesNotMatch(gameSource, /const drawSide =/, "The large frames around fighter icons and stamina should be removed");
+assert.doesNotMatch(gameSource, /drawArenaAmbience/, "Procedural arena lighting should be removed for performance");
+assert.doesNotMatch(gameSource, /globalCompositeOperation = "screen"/, "The arena should not run a screen-blended lighting pass");
+for (const [characterId, character] of Object.entries(animationManifest.characters)) {
+  for (const [movementId, sheet] of Object.entries(character.sheets)) {
+    assert(imageSources.includes(sheet.src), `${characterId}/${movementId} should preload its own sheet`);
+  }
 }
-assert(imageSources.includes("/assets/animations/support/hit-reactions-v4.png"));
-assert(imageSources.includes("/assets/animations/support/footwork-v3.png"));
-assert(imageSources.includes("/assets/animations/support/guards-v3.png"));
+assert(imageSources.includes("/assets/characters/rook/animations/reactions/body-hit/sheet.png"));
+assert(imageSources.includes("/assets/characters/vex/animations/defense/high-guard/sheet.png"));
 
 modeButtons[2].dispatch("click");
 game.state = "fighting";
@@ -570,18 +1026,14 @@ game.returnToMenu();
 modeButtons[0].dispatch("click");
 assert.equal(selectors.get("#menu-screen").classList.contains("is-hidden"), true);
 
-const sendKey = (type, code) => {
-  for (const listener of windowListeners.get(type) || []) {
-    listener({ code, repeat: false, preventDefault() {} });
-  }
-};
+const sendKey = dispatchWindowKey;
 
 const tapFrames = new Map([
-  [130, "KeyU"],
-  [175, "KeyI"],
-  [235, "KeyJ"],
-  [305, "KeyK"],
-  [390, "KeyU"],
+  [130, "KeyT"],
+  [175, "KeyY"],
+  [235, "KeyG"],
+  [305, "KeyH"],
+  [390, "KeyT"],
 ]);
 
 let time = performance.now();

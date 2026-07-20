@@ -1,0 +1,81 @@
+{
+  "id": "headKnockdownShoulderRoll",
+  "label": "HEAD KNOCKDOWN // SHOULDER ROLL",
+  "category": "knockdowns",
+  "target": "head",
+  "result": "knockdown",
+  "variant": "corkscrew-shoulder-roll-recovery",
+  "limb": null,
+  "supportLimb": null,
+  "input": null,
+  "folder": "animations/knockdowns/head/corkscrew-shoulder-roll",
+  "runtimeSheet": "animations/knockdowns/head/corkscrew-shoulder-roll/sheet.png",
+  "frameCount": 10,
+  "contactFrame": null,
+  "canonicalFacing": "right",
+  "mirrorForFacingLeft": true,
+  "grid": {
+    "columns": 5,
+    "rows": 2,
+    "frames": 10,
+    "fallbackWidth": 1920,
+    "fallbackHeight": 682,
+    "isolatedCells": true,
+    "minCellPadding": 6
+  },
+  "provenance": "generated-v4-corkscrew-shoulder-roll-head-knockdown",
+  "verification": "visual-and-runtime",
+  "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/head-knockdown-shoulder-roll-v4.png",
+  "frames": [
+    {
+      "index": 1,
+      "label": "guard",
+      "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-01-guard.png"
+    },
+    {
+      "index": 2,
+      "label": "impact",
+      "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-02-impact.png"
+    },
+    {
+      "index": 3,
+      "label": "balance-break",
+      "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-03-balance-break.png"
+    },
+    {
+      "index": 4,
+      "label": "legs-buckle",
+      "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-04-legs-buckle.png"
+    },
+    {
+      "index": 5,
+      "label": "fall",
+      "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-05-fall.png"
+    },
+    {
+      "index": 6,
+      "label": "mat-contact",
+      "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-06-mat-contact.png"
+    },
+    {
+      "index": 7,
+      "label": "stunned",
+      "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-07-stunned.png"
+    },
+    {
+      "index": 8,
+      "label": "brace",
+      "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-08-brace.png"
+    },
+    {
+      "index": 9,
+      "label": "kneeling-rise",
+      "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-09-kneeling-rise.png"
+    },
+    {
+      "index": 10,
+      "label": "guard-return",
+      "file": "animations/knockdowns/head/corkscrew-shoulder-roll/frames/frame-10-guard-return.png"
+    }
+  ]
+}

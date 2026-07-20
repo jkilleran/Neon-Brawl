@@ -1,17 +1,31 @@
 {
   "name": "neon-brawl",
   "private": true,
-  "version": "0.14.0",
+  "version": "0.24.0",
   "type": "commonjs",
-  "description": "Juego MMA super light para uno o dos jugadores, creado con Canvas y JavaScript.",
+  "description": "A lightweight one- or two-player MMA game built with Canvas and JavaScript.",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "vite build",
+    "dev:online": "npm run build && node server.cjs",
+    "start": "node server.cjs",
+    "build": "vite build && node scripts/prune-production-assets.cjs",
     "preview": "vite preview --host 0.0.0.0",
-    "check": "node --check animation-manifest.js && node --check game.js && node --check scripts/png-alpha.cjs && node --check scripts/normalize-support-sheets.cjs && node --check scripts/validate-animation-assets.cjs && node scripts/validate-animation-assets.cjs",
-    "test": "node tests/smoke.cjs"
+    "check": "node --check combat-config.js && node --check animation-manifest.js && node --check online-simulation.cjs && node --check online-client.js && node --check game.js && node --check server.cjs && node --check scripts/png-alpha.cjs && node --check scripts/normalize-support-sheets.cjs && node --check scripts/manage-character-sprites.cjs && node --check scripts/prune-production-assets.cjs && node --check scripts/validate-animation-assets.cjs && node scripts/manage-character-sprites.cjs validate && node scripts/validate-animation-assets.cjs",
+    "sprites:list": "node scripts/manage-character-sprites.cjs list",
+    "sprites:catalog": "node scripts/manage-character-sprites.cjs catalog",
+    "sprites:extract": "node scripts/manage-character-sprites.cjs extract",
+    "sprites:build": "node scripts/manage-character-sprites.cjs build",
+    "sprites:validate": "node scripts/manage-character-sprites.cjs validate",
+    "test": "node tests/smoke.cjs && node tests/online-simulation.cjs && node tests/online-server.cjs"
   },
   "devDependencies": {
     "vite": "^7.0.0"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "ws": "^8.21.1"
   }
 }
