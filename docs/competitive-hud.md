@@ -4,6 +4,8 @@
 
 The combat HUD communicates tactical condition without exposing exact head or body health percentages. The underlying gameplay values remain unchanged; only their presentation is abstracted into readable condition states.
 
+The visual language intentionally follows the cel-shaded fighters: rounded dark cards, bold outlines, flat accent colors, and circular condition badges. Angular sci-fi polygons and hard segmented meters are avoided so the interface belongs to the same illustrated world as the character sprites.
+
 ## Layout
 
 Each fighter panel contains:
@@ -37,8 +39,9 @@ Stamina is the only continuous fighter meter:
 - the translucent section is the long-term recoverable capacity;
 - the amber marker identifies the current long-term cap;
 - fill direction mirrors for the right-side fighter;
-- meter color follows the fighter's cyan or magenta identity.
+- meter color follows the fighter's cyan or magenta identity;
+- the capsule-shaped meter uses one continuous fill without decorative segmentation.
 
 ## Maintenance
 
-The thresholds are defined in `HUD_HEALTH_STATES` in `game.js`. Icon geometry is isolated in `drawHeadHealthGlyph` and `drawBodyHealthGlyph`; panel composition is isolated in `drawHudFrame`, `drawFighterHud`, and `drawHealthStatusIcon`. These presentation functions do not modify combat state.
+The thresholds are defined in `HUD_HEALTH_STATES` in `game.js`. Icon geometry is isolated in `drawHeadHealthGlyph` and `drawBodyHealthGlyph`; rounded panel geometry is shared through `traceRoundedRect`; panel composition is isolated in `drawHudFrame`, `drawFighterHud`, and `drawHealthStatusIcon`. These presentation functions do not modify combat state.

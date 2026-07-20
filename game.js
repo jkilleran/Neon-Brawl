@@ -2875,59 +2875,93 @@
     }
 
     drawHudFrame(context) {
-      const drawSide = (reverse, color) => {
-        const outerX = reverse ? WIDTH - 24 : 24;
-        const innerX = reverse ? WIDTH / 2 + 92 : WIDTH / 2 - 92;
-        const innerShoulder = reverse ? innerX + 34 : innerX - 34;
-        const gradient = context.createLinearGradient(outerX, 0, innerX, 0);
-        gradient.addColorStop(0, "rgba(5, 7, 18, 0.94)");
-        gradient.addColorStop(0.72, "rgba(7, 9, 23, 0.86)");
-        gradient.addColorStop(1, "rgba(7, 7, 18, 0.35)");
+      context.save();
+      const topFade = context.createLinearGradient(0, 0, 0, 128);
+      topFade.addColorStop(0, "rgba(3, 4, 12, 0.93)");
+      topFade.addColorStop(0.76, "rgba(5, 6, 16, 0.7)");
+      topFade.addColorStop(1, "rgba(5, 6, 16, 0)");
+      context.fillStyle = topFade;
+      context.fillRect(0, 0, WIDTH, 128);
 
-        context.beginPath();
-        context.moveTo(outerX, 15);
-        context.lineTo(innerShoulder, 15);
-        context.lineTo(innerX, 54);
-        context.lineTo(innerShoulder, 108);
-        context.lineTo(outerX, 108);
-        context.closePath();
+      const drawSide = (panelX, color, reverse) => {
+        const panelWidth = 500;
+        const panelY = 12;
+        const panelHeight = 98;
+        const gradient = context.createLinearGradient(
+          reverse ? panelX + panelWidth : panelX,
+          0,
+          reverse ? panelX : panelX + panelWidth,
+          0,
+        );
+        gradient.addColorStop(0, "rgba(11, 13, 27, 0.98)");
+        gradient.addColorStop(1, "rgba(10, 12, 25, 0.82)");
+
+        this.traceRoundedRect(context, panelX, panelY, panelWidth, panelHeight, 15);
         context.fillStyle = gradient;
         context.fill();
-        context.strokeStyle = `${color}80`;
-        context.lineWidth = 1;
+        context.strokeStyle = "rgba(2, 3, 10, 0.94)";
+        context.lineWidth = 5;
+        context.stroke();
+        context.strokeStyle = `${color}90`;
+        context.lineWidth = 1.5;
+        context.stroke();
+
+        context.beginPath();
+        const accentStart = reverse ? panelX + panelWidth - 120 : panelX + 18;
+        const accentEnd = reverse ? panelX + panelWidth - 18 : panelX + 120;
+        context.moveTo(accentStart, panelY + 1);
+        context.lineTo(accentEnd, panelY + 1);
+        context.strokeStyle = color;
+        context.lineWidth = 3;
+        context.lineCap = "round";
         context.stroke();
       };
 
-      context.save();
-      drawSide(false, this.fighterOne.color);
-      drawSide(true, this.fighterTwo.color);
+      drawSide(24, this.fighterOne.color, false);
+      drawSide(WIDTH - 524, this.fighterTwo.color, true);
 
       const centerX = WIDTH / 2;
-      const centerGradient = context.createLinearGradient(centerX - 102, 0, centerX + 102, 0);
-      centerGradient.addColorStop(0, "rgba(53, 242, 229, 0.08)");
-      centerGradient.addColorStop(0.5, "rgba(8, 8, 22, 0.97)");
-      centerGradient.addColorStop(1, "rgba(255, 59, 157, 0.08)");
-      context.beginPath();
-      context.moveTo(centerX - 88, 19);
-      context.lineTo(centerX + 88, 19);
-      context.lineTo(centerX + 108, 53);
-      context.lineTo(centerX + 87, 105);
-      context.lineTo(centerX - 87, 105);
-      context.lineTo(centerX - 108, 53);
-      context.closePath();
+      const centerGradient = context.createLinearGradient(centerX - 92, 0, centerX + 92, 0);
+      centerGradient.addColorStop(0, "rgba(17, 27, 38, 0.98)");
+      centerGradient.addColorStop(0.5, "rgba(9, 10, 23, 0.99)");
+      centerGradient.addColorStop(1, "rgba(36, 15, 35, 0.98)");
+      this.traceRoundedRect(context, centerX - 94, 12, 188, 98, 18);
       context.fillStyle = centerGradient;
       context.fill();
-      context.strokeStyle = "rgba(200, 213, 255, 0.3)";
-      context.lineWidth = 1.2;
+      context.strokeStyle = "rgba(2, 3, 10, 0.96)";
+      context.lineWidth = 5;
+      context.stroke();
+      context.strokeStyle = "rgba(220, 225, 255, 0.32)";
+      context.lineWidth = 1.5;
       context.stroke();
 
-      context.globalAlpha = 0.32;
-      context.strokeStyle = "rgba(255,255,255,0.14)";
       context.beginPath();
-      context.moveTo(32, 114);
-      context.lineTo(WIDTH - 32, 114);
+      context.moveTo(centerX - 58, 108);
+      context.lineTo(centerX, 108);
+      context.strokeStyle = this.fighterOne.color;
+      context.lineWidth = 2;
+      context.stroke();
+      context.beginPath();
+      context.moveTo(centerX, 108);
+      context.lineTo(centerX + 58, 108);
+      context.strokeStyle = this.fighterTwo.color;
       context.stroke();
       context.restore();
+    }
+
+    traceRoundedRect(context, x, y, width, height, radius) {
+      const safeRadius = Math.min(radius, width / 2, height / 2);
+      context.beginPath();
+      context.moveTo(x + safeRadius, y);
+      context.lineTo(x + width - safeRadius, y);
+      context.quadraticCurveTo(x + width, y, x + width, y + safeRadius);
+      context.lineTo(x + width, y + height - safeRadius);
+      context.quadraticCurveTo(x + width, y + height, x + width - safeRadius, y + height);
+      context.lineTo(x + safeRadius, y + height);
+      context.quadraticCurveTo(x, y + height, x, y + height - safeRadius);
+      context.lineTo(x, y + safeRadius);
+      context.quadraticCurveTo(x, y, x + safeRadius, y);
+      context.closePath();
     }
 
     drawDamageNumbers(context) {
@@ -2954,6 +2988,9 @@
       const textX = reverse ? x + width : x;
       context.fillStyle = "#f5f5ff";
       context.font = "700 21px Orbitron, sans-serif";
+      context.strokeStyle = "rgba(2, 3, 10, 0.9)";
+      context.lineWidth = 4;
+      context.strokeText(fighter.name, textX, 31);
       context.fillText(fighter.name, textX, 31);
       context.fillStyle = fighter.color;
       context.font = "600 9px Chakra Petch, sans-serif";
@@ -2986,29 +3023,26 @@
       context.save();
       context.globalAlpha = criticalPulse;
       context.beginPath();
-      context.moveTo(centerX - 17, centerY - 22);
-      context.lineTo(centerX + 12, centerY - 22);
-      context.lineTo(centerX + 22, centerY);
-      context.lineTo(centerX + 12, centerY + 22);
-      context.lineTo(centerX - 17, centerY + 22);
-      context.lineTo(centerX - 25, centerY);
-      context.closePath();
-      context.fillStyle = "rgba(5, 7, 18, 0.9)";
+      context.arc(centerX, centerY, 22, 0, Math.PI * 2);
+      context.fillStyle = "rgba(3, 4, 12, 0.96)";
       context.fill();
-      context.strokeStyle = `${accent}70`;
-      context.lineWidth = 1;
+      context.strokeStyle = "rgba(1, 2, 8, 0.95)";
+      context.lineWidth = 5;
       context.stroke();
 
       context.beginPath();
-      context.moveTo(centerX - 13, centerY - 17);
-      context.lineTo(centerX + 9, centerY - 17);
-      context.lineTo(centerX + 17, centerY);
-      context.lineTo(centerX + 9, centerY + 17);
-      context.lineTo(centerX - 13, centerY + 17);
-      context.lineTo(centerX - 19, centerY);
-      context.closePath();
-      context.fillStyle = `${status.color}18`;
+      context.arc(centerX, centerY, 19, 0, Math.PI * 2);
+      context.fillStyle = `${status.color}20`;
       context.fill();
+      context.strokeStyle = `${accent}a8`;
+      context.lineWidth = 2;
+      context.stroke();
+
+      context.beginPath();
+      context.arc(centerX, centerY, 16, 0, Math.PI * 2);
+      context.strokeStyle = `${status.color}80`;
+      context.lineWidth = 1;
+      context.stroke();
 
       context.fillStyle = status.color;
       context.strokeStyle = status.color;
@@ -3017,9 +3051,6 @@
       if (type === "head") this.drawHeadHealthGlyph(context, centerX - 1, centerY);
       else this.drawBodyHealthGlyph(context, centerX - 1, centerY);
       context.shadowBlur = 0;
-
-      context.fillStyle = status.color;
-      context.fillRect(centerX - 7, centerY + 16, 12, 1.5);
       context.restore();
     }
 
@@ -3065,21 +3096,20 @@
       const trackWidth = width - labelSpace - 8;
       const labelX = reverse ? x + 10 : x + width - 10;
 
-      context.beginPath();
-      context.moveTo(x + 7, y - 6);
-      context.lineTo(x + width - 7, y - 6);
-      context.lineTo(x + width, y + height / 2);
-      context.lineTo(x + width - 7, y + height + 6);
-      context.lineTo(x + 7, y + height + 6);
-      context.lineTo(x, y + height / 2);
-      context.closePath();
-      context.fillStyle = "rgba(1, 1, 8, 0.88)";
+      this.traceRoundedRect(context, x, y - 6, width, height + 12, 10);
+      context.fillStyle = "rgba(2, 3, 10, 0.92)";
       context.fill();
-      context.strokeStyle = `${fighter.color}70`;
-      context.lineWidth = 1;
+      context.strokeStyle = "rgba(1, 2, 7, 0.95)";
+      context.lineWidth = 4;
+      context.stroke();
+      context.strokeStyle = `${fighter.color}78`;
+      context.lineWidth = 1.5;
       context.stroke();
 
-      context.fillStyle = "rgba(255,255,255,0.07)";
+      context.save();
+      this.traceRoundedRect(context, trackX, y, trackWidth, height, height / 2);
+      context.clip();
+      context.fillStyle = "rgba(255,255,255,0.08)";
       context.fillRect(trackX, y, trackWidth, height);
       const capacityWidth = clamp(trackWidth * (fighter.displayStaminaCap / 100), 0, trackWidth);
       const staminaWidth = clamp(trackWidth * (fighter.displayStamina / 100), 0, capacityWidth);
@@ -3093,21 +3123,12 @@
       context.shadowBlur = 7;
       context.fillRect(staminaX, y, staminaWidth, height);
       context.shadowBlur = 0;
+      context.restore();
 
       context.textAlign = reverse ? "left" : "right";
       context.fillStyle = fighter.color;
       context.font = "700 8px Orbitron, sans-serif";
       context.fillText("STAMINA", labelX, y + 8);
-
-      context.strokeStyle = "rgba(5, 5, 15, 0.34)";
-      context.lineWidth = 1;
-      for (let segment = 1; segment < 5; segment += 1) {
-        const segmentX = trackX + (trackWidth * segment) / 5;
-        context.beginPath();
-        context.moveTo(segmentX, y);
-        context.lineTo(segmentX, y + height);
-        context.stroke();
-      }
 
       if (capacityWidth < trackWidth - 1) {
         const capX = reverse ? trackX + trackWidth - capacityWidth : trackX + capacityWidth;

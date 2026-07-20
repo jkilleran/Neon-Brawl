@@ -538,6 +538,8 @@ assert.match(gameSource, /target\.blockReaction = \{/, "Blocked strikes should t
 assert.match(gameSource, /drawStaminaBar\(context, fighter/, "HUD should draw short and long-term stamina together");
 assert.match(gameSource, /drawHealthStatusIcon\(context, "head"/, "HUD should represent head health with an icon");
 assert.match(gameSource, /drawHealthStatusIcon\(context, "body"/, "HUD should represent body health with an icon");
+assert.match(gameSource, /traceRoundedRect\(context, panelX, panelY, panelWidth, panelHeight, 15\)/, "Fighter HUD panels should use clean rounded geometry");
+assert.match(gameSource, /context\.arc\(centerX, centerY, 22/, "Health status badges should use circular illustrated geometry");
 assert.doesNotMatch(gameSource, /this\.drawBar\(context[\s\S]{0,120}displayHead/, "HUD should not expose a direct head-health bar");
 assert.doesNotMatch(gameSource, /this\.drawBar\(context[\s\S]{0,120}displayBody/, "HUD should not expose a direct body-health bar");
 assert.match(gameSource, /this\.mode !== "practice"[\s\S]*this\.timer/, "Practice mode should not consume the timer");
