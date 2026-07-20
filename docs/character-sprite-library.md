@@ -88,6 +88,8 @@ npm run sprites:import -- <transparent-grid.png> <normalized-sheet.png>
 
 The importer isolates all ten cells, trims transparent space, limits each fighter to a 330 × 310 presentation box, and aligns every pose to the shared baseline before the sheet is added to a movement folder.
 
+Use `--scale=<ratio>` when a crouched pose must preserve its size relative to the standing reference. Use `--repeat-first` only for code-driven idle breathing where an identical planted pose is required in all ten catalog cells.
+
 ## Replace one frame
 
 Example: replace Rook's right body kick contact frame.

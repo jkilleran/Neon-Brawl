@@ -72,7 +72,7 @@
   const ONLINE_REMOTE_SMOOTHING_RATE = 24;
   const ONLINE_LOCAL_RECONCILIATION_RATE = 7;
   const GUARD_TRANSITION_RATE = COMBAT_CONFIG.guardTransitionRate;
-  const IDLE_ANIMATION_FPS = 5;
+  const IDLE_BREATH_CYCLE_SECONDS = 2;
   const FOOTWORK_ANIMATION_FPS = 11;
   const GUARD_FOOTWORK_ANIMATION_FPS = 10;
   const LOCOMOTION_SPEED_THRESHOLD = 18;
@@ -912,13 +912,16 @@
       const row = Math.floor(frame / sheet.columns);
       const destinationHeight = 350 * scale;
       const destinationWidth = destinationHeight * (frameWidth / frameHeight);
+      const idleBreathScaleY = visual.animation === "idleBreathing" && options.frame === undefined
+        ? 1 - (Math.sin(this.animationTime * Math.PI * 2 / IDLE_BREATH_CYCLE_SECONDS) * 0.5 + 0.5) * 0.008
+        : 1;
 
       this.drawFighterShadow(context, drawX, drawY, scale, facing);
 
       context.save();
       context.translate(drawX, drawY);
       context.rotate(rotation);
-      context.scale(facing, 1);
+      context.scale(facing, idleBreathScaleY);
       context.shadowColor = this.color;
       context.shadowBlur = this.moveFlash > 0 ? 24 : 12;
       context.imageSmoothingEnabled = true;
@@ -1104,7 +1107,7 @@
       }
       return {
         animation: "idleBreathing",
-        frame: Math.floor(this.animationTime * IDLE_ANIMATION_FPS) % 10,
+        frame: 0,
       };
     }
 

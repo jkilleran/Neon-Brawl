@@ -23,9 +23,9 @@
     "isolatedCells": true,
     "minCellPadding": 6
   },
-  "provenance": "generated-v1-subtle-combat-idle",
+  "provenance": "generated-v2-planted-code-driven-idle",
   "verification": "visual-and-runtime",
-  "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/idle-breathing-v1.png",
+  "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/idle-breathing-v2.png",
   "frames": [
     {
       "index": 1,

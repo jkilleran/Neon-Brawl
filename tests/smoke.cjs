@@ -5,6 +5,7 @@ const combatConfig = require("../combat-config.js");
 const animationManifest = require("../animation-manifest.js");
 const arenaMetadata = require("../public/assets/arenas/neon-octagon/arena.json");
 const { OnlineMatchSimulation } = require("../online-simulation.cjs");
+const { decodeAlpha, frameBounds } = require("../scripts/png-alpha.cjs");
 
 const listRelativePngs = (root, directory = root) => fs.readdirSync(directory, { withFileTypes: true })
   .flatMap((entry) => {
@@ -34,6 +35,48 @@ assert.deepEqual(
   referencedArchivePngs,
   "The source archive should contain only canonical sheets referenced by movement metadata",
 );
+
+const frameAlpha = (png, columns, rows, frame) => {
+  const cellWidth = png.width / columns;
+  const cellHeight = png.height / rows;
+  const originX = (frame % columns) * cellWidth;
+  const originY = Math.floor(frame / columns) * cellHeight;
+  const alpha = Buffer.alloc(cellWidth * cellHeight);
+  for (let y = 0; y < cellHeight; y += 1) {
+    png.alpha.copy(
+      alpha,
+      y * cellWidth,
+      (originY + y) * png.width + originX,
+      (originY + y) * png.width + originX + cellWidth,
+    );
+  }
+  return alpha;
+};
+
+for (const characterId of Object.keys(animationManifest.characters)) {
+  const characterRoot = path.join(__dirname, "..", "public", "assets", "characters", characterId);
+  const idleSheet = decodeAlpha(path.join(characterRoot, "animations", "locomotion", "idle-breathing", "sheet.png"));
+  const plantedIdleAlpha = frameAlpha(idleSheet, 5, 2, 0);
+  for (let frame = 1; frame < 10; frame += 1) {
+    assert(
+      frameAlpha(idleSheet, 5, 2, frame).equals(plantedIdleAlpha),
+      `${characterId} idle frame ${frame + 1} must preserve the exact planted silhouette`,
+    );
+  }
+
+  const stationaryLowGuard = decodeAlpha(path.join(characterRoot, "animations", "defense", "low-guard", "sheet.png"));
+  const movingLowGuard = decodeAlpha(path.join(characterRoot, "animations", "defense", "low-guard-footwork", "sheet.png"));
+  const stationaryBounds = frameBounds(stationaryLowGuard, 5, 2, 9);
+  const stationaryHeight = stationaryBounds.maxY - stationaryBounds.minY + 1;
+  for (let frame = 0; frame < 10; frame += 1) {
+    const movingBounds = frameBounds(movingLowGuard, 5, 2, frame);
+    const movingHeight = movingBounds.maxY - movingBounds.minY + 1;
+    assert(
+      Math.abs(movingHeight - stationaryHeight) <= 6,
+      `${characterId} moving low guard frame ${frame + 1} must retain the stationary guard scale`,
+    );
+  }
+}
 assert.equal(
   fs.existsSync(path.join(__dirname, "..", "public", "assets", "arenas", "neon-octagon", "arena.png")),
   false,
@@ -612,6 +655,7 @@ assert.match(gameSource, /critical\s*\? GAMEPLAY_RULES\.criticalStrikeDamageScal
 assert.match(gameSource, /severity: critical \? "critical" : "clean"/, "Clean and critical hits should use distinct reactions");
 assert.match(gameSource, /target\.blockReaction = \{/, "Blocked strikes should trigger a subtle guard reaction");
 assert.match(gameSource, /drawStaminaBar\(context, fighter/, "HUD should draw short and long-term stamina together");
+assert.match(gameSource, /context\.scale\(facing, idleBreathScaleY\)/, "Idle breathing should stay anchored to the fighter's planted baseline");
 assert.match(gameSource, /drawHealthStatusIcon\(context, "head"/, "HUD should represent head health with an icon");
 assert.match(gameSource, /drawHealthStatusIcon\(context, "body"/, "HUD should represent body health with an icon");
 assert.doesNotMatch(gameSource, /traceRoundedRect\(context, panelX, panelY, panelWidth, panelHeight, 15\)/, "Fighter HUD information should not sit inside large exterior frames");
@@ -627,7 +671,7 @@ const defender = game.fighterTwo;
 attacker.resetRound(400, 1);
 attacker.animationTime = 0.8;
 assert.equal(attacker.getVisualFrame().animation, "idleBreathing", "A stationary fighter should breathe instead of freezing on a footwork frame");
-assert.notEqual(attacker.getVisualFrame().frame, 0, "Idle breathing should advance through its ten-frame cycle");
+assert.equal(attacker.getVisualFrame().frame, 0, "Idle breathing should keep one planted sprite while the renderer animates the torso");
 attacker.velocityX = 120;
 assert.equal(attacker.getVisualFrame().animation, "footworkForward", "Forward motion should use the fluid combat shuffle");
 attacker.velocityX = -120;

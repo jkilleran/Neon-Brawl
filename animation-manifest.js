@@ -533,9 +533,9 @@
       category: "locomotion",
       folder: "animations/locomotion/idle-breathing",
       frameLabels: IDLE_PHASES,
-      archiveSource: "animations/support/idle-breathing-v1.png",
+      archiveSource: "animations/support/idle-breathing-v2.png",
       archiveGrid: grid(),
-      provenance: "generated-v1-subtle-combat-idle",
+      provenance: "generated-v2-planted-code-driven-idle",
     }),
     footworkForward: supportMovement({
       id: "footworkForward",
@@ -590,9 +590,9 @@
       category: "defense",
       folder: "animations/defense/low-guard-footwork",
       frameLabels: FOOTWORK_PHASES,
-      archiveSource: "animations/support/low-guard-footwork-v1.png",
+      archiveSource: "animations/support/low-guard-footwork-v2.png",
       archiveGrid: grid(),
-      provenance: "generated-v1-low-guard-combat-shuffle",
+      provenance: "generated-v2-scale-locked-low-guard-shuffle",
     }),
     hitReactionHead: supportMovement({
       id: "hitReactionHead",
@@ -694,7 +694,7 @@
   });
 
   const manifest = Object.freeze({
-    version: "10.0.0",
+    version: "10.0.1",
     assetSchemaVersion: "1.0.0",
     frameLimitPerMovement: 10,
     canonicalSourceFacing: "right",

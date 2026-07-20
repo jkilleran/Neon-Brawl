@@ -8,7 +8,7 @@ The locomotion layer keeps both fighters alive between attacks without changing 
 
 | Runtime state | Movement ID | Playback |
 | --- | --- | --- |
-| Stationary, no guard | `idleBreathing` | Forward loop at 5 fps |
+| Stationary, no guard | `idleBreathing` | Two-second code-driven breath on a planted pose |
 | Advancing, no guard | `footworkForward` | Forward loop at 11 fps |
 | Retreating, no guard | `footworkBackward` | Forward loop at 11 fps |
 | Stationary high guard | `guardHigh` | Guard transition and hold |
@@ -16,7 +16,7 @@ The locomotion layer keeps both fighters alive between attacks without changing 
 | Stationary low guard | `guardLow` | Guard transition and hold |
 | Moving low guard | `guardLowFootwork` | 10 fps; reversed when retreating |
 
-The movement-speed threshold is shared by normal and guarded locomotion. A guard locomotion cycle starts only after the guard transition is at least 92% complete, preventing the arms from snapping directly into a moving pose.
+The movement-speed threshold is shared by normal and guarded locomotion. A guard locomotion cycle starts only after the guard transition is at least 92% complete, preventing the arms from snapping directly into a moving pose. Idle breathing scales by less than one percent around the floor anchor, so the feet never slide or lift.
 
 ## Art contract
 
@@ -24,9 +24,10 @@ The movement-speed threshold is shared by normal and guarded locomotion. A guard
 - Canonical artwork faces screen-right; runtime mirroring handles the opposite side.
 - The fighter is normalized into a 330 × 310 presentation box on a common baseline.
 - Both feet, hips, torso, gloves, shorts, and head must remain anatomically coherent through the complete loop.
-- Idle motion is limited to breathing, a small weight shift, and subtle glove movement.
+- All ten idle cells share the exact same planted silhouette. Runtime applies only a subtle floor-anchored vertical breath; feet and stance width never change.
 - Normal footwork keeps a loose combat guard. It must not look like a casual walk or a full blocking guard.
 - Guard footwork must keep the declared high or low coverage while the legs visibly advance or retreat.
+- Crouched locomotion uses an explicit import scale so its apparent body size matches the final stationary guard pose.
 - Frame 1 and frame 10 must connect cleanly so the loop does not pop.
 
 ## Source and runtime locations

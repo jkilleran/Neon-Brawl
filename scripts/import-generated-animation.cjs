@@ -6,8 +6,16 @@ const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
-const [, , inputArgument, outputArgument] = process.argv;
-assert(inputArgument && outputArgument, "Usage: node scripts/import-generated-animation.cjs <transparent-grid.png> <normalized-sheet.png>");
+const [, , inputArgument, outputArgument, ...flags] = process.argv;
+assert(
+  inputArgument && outputArgument,
+  "Usage: node scripts/import-generated-animation.cjs <transparent-grid.png> <normalized-sheet.png> [--scale=1] [--repeat-first]",
+);
+
+const scaleFlag = flags.find((flag) => flag.startsWith("--scale="));
+const poseScale = scaleFlag ? Number(scaleFlag.slice("--scale=".length)) : 1;
+assert(Number.isFinite(poseScale) && poseScale > 0 && poseScale <= 1, "--scale must be greater than 0 and no more than 1");
+const repeatFirst = flags.includes("--repeat-first");
 
 const input = path.resolve(inputArgument);
 const output = path.resolve(outputArgument);
@@ -18,8 +26,8 @@ const cellWidth = 384;
 const cellHeight = 341;
 const targetWidth = columns * cellWidth;
 const targetHeight = rows * cellHeight;
-const targetMaxWidth = 330;
-const targetMaxHeight = 310;
+const targetMaxWidth = 330 * poseScale;
+const targetMaxHeight = 310 * poseScale;
 const baseline = 333;
 
 function findImageMagick() {
@@ -53,12 +61,15 @@ try {
   run(["-size", `${targetWidth}x${targetHeight}`, "xc:none", current]);
 
   for (let frame = 0; frame < frames; frame += 1) {
+    const sourceFrame = repeatFirst ? 0 : frame;
     const column = frame % columns;
     const row = Math.floor(frame / columns);
-    const x0 = Math.round(column * sourceSize.width / columns);
-    const x1 = Math.round((column + 1) * sourceSize.width / columns);
-    const y0 = Math.round(row * sourceSize.height / rows);
-    const y1 = Math.round((row + 1) * sourceSize.height / rows);
+    const sourceColumn = sourceFrame % columns;
+    const sourceRow = Math.floor(sourceFrame / columns);
+    const x0 = Math.round(sourceColumn * sourceSize.width / columns);
+    const x1 = Math.round((sourceColumn + 1) * sourceSize.width / columns);
+    const y0 = Math.round(sourceRow * sourceSize.height / rows);
+    const y1 = Math.round((sourceRow + 1) * sourceSize.height / rows);
     const cropped = path.join(temporary, `frame-${String(frame + 1).padStart(2, "0")}-crop.png`);
     const normalized = path.join(temporary, `frame-${String(frame + 1).padStart(2, "0")}.png`);
 
