@@ -44,20 +44,11 @@ The arena uses a fixed-over-moving layer stack:
 
 1. two adjacent crowd frames are drawn behind the cage with a smooth eased crossfade;
 2. the same transparent arena foreground is drawn over them every frame;
-3. lightweight procedural light is applied before fighters, particles, and the HUD.
+3. fighters, particles, and the HUD are drawn over the completed fixed arena.
 
-Only the audience changes. The floor, center logo, cage geometry, posts, mesh, camera, and arena illumination come from one immutable foreground, preventing the vibration that occurs when complete generated arena images are alternated. Each audience state lasts `1.8` seconds and loops continuously through three restrained poses. The complete compressed crowd payload is approximately 198 KB. When reduced motion is requested, the first crowd image remains static.
+Only the audience changes. The floor, center logo, cage geometry, posts, mesh, camera, and arena illumination come from one immutable foreground, preventing the vibration that occurs when complete generated arena images are alternated. Each audience state lasts `2` seconds: it remains fully visible for the first 72% and crossfades during the final 28%. This makes the changed poses readable while preventing a hard cut. The complete three-state loop lasts six seconds. The compressed crowd payload is approximately 198 KB. When reduced motion is requested, the first crowd image remains static.
 
-The procedural pass adds six restrained ambient layers:
-
-1. slow cyan and magenta side-light breathing;
-2. two slowly swaying light beams behind the cage;
-3. traveling light pulses along the upper rail and rear floor seam;
-4. twelve audience lights with independent cores and halos;
-5. one translucent floor reflection crossing the mat every 10 seconds;
-6. a restrained breathing glow around the center logo.
-
-The three crowd frames are decoded once and use the same 1536 × 1024 crop as the fixed foreground. Canvas performs only two crowd draws during a transition and one foreground draw; there are no videos, animated GIFs, per-pixel effects, or gameplay/network synchronization. The existing Canvas already redraws for gameplay. When the operating system requests reduced motion, the crowd, beams, and light sweep become static.
+The three crowd frames are decoded once and use the same 1536 × 1024 crop as the fixed foreground. Canvas draws only one crowd bitmap during the 72% hold and temporarily draws the adjacent image during the short crossfade. There are no videos, animated GIFs, procedural light beams, audience sparkles, rail sweeps, per-pixel effects, or gameplay/network synchronization. This makes the crowd swap the only animated background work.
 
 The previous cyan upper-left and magenta lower-right viewport brackets were removed. They were interface decoration rather than part of the octagon artwork and could appear as disconnected corner pieces at some sizes.
 

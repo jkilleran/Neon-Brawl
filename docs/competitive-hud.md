@@ -4,7 +4,7 @@
 
 The combat HUD communicates tactical condition without exposing exact head or body health percentages. The underlying gameplay values remain unchanged; only their presentation is abstracted into readable condition states.
 
-The visual language intentionally follows the cel-shaded fighters: rounded dark cards, bold outlines, flat accent colors, and circular condition badges. Angular sci-fi polygons and hard segmented meters are avoided so the interface belongs to the same illustrated world as the character sprites.
+The visual language intentionally follows the cel-shaded fighters: flat accent colors, compact rounded meters, and circular condition badges. Angular sci-fi polygons and hard segmented meters are avoided so the interface belongs to the same illustrated world as the character sprites.
 
 ## Layout
 
@@ -17,6 +17,8 @@ Each fighter panel contains:
 - round-win indicators.
 
 The center module contains the round clock, current round, game mode, and online latency when applicable.
+
+The fighter information floats directly over the restrained top fade. There is no large exterior card or outline enclosing the name, condition icons, and stamina meter. The center clock keeps its independent module.
 
 ## Health condition states
 
@@ -40,7 +42,7 @@ Stamina is the only continuous fighter meter:
 - the amber marker identifies the current long-term cap;
 - fill direction mirrors for the right-side fighter;
 - meter color follows the fighter's cyan or magenta identity;
-- the meter uses one continuous clipped fill without an additional outer capsule or double border.
+- the compact capsule around the meter remains its only local container and keeps the label readable.
 
 ## Maintenance
 

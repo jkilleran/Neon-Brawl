@@ -111,23 +111,9 @@
     "/assets/arenas/neon-octagon/crowd/frame-03.webp",
   ]);
   const ARENA_VERTICAL_CROP_ANCHOR = 0.35;
-  const ARENA_CROWD_FRAME_SECONDS = 1.8;
-  const ARENA_AMBIENT_CYCLE_SECONDS = 10;
+  const ARENA_CROWD_FRAME_SECONDS = 2;
+  const ARENA_CROWD_BLEND_FRACTION = 0.28;
   const ARENA_REDUCED_MOTION = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
-  const ARENA_AUDIENCE_LIGHTS = Object.freeze([
-    Object.freeze({ x: 116, y: 196, size: 1.8, phase: 0.1 }),
-    Object.freeze({ x: 204, y: 128, size: 1.4, phase: 1.7 }),
-    Object.freeze({ x: 292, y: 220, size: 2.1, phase: 3.2 }),
-    Object.freeze({ x: 382, y: 154, size: 1.5, phase: 4.8 }),
-    Object.freeze({ x: 474, y: 236, size: 1.9, phase: 0.9 }),
-    Object.freeze({ x: 560, y: 182, size: 1.4, phase: 2.5 }),
-    Object.freeze({ x: 720, y: 188, size: 1.4, phase: 5.1 }),
-    Object.freeze({ x: 808, y: 230, size: 2, phase: 1.2 }),
-    Object.freeze({ x: 900, y: 146, size: 1.5, phase: 3.7 }),
-    Object.freeze({ x: 992, y: 218, size: 2.1, phase: 5.8 }),
-    Object.freeze({ x: 1082, y: 124, size: 1.4, phase: 2.1 }),
-    Object.freeze({ x: 1168, y: 194, size: 1.8, phase: 4.3 }),
-  ]);
 
   const ANIMATION_MANIFEST = globalThis.NEON_BRAWL_ANIMATIONS;
   if (!ANIMATION_MANIFEST) {
@@ -2870,10 +2856,16 @@
       const framePosition = (this.elapsed / ARENA_CROWD_FRAME_SECONDS) % arenaCrowdImages.length;
       const frameIndex = Math.floor(framePosition);
       const nextIndex = (frameIndex + 1) % arenaCrowdImages.length;
-      const linearMix = framePosition - frameIndex;
+      const frameProgress = framePosition - frameIndex;
+      const blendStart = 1 - ARENA_CROWD_BLEND_FRACTION;
+      const linearMix = clamp(
+        (frameProgress - blendStart) / ARENA_CROWD_BLEND_FRACTION,
+        0,
+        1,
+      );
       const smoothMix = linearMix * linearMix * (3 - 2 * linearMix);
       this.drawArenaLayer(context, arenaCrowdImages[frameIndex]);
-      this.drawArenaLayer(context, arenaCrowdImages[nextIndex], smoothMix);
+      if (smoothMix > 0) this.drawArenaLayer(context, arenaCrowdImages[nextIndex], smoothMix);
       return true;
     }
 
@@ -2886,120 +2878,6 @@
       } else if (!this.drawArenaLayer(context, arenaBackgroundImage)) {
         this.drawLegacyOctagon(context);
       }
-
-      this.drawArenaAmbience(context);
-    }
-
-    drawArenaAmbience(context) {
-      const time = ARENA_REDUCED_MOTION ? 0 : this.elapsed;
-      const cycle = time * (Math.PI * 2 / ARENA_AMBIENT_CYCLE_SECONDS);
-      const cyanPulse = 0.62 + Math.sin(cycle) * 0.38;
-      const pinkPulse = 0.62 + Math.sin(cycle + Math.PI) * 0.38;
-      const travelProgress = (time % ARENA_AMBIENT_CYCLE_SECONDS) / ARENA_AMBIENT_CYCLE_SECONDS;
-
-      context.save();
-      context.globalCompositeOperation = "screen";
-
-      context.globalAlpha = 0.11 * cyanPulse;
-      const cyanAtmosphere = context.createRadialGradient(170, 350, 30, 170, 350, 560);
-      cyanAtmosphere.addColorStop(0, "rgba(45, 238, 255, 0.72)");
-      cyanAtmosphere.addColorStop(0.5, "rgba(23, 153, 255, 0.2)");
-      cyanAtmosphere.addColorStop(1, "rgba(0, 0, 0, 0)");
-      context.fillStyle = cyanAtmosphere;
-      context.fillRect(0, 80, WIDTH * 0.58, HEIGHT - 80);
-
-      context.globalAlpha = 0.11 * pinkPulse;
-      const pinkAtmosphere = context.createRadialGradient(WIDTH - 170, 350, 30, WIDTH - 170, 350, 560);
-      pinkAtmosphere.addColorStop(0, "rgba(255, 49, 170, 0.72)");
-      pinkAtmosphere.addColorStop(0.5, "rgba(210, 32, 193, 0.2)");
-      pinkAtmosphere.addColorStop(1, "rgba(0, 0, 0, 0)");
-      context.fillStyle = pinkAtmosphere;
-      context.fillRect(WIDTH * 0.42, 80, WIDTH * 0.58, HEIGHT - 80);
-
-      const drawLightBeam = (originX, destinationX, color, phase) => {
-        const sway = Math.sin(time * 0.42 + phase) * 92;
-        const beamGradient = context.createLinearGradient(originX, 104, destinationX + sway, 585);
-        beamGradient.addColorStop(0, color.replace("ALPHA", "0"));
-        beamGradient.addColorStop(0.28, color.replace("ALPHA", "0.11"));
-        beamGradient.addColorStop(1, color.replace("ALPHA", "0"));
-        context.globalAlpha = ARENA_REDUCED_MOTION ? 0.08 : 0.18;
-        context.fillStyle = beamGradient;
-        context.beginPath();
-        context.moveTo(originX - 18, 102);
-        context.lineTo(originX + 18, 102);
-        context.lineTo(destinationX + sway + 185, 585);
-        context.lineTo(destinationX + sway - 185, 585);
-        context.closePath();
-        context.fill();
-      };
-      drawLightBeam(242, 430, "rgba(53, 242, 229, ALPHA)", 0);
-      drawLightBeam(WIDTH - 242, WIDTH - 430, "rgba(255, 59, 157, ALPHA)", Math.PI);
-
-      context.globalAlpha = 0.28;
-      const railGlow = context.createLinearGradient(170, 0, WIDTH - 170, 0);
-      railGlow.addColorStop(0, `rgba(53, 242, 229, ${0.48 * cyanPulse})`);
-      railGlow.addColorStop(0.46, "rgba(141, 92, 255, 0.18)");
-      railGlow.addColorStop(0.54, "rgba(141, 92, 255, 0.18)");
-      railGlow.addColorStop(1, `rgba(255, 59, 157, ${0.48 * pinkPulse})`);
-      context.fillStyle = railGlow;
-      context.fillRect(175, 150, WIDTH - 350, 3);
-
-      if (!ARENA_REDUCED_MOTION) {
-        const railPulseX = 150 + travelProgress * (WIDTH - 300);
-        const railPulse = context.createLinearGradient(railPulseX - 130, 0, railPulseX + 130, 0);
-        railPulse.addColorStop(0, "rgba(255, 255, 255, 0)");
-        railPulse.addColorStop(0.5, "rgba(225, 252, 255, 0.86)");
-        railPulse.addColorStop(1, "rgba(255, 255, 255, 0)");
-        context.globalAlpha = 0.46;
-        context.fillStyle = railPulse;
-        context.fillRect(railPulseX - 130, 148, 260, 6);
-        context.globalAlpha = 0.28;
-        context.fillRect(railPulseX - 105, 404, 210, 4);
-      }
-
-      for (const light of ARENA_AUDIENCE_LIGHTS) {
-        const flicker = 0.45 + Math.sin(time * 1.6 + light.phase) * 0.25;
-        const lightAlpha = ARENA_REDUCED_MOTION ? 0.12 : 0.1 + Math.max(0, flicker) * 0.24;
-        context.fillStyle = light.x < WIDTH / 2 ? "#35f2e5" : "#ff3b9d";
-        context.globalAlpha = lightAlpha * 0.22;
-        context.beginPath();
-        context.arc(light.x, light.y, light.size * 3.4, 0, Math.PI * 2);
-        context.fill();
-        context.globalAlpha = lightAlpha;
-        context.beginPath();
-        context.arc(light.x, light.y, light.size * 1.45, 0, Math.PI * 2);
-        context.fill();
-      }
-
-      if (!ARENA_REDUCED_MOTION) {
-        const sweepX = -360 + travelProgress * (WIDTH + 720);
-        context.save();
-        context.beginPath();
-        context.moveTo(172, 404);
-        context.lineTo(WIDTH - 172, 404);
-        context.lineTo(WIDTH - 42, HEIGHT);
-        context.lineTo(42, HEIGHT);
-        context.closePath();
-        context.clip();
-        const floorSweep = context.createLinearGradient(sweepX - 260, 0, sweepX + 260, 0);
-        floorSweep.addColorStop(0, "rgba(255, 255, 255, 0)");
-        floorSweep.addColorStop(0.5, "rgba(184, 225, 255, 0.16)");
-        floorSweep.addColorStop(1, "rgba(255, 255, 255, 0)");
-        context.globalAlpha = 0.72;
-        context.fillStyle = floorSweep;
-        context.fillRect(sweepX - 260, 390, 520, HEIGHT - 390);
-        context.restore();
-      }
-
-      const logoPulse = context.createRadialGradient(WIDTH / 2, 565, 35, WIDTH / 2, 565, 220);
-      logoPulse.addColorStop(0, `rgba(141, 92, 255, ${0.12 + cyanPulse * 0.08})`);
-      logoPulse.addColorStop(0.58, "rgba(53, 242, 229, 0.025)");
-      logoPulse.addColorStop(1, "rgba(0, 0, 0, 0)");
-      context.globalAlpha = 0.42;
-      context.fillStyle = logoPulse;
-      context.fillRect(380, 430, 520, 270);
-
-      context.restore();
     }
 
     drawLegacyOctagon(context) {
@@ -3155,43 +3033,6 @@
       topFade.addColorStop(1, "rgba(5, 6, 16, 0)");
       context.fillStyle = topFade;
       context.fillRect(0, 0, WIDTH, 128);
-
-      const drawSide = (panelX, color, reverse) => {
-        const panelWidth = 500;
-        const panelY = 12;
-        const panelHeight = 98;
-        const gradient = context.createLinearGradient(
-          reverse ? panelX + panelWidth : panelX,
-          0,
-          reverse ? panelX : panelX + panelWidth,
-          0,
-        );
-        gradient.addColorStop(0, "rgba(11, 13, 27, 0.98)");
-        gradient.addColorStop(1, "rgba(10, 12, 25, 0.82)");
-
-        this.traceRoundedRect(context, panelX, panelY, panelWidth, panelHeight, 15);
-        context.fillStyle = gradient;
-        context.fill();
-        context.strokeStyle = "rgba(2, 3, 10, 0.94)";
-        context.lineWidth = 5;
-        context.stroke();
-        context.strokeStyle = `${color}90`;
-        context.lineWidth = 1.5;
-        context.stroke();
-
-        context.beginPath();
-        const accentStart = reverse ? panelX + panelWidth - 120 : panelX + 18;
-        const accentEnd = reverse ? panelX + panelWidth - 18 : panelX + 120;
-        context.moveTo(accentStart, panelY + 1);
-        context.lineTo(accentEnd, panelY + 1);
-        context.strokeStyle = color;
-        context.lineWidth = 3;
-        context.lineCap = "round";
-        context.stroke();
-      };
-
-      drawSide(24, this.fighterOne.color, false);
-      drawSide(WIDTH - 524, this.fighterTwo.color, true);
 
       const centerX = WIDTH / 2;
       const centerGradient = context.createLinearGradient(centerX - 92, 0, centerX + 92, 0);
@@ -3368,6 +3209,16 @@
       const trackX = reverse ? x + labelSpace : x + 8;
       const trackWidth = width - labelSpace - 8;
       const labelX = reverse ? x + 10 : x + width - 10;
+
+      this.traceRoundedRect(context, x, y - 6, width, height + 12, 10);
+      context.fillStyle = "rgba(2, 3, 10, 0.92)";
+      context.fill();
+      context.strokeStyle = "rgba(1, 2, 7, 0.95)";
+      context.lineWidth = 4;
+      context.stroke();
+      context.strokeStyle = `${fighter.color}78`;
+      context.lineWidth = 1.5;
+      context.stroke();
 
       context.save();
       this.traceRoundedRect(context, trackX, y, trackWidth, height, height / 2);

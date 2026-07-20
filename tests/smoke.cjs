@@ -46,10 +46,14 @@ assert.equal(arenaMetadata.shadow.standingBaselineOffsetY, -7, "Standing shadows
 assert.deepEqual(arenaMetadata.shadow.footContactOffsetsX, [-76, 62], "Each planted foot should have an independent contact shadow");
 assert.equal(arenaMetadata.ambientAnimation.arenaBitmapFrames, 1, "The cage and floor must remain one fixed bitmap");
 assert.equal(arenaMetadata.ambientAnimation.crowdBitmapFrames, 3, "The audience should expose three restrained motion states");
-assert.equal(arenaMetadata.layers.crowd.transition, "smooth-crossfade", "Crowd frames should never hard-cut");
-assert.equal(arenaMetadata.ambientAnimation.cycleSeconds, 10, "Ambient motion should remain slow but clearly visible");
-assert(arenaMetadata.ambientAnimation.layers.includes("moving-light-beams"), "The arena should expose moving cage lighting");
-assert(arenaMetadata.ambientAnimation.layers.includes("traveling-rail-pulses"), "The arena should expose visible rail motion");
+assert.equal(arenaMetadata.layers.crowd.transition, "hold-then-smooth-crossfade", "Crowd states should be readable without hard cuts");
+assert.equal(arenaMetadata.ambientAnimation.cycleSeconds, 6, "The complete three-frame crowd loop should remain visible");
+assert.equal(arenaMetadata.ambientAnimation.proceduralLighting, false, "The layered crowd should be the only arena animation");
+assert.deepEqual(
+  arenaMetadata.ambientAnimation.layers,
+  ["crowd-hold", "crowd-crossfade", "fixed-arena-foreground"],
+  "Arena animation should not retain procedural light layers",
+);
 assert.match(gameSource, /predictOnlineLocalInput/, "Both players should predict their own controls locally");
 assert.match(gameSource, /reconcileGuardPresentation/, "Online guards should have a snapshot-safe presentation layer");
 assert.match(gameSource, /queueOnlineSnapshot/, "The browser should coalesce snapshot bursts before rendering");
@@ -571,7 +575,7 @@ assert.match(gameSource, /target\.blockReaction = \{/, "Blocked strikes should t
 assert.match(gameSource, /drawStaminaBar\(context, fighter/, "HUD should draw short and long-term stamina together");
 assert.match(gameSource, /drawHealthStatusIcon\(context, "head"/, "HUD should represent head health with an icon");
 assert.match(gameSource, /drawHealthStatusIcon\(context, "body"/, "HUD should represent body health with an icon");
-assert.match(gameSource, /traceRoundedRect\(context, panelX, panelY, panelWidth, panelHeight, 15\)/, "Fighter HUD panels should use clean rounded geometry");
+assert.doesNotMatch(gameSource, /traceRoundedRect\(context, panelX, panelY, panelWidth, panelHeight, 15\)/, "Fighter HUD information should not sit inside large exterior frames");
 assert.match(gameSource, /context\.arc\(centerX, centerY, 22/, "Health status badges should use circular illustrated geometry");
 assert.doesNotMatch(gameSource, /this\.drawBar\(context[\s\S]{0,120}displayHead/, "HUD should not expose a direct head-health bar");
 assert.doesNotMatch(gameSource, /this\.drawBar\(context[\s\S]{0,120}displayBody/, "HUD should not expose a direct body-health bar");
@@ -914,6 +918,34 @@ assert(imageSources.includes(arenaMetadata.layers.foreground), "The fixed transp
 for (const crowdFrame of arenaMetadata.layers.crowd.frames) {
   assert(imageSources.includes(crowdFrame), `${crowdFrame} should preload`);
 }
+const arenaDraws = [];
+const originalDrawImage = context.drawImage;
+context.globalAlpha = 1;
+context.drawImage = (image) => arenaDraws.push({ source: image.source, alpha: context.globalAlpha });
+game.elapsed = 0;
+game.drawArenaCrowd(context);
+assert.deepEqual(
+  arenaDraws.map(({ source }) => source),
+  [arenaMetadata.layers.crowd.frames[0]],
+  "A crowd state should be shown completely instead of remaining perpetually blended",
+);
+arenaDraws.length = 0;
+game.elapsed = 1.6;
+game.drawArenaCrowd(context);
+assert.deepEqual(
+  arenaDraws.map(({ source }) => source),
+  arenaMetadata.layers.crowd.frames.slice(0, 2),
+  "Only the short transition window should blend adjacent crowd states",
+);
+arenaDraws.length = 0;
+game.elapsed = 2;
+game.drawArenaCrowd(context);
+assert.deepEqual(
+  arenaDraws.map(({ source }) => source),
+  [arenaMetadata.layers.crowd.frames[1]],
+  "The next crowd image should replace the previous state completely",
+);
+context.drawImage = originalDrawImage;
 assert.match(gameSource, /ARENA_VERTICAL_CROP_ANCHOR = 0\.35/, "Arena crop should preserve the approved composition");
 assert.match(gameSource, /drawFighterShadow\(context, drawX, drawY, scale, facing\)/, "Every fighter should render a mirrored contact shadow");
 assert.match(gameSource, /shadowY = drawY \+ \(groundedOutcome \? 2 : -7\)/, "Standing shadows should touch the visible feet");
@@ -925,19 +957,18 @@ assert.match(stylesSource, /@container game \(max-width: 720px\)/, "Small game v
 assert.match(stylesSource, /@container game \(max-width: 520px\)/, "Extra-small game viewports should preserve usable dialogs");
 assert.doesNotMatch(stylesSource, /\.game-viewport::before/, "The disconnected upper-left corner bracket should be removed");
 assert.doesNotMatch(stylesSource, /\.game-viewport::after/, "The disconnected lower-right corner bracket should be removed");
-assert.match(gameSource, /drawArenaAmbience\(context\)/, "The octagon should render a lightweight ambient pass");
-assert.match(gameSource, /ARENA_CROWD_FRAME_SECONDS = 1\.8/, "Crowd motion should use slow transitions");
+assert.match(gameSource, /ARENA_CROWD_FRAME_SECONDS = 2/, "Each crowd state should remain clearly visible");
+assert.match(gameSource, /ARENA_CROWD_BLEND_FRACTION = 0\.28/, "Crowd transitions should be brief and smooth");
 assert.match(gameSource, /smoothMix = linearMix \* linearMix \* \(3 - 2 \* linearMix\)/, "Crowd frames should crossfade without brightness jumps");
 assert.match(gameSource, /drawArenaCrowd\(context\)[\s\S]*drawArenaLayer\(context, arenaForegroundImage\)/, "The fixed arena should render over the changing crowd");
-assert.doesNotMatch(
+assert.match(
   gameSource,
   /traceRoundedRect\(context, x, y - 6, width, height \+ 12, 10\)/,
-  "Stamina bars should not retain the heavy outer capsule",
+  "The intended stamina capsule should remain intact",
 );
-assert.match(gameSource, /ARENA_AMBIENT_CYCLE_SECONDS = 10/, "The ambient lighting cycle should be visible without becoming distracting");
-assert.match(gameSource, /globalCompositeOperation = "screen"/, "Ambient light should blend without replacing the arena image");
-assert.match(gameSource, /drawLightBeam\(242, 430/, "The crowd should receive visible cyan and magenta light beams");
-assert.match(gameSource, /railPulseX/, "The upper rail should receive a traveling highlight");
+assert.doesNotMatch(gameSource, /const drawSide =/, "The large frames around fighter icons and stamina should be removed");
+assert.doesNotMatch(gameSource, /drawArenaAmbience/, "Procedural arena lighting should be removed for performance");
+assert.doesNotMatch(gameSource, /globalCompositeOperation = "screen"/, "The arena should not run a screen-blended lighting pass");
 for (const [characterId, character] of Object.entries(animationManifest.characters)) {
   for (const [movementId, sheet] of Object.entries(character.sheets)) {
     assert(imageSources.includes(sheet.src), `${characterId}/${movementId} should preload its own sheet`);
