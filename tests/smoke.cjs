@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const combatConfig = require("../combat-config.js");
 const animationManifest = require("../animation-manifest.js");
+const arenaMetadata = require("../public/assets/arenas/neon-octagon/arena.json");
 const { OnlineMatchSimulation } = require("../online-simulation.cjs");
 
 const markup = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
@@ -31,6 +32,13 @@ assert.match(markup, /brillante = stamina actual · tenue = límite recuperable/
 assert.equal(combatConfig.snapshotHz, 30, "Server snapshots should use a bandwidth-safe 30 Hz cadence");
 assert.equal(combatConfig.simulationHz, 60, "The neutral server simulation should use a fixed 60 Hz step");
 assert.equal(combatConfig.guardTransitionRate, 6, "Guard transitions should expose all ten frames at 60 Hz");
+assert.equal(arenaMetadata.runtimeAsset, "/assets/arenas/neon-octagon/arena.png");
+assert.deepEqual(arenaMetadata.viewport.effectiveSourceCrop, { x: 0, y: 56, width: 1536, height: 864 });
+assert.deepEqual(
+  [arenaMetadata.fighterLayout.rookSpawnX, arenaMetadata.fighterLayout.vexSpawnX, arenaMetadata.fighterLayout.floorY],
+  [380, 900, 604],
+  "Arena metadata should preserve the approved fighter composition",
+);
 assert.match(gameSource, /predictOnlineLocalInput/, "Both players should predict their own controls locally");
 assert.match(gameSource, /reconcileGuardPresentation/, "Online guards should have a snapshot-safe presentation layer");
 assert.match(gameSource, /queueOnlineSnapshot/, "The browser should coalesce snapshot bursts before rendering");
@@ -230,6 +238,10 @@ const animationSheetsBySource = new Map(
     Object.values(character.sheets).map((sheet) => [sheet.src, sheet])
   )),
 );
+animationSheetsBySource.set(arenaMetadata.runtimeAsset, {
+  fallbackWidth: arenaMetadata.source.width,
+  fallbackHeight: arenaMetadata.source.height,
+});
 
 global.document = {
   fullscreenElement: null,
@@ -875,7 +887,10 @@ menuBackButtons[0].dispatch("click");
 assert.equal(selectors.get("#menu-screen").dataset.menuSection, "root");
 assert.equal(modeButtons[0].listeners.has("click"), true, "CPU mode should be interactive");
 assert.equal(modeButtons[2].listeners.has("click"), true, "Practice mode should be interactive");
-assert.equal(imageSources.length, 66, "All 33 movements for both fighters should preload");
+assert.equal(imageSources.length, 67, "The arena and all 33 movements for both fighters should preload");
+assert(imageSources.includes(arenaMetadata.runtimeAsset), "The approved arena plate should preload");
+assert.match(gameSource, /ARENA_VERTICAL_CROP_ANCHOR = 0\.35/, "Arena crop should preserve the approved composition");
+assert.match(gameSource, /drawFighterShadow\(context, drawX, drawY, scale\)/, "Every fighter should render a contact shadow");
 for (const [characterId, character] of Object.entries(animationManifest.characters)) {
   for (const [movementId, sheet] of Object.entries(character.sheets)) {
     assert(imageSources.includes(sheet.src), `${characterId}/${movementId} should preload its own sheet`);

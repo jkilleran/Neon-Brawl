@@ -1,0 +1,34 @@
+{
+  "id": "neon-octagon",
+  "name": "Neon MMA Octagon",
+  "runtimeAsset": "/assets/arenas/neon-octagon/arena.png",
+  "source": {
+    "width": 1536,
+    "height": 1024,
+    "format": "png"
+  },
+  "viewport": {
+    "width": 1280,
+    "height": 720,
+    "fit": "cover",
+    "verticalCropAnchor": 0.35,
+    "effectiveSourceCrop": {
+      "x": 0,
+      "y": 56,
+      "width": 1536,
+      "height": 864
+    }
+  },
+  "fighterLayout": {
+    "floorY": 604,
+    "rookSpawnX": 380,
+    "vexSpawnX": 900,
+    "spriteHeight": 350
+  },
+  "shadow": {
+    "type": "dynamic-radial-contact",
+    "standingRadius": [70, 15],
+    "attackingRadius": [76, 15],
+    "groundedRadius": [112, 21]
+  }
+}

@@ -86,11 +86,15 @@
     return HUD_HEALTH_STATES.find((state) => safeHealth >= state.minimum)
       ?? HUD_HEALTH_STATES.at(-1);
   };
+  const ARENA_BACKGROUND_SRC = "/assets/arenas/neon-octagon/arena.png";
+  const ARENA_VERTICAL_CROP_ANCHOR = 0.35;
 
   const ANIMATION_MANIFEST = globalThis.NEON_BRAWL_ANIMATIONS;
   if (!ANIMATION_MANIFEST) {
     throw new Error("Animation manifest must load before game.js");
   }
+  const arenaBackgroundImage = new Image();
+  arenaBackgroundImage.src = ARENA_BACKGROUND_SRC;
 
   function animationSheet({ src, columns, rows, frames, fallbackWidth, fallbackHeight }) {
     const image = new Image();
@@ -875,22 +879,7 @@
       const destinationHeight = 350 * scale;
       const destinationWidth = destinationHeight * (frameWidth / frameHeight);
 
-      context.save();
-      context.globalAlpha = 0.38;
-      context.fillStyle = "#020207";
-      context.filter = "blur(7px)";
-      context.beginPath();
-      context.ellipse(
-        drawX,
-        drawY + 4,
-        this.knockdownTimer > 0 || this.finishAnimation ? 105 : 64,
-        14,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      context.fill();
-      context.restore();
+      this.drawFighterShadow(context, drawX, drawY, scale);
 
       context.save();
       context.translate(drawX, drawY);
@@ -956,6 +945,35 @@
       }
 
       if (!options.hideStatus) this.drawStatus(context);
+    }
+
+    drawFighterShadow(context, drawX, drawY, scale = 1) {
+      const groundedOutcome = this.knockdownTimer > 0 || this.finishAnimation;
+      const shadowWidth = (groundedOutcome ? 112 : this.attack ? 76 : 70) * scale;
+      const shadowHeight = (groundedOutcome ? 21 : 15) * scale;
+      const shadowY = drawY + (groundedOutcome ? 9 : 7) * scale;
+
+      context.save();
+      context.translate(drawX, shadowY);
+      context.scale(shadowWidth, shadowHeight);
+      const shadowGradient = context.createRadialGradient(0, 0, 0.06, 0, 0, 1);
+      shadowGradient.addColorStop(0, "rgba(0, 0, 4, 0.62)");
+      shadowGradient.addColorStop(0.58, "rgba(0, 0, 5, 0.38)");
+      shadowGradient.addColorStop(1, "rgba(0, 0, 5, 0)");
+      context.fillStyle = shadowGradient;
+      context.beginPath();
+      context.arc(0, 0, 1, 0, Math.PI * 2);
+      context.fill();
+      context.restore();
+
+      context.save();
+      context.globalAlpha = groundedOutcome ? 0.24 : 0.32;
+      context.fillStyle = "#020208";
+      context.filter = "blur(2px)";
+      context.beginPath();
+      context.ellipse(drawX, shadowY - 1, shadowWidth * 0.52, shadowHeight * 0.34, 0, 0, Math.PI * 2);
+      context.fill();
+      context.restore();
     }
 
     getVisualFrame() {
@@ -2730,6 +2748,42 @@
     }
 
     drawOctagon(context) {
+      const sourceWidth = arenaBackgroundImage.naturalWidth;
+      const sourceHeight = arenaBackgroundImage.naturalHeight;
+      if (arenaBackgroundImage.complete && sourceWidth > 0 && sourceHeight > 0) {
+        const targetAspect = WIDTH / HEIGHT;
+        const sourceAspect = sourceWidth / sourceHeight;
+        let cropX = 0;
+        let cropY = 0;
+        let cropWidth = sourceWidth;
+        let cropHeight = sourceHeight;
+
+        if (sourceAspect < targetAspect) {
+          cropHeight = sourceWidth / targetAspect;
+          cropY = (sourceHeight - cropHeight) * ARENA_VERTICAL_CROP_ANCHOR;
+        } else if (sourceAspect > targetAspect) {
+          cropWidth = sourceHeight * targetAspect;
+          cropX = (sourceWidth - cropWidth) / 2;
+        }
+
+        context.drawImage(
+          arenaBackgroundImage,
+          cropX,
+          cropY,
+          cropWidth,
+          cropHeight,
+          0,
+          0,
+          WIDTH,
+          HEIGHT,
+        );
+        return;
+      }
+
+      this.drawLegacyOctagon(context);
+    }
+
+    drawLegacyOctagon(context) {
       const sky = context.createLinearGradient(0, 0, 0, HEIGHT);
       sky.addColorStop(0, "#05050d");
       sky.addColorStop(0.58, "#111127");
