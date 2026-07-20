@@ -23,9 +23,9 @@
     "isolatedCells": true,
     "minCellPadding": 6
   },
-  "provenance": "generated-v2-scale-locked-low-guard-shuffle",
+  "provenance": "generated-v3-anatomical-scale-low-guard-shuffle",
   "verification": "visual-and-runtime",
-  "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/low-guard-footwork-v2.png",
+  "archiveSource": "/assets/characters/prototype-fighter/source-archive/original-assets/animations/support/low-guard-footwork-v3.png",
   "frames": [
     {
       "index": 1,

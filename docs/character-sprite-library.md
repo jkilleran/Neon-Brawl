@@ -88,7 +88,7 @@ npm run sprites:import -- <transparent-grid.png> <normalized-sheet.png>
 
 The importer isolates all ten cells, trims transparent space, limits each fighter to a 330 × 310 presentation box, and aligns every pose to the shared baseline before the sheet is added to a movement folder.
 
-Use `--scale=<ratio>` when a crouched pose must preserve its size relative to the standing reference. Use `--repeat-first` only for code-driven idle breathing where an identical planted pose is required in all ten catalog cells.
+Use `--scale=<ratio>` when a generated pose must fit a known fraction of the standing presentation box. Use `--multiply=<ratio>` to preserve every existing frame's relative size while uniformly enlarging or reducing an already-normalized sequence. Use `--repeat-first` only for a code-driven idle stance where an identical planted pose is required in all ten catalog cells.
 
 ## Replace one frame
 

@@ -9,12 +9,19 @@ const { spawnSync } = require("node:child_process");
 const [, , inputArgument, outputArgument, ...flags] = process.argv;
 assert(
   inputArgument && outputArgument,
-  "Usage: node scripts/import-generated-animation.cjs <transparent-grid.png> <normalized-sheet.png> [--scale=1] [--repeat-first]",
+  "Usage: node scripts/import-generated-animation.cjs <transparent-grid.png> <normalized-sheet.png> [--scale=1 | --multiply=1] [--repeat-first]",
 );
 
 const scaleFlag = flags.find((flag) => flag.startsWith("--scale="));
 const poseScale = scaleFlag ? Number(scaleFlag.slice("--scale=".length)) : 1;
 assert(Number.isFinite(poseScale) && poseScale > 0 && poseScale <= 1, "--scale must be greater than 0 and no more than 1");
+const multiplyFlag = flags.find((flag) => flag.startsWith("--multiply="));
+const uniformMultiplier = multiplyFlag ? Number(multiplyFlag.slice("--multiply=".length)) : null;
+assert(!(scaleFlag && multiplyFlag), "Use either --scale or --multiply, not both");
+assert(
+  uniformMultiplier === null || (Number.isFinite(uniformMultiplier) && uniformMultiplier > 0 && uniformMultiplier <= 1.5),
+  "--multiply must be greater than 0 and no more than 1.5",
+);
 const repeatFirst = flags.includes("--repeat-first");
 
 const input = path.resolve(inputArgument);
@@ -84,7 +91,8 @@ try {
     ]);
 
     const croppedSize = readPngSize(cropped);
-    const scale = Math.min(targetMaxWidth / croppedSize.width, targetMaxHeight / croppedSize.height);
+    const scale = uniformMultiplier
+      ?? Math.min(targetMaxWidth / croppedSize.width, targetMaxHeight / croppedSize.height);
     const width = Math.max(1, Math.round(croppedSize.width * scale));
     const height = Math.max(1, Math.round(croppedSize.height * scale));
     run([cropped, "-filter", "Lanczos", "-resize", `${width}x${height}!`, normalized]);

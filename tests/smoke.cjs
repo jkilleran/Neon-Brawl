@@ -68,6 +68,18 @@ for (const characterId of Object.keys(animationManifest.characters)) {
   const movingLowGuard = decodeAlpha(path.join(characterRoot, "animations", "defense", "low-guard-footwork", "sheet.png"));
   const stationaryBounds = frameBounds(stationaryLowGuard, 5, 2, 9);
   const stationaryHeight = stationaryBounds.maxY - stationaryBounds.minY + 1;
+  const idleBounds = frameBounds(idleSheet, 5, 2, 0);
+  const idleHeight = idleBounds.maxY - idleBounds.minY + 1;
+  assert(
+    stationaryHeight / idleHeight >= 0.77 && stationaryHeight / idleHeight <= 0.82,
+    `${characterId} stationary low guard should crouch without shrinking the fighter anatomy`,
+  );
+  const lowGuardEntryBounds = frameBounds(stationaryLowGuard, 5, 2, 0);
+  const lowGuardEntryHeight = lowGuardEntryBounds.maxY - lowGuardEntryBounds.minY + 1;
+  assert(
+    lowGuardEntryHeight / idleHeight >= 0.98 && lowGuardEntryHeight / idleHeight <= 1.04,
+    `${characterId} low guard entry must begin at the standing anatomical scale`,
+  );
   for (let frame = 0; frame < 10; frame += 1) {
     const movingBounds = frameBounds(movingLowGuard, 5, 2, frame);
     const movingHeight = movingBounds.maxY - movingBounds.minY + 1;
@@ -655,7 +667,7 @@ assert.match(gameSource, /critical\s*\? GAMEPLAY_RULES\.criticalStrikeDamageScal
 assert.match(gameSource, /severity: critical \? "critical" : "clean"/, "Clean and critical hits should use distinct reactions");
 assert.match(gameSource, /target\.blockReaction = \{/, "Blocked strikes should trigger a subtle guard reaction");
 assert.match(gameSource, /drawStaminaBar\(context, fighter/, "HUD should draw short and long-term stamina together");
-assert.match(gameSource, /context\.scale\(facing, idleBreathScaleY\)/, "Idle breathing should stay anchored to the fighter's planted baseline");
+assert.match(gameSource, /context\.scale\(facing, idleStanceScaleY\)/, "The idle stance flex should stay anchored to the fighter's planted baseline");
 assert.match(gameSource, /drawHealthStatusIcon\(context, "head"/, "HUD should represent head health with an icon");
 assert.match(gameSource, /drawHealthStatusIcon\(context, "body"/, "HUD should represent body health with an icon");
 assert.doesNotMatch(gameSource, /traceRoundedRect\(context, panelX, panelY, panelWidth, panelHeight, 15\)/, "Fighter HUD information should not sit inside large exterior frames");
@@ -670,8 +682,8 @@ const attacker = game.fighterOne;
 const defender = game.fighterTwo;
 attacker.resetRound(400, 1);
 attacker.animationTime = 0.8;
-assert.equal(attacker.getVisualFrame().animation, "idleBreathing", "A stationary fighter should breathe instead of freezing on a footwork frame");
-assert.equal(attacker.getVisualFrame().frame, 0, "Idle breathing should keep one planted sprite while the renderer animates the torso");
+assert.equal(attacker.getVisualFrame().animation, "idleBreathing", "A stationary fighter should use the planted stance instead of freezing on a footwork frame");
+assert.equal(attacker.getVisualFrame().frame, 0, "Idle stance motion should keep one planted sprite while the renderer flexes the posture");
 attacker.velocityX = 120;
 assert.equal(attacker.getVisualFrame().animation, "footworkForward", "Forward motion should use the fluid combat shuffle");
 attacker.velocityX = -120;

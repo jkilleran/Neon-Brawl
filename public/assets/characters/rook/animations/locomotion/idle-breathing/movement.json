@@ -1,6 +1,6 @@
 {
   "id": "idleBreathing",
-  "label": "LOCOMOTION // IDLE BREATHING",
+  "label": "LOCOMOTION // PLANTED IDLE STANCE",
   "category": "locomotion",
   "target": null,
   "result": null,
@@ -34,43 +34,43 @@
     },
     {
       "index": 2,
-      "label": "inhale-1",
-      "file": "animations/locomotion/idle-breathing/frames/frame-02-inhale-1.png"
+      "label": "knee-flex-1",
+      "file": "animations/locomotion/idle-breathing/frames/frame-02-knee-flex-1.png"
     },
     {
       "index": 3,
-      "label": "inhale-2",
-      "file": "animations/locomotion/idle-breathing/frames/frame-03-inhale-2.png"
+      "label": "knee-flex-2",
+      "file": "animations/locomotion/idle-breathing/frames/frame-03-knee-flex-2.png"
     },
     {
       "index": 4,
-      "label": "inhale-peak-1",
-      "file": "animations/locomotion/idle-breathing/frames/frame-04-inhale-peak-1.png"
+      "label": "knee-flex-3",
+      "file": "animations/locomotion/idle-breathing/frames/frame-04-knee-flex-3.png"
     },
     {
       "index": 5,
-      "label": "inhale-peak-2",
-      "file": "animations/locomotion/idle-breathing/frames/frame-05-inhale-peak-2.png"
+      "label": "knee-flex-peak",
+      "file": "animations/locomotion/idle-breathing/frames/frame-05-knee-flex-peak.png"
     },
     {
       "index": 6,
-      "label": "exhale-1",
-      "file": "animations/locomotion/idle-breathing/frames/frame-06-exhale-1.png"
+      "label": "knee-flex-hold",
+      "file": "animations/locomotion/idle-breathing/frames/frame-06-knee-flex-hold.png"
     },
     {
       "index": 7,
-      "label": "exhale-2",
-      "file": "animations/locomotion/idle-breathing/frames/frame-07-exhale-2.png"
+      "label": "rise-1",
+      "file": "animations/locomotion/idle-breathing/frames/frame-07-rise-1.png"
     },
     {
       "index": 8,
-      "label": "settle-1",
-      "file": "animations/locomotion/idle-breathing/frames/frame-08-settle-1.png"
+      "label": "rise-2",
+      "file": "animations/locomotion/idle-breathing/frames/frame-08-rise-2.png"
     },
     {
       "index": 9,
-      "label": "settle-2",
-      "file": "animations/locomotion/idle-breathing/frames/frame-09-settle-2.png"
+      "label": "rise-3",
+      "file": "animations/locomotion/idle-breathing/frames/frame-09-rise-3.png"
     },
     {
       "index": 10,

@@ -102,7 +102,7 @@ Every support action is an independent 10-frame movement. Forward and backward m
 
 | Movement ID | Purpose | Movement folder |
 | --- | --- | --- |
-| `idleBreathing` | Subtle combat-ready breathing while stationary | `animations/locomotion/idle-breathing/` |
+| `idleBreathing` | Planted combat stance with a subtle athletic knee flex | `animations/locomotion/idle-breathing/` |
 | `footworkForward` | Forward step | `animations/locomotion/forward-step/` |
 | `footworkBackward` | Backward step and evade pose source | `animations/locomotion/backward-step/` |
 | `guardHigh` | High guard and high block reaction | `animations/defense/high-guard/` |
@@ -117,7 +117,7 @@ Every support action is an independent 10-frame movement. Forward and backward m
 
 `game.js` assigns `characterId: "rook"` to Player 1 and `characterId: "vex"` to Player 2. The renderer selects `ANIMATIONS[characterId][movementId]`. Both libraries use canonical right-facing artwork, and `facing` mirrors the selected frame toward the opponent.
 
-At runtime, stationary fighters use a two-second floor-anchored breathing transform over an identical planted pose. Normal footwork loops at 11 fps. Guard footwork loops at 10 fps and reverses the same coherent sequence when retreating, keeping the library compact without sacrificing directional motion.
+At runtime, stationary fighters use a 1.8-second floor-anchored knee-flex transform over an identical planted pose. Normal footwork loops at 11 fps. Guard footwork loops at 10 fps and reverses the same coherent sequence when retreating, keeping the library compact without sacrificing directional motion.
 
 ## Verification
 

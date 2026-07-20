@@ -68,14 +68,14 @@
 
   const IDLE_PHASES = Object.freeze([
     "stance",
-    "inhale-1",
-    "inhale-2",
-    "inhale-peak-1",
-    "inhale-peak-2",
-    "exhale-1",
-    "exhale-2",
-    "settle-1",
-    "settle-2",
+    "knee-flex-1",
+    "knee-flex-2",
+    "knee-flex-3",
+    "knee-flex-peak",
+    "knee-flex-hold",
+    "rise-1",
+    "rise-2",
+    "rise-3",
     "stance-return",
   ]);
 
@@ -529,7 +529,7 @@
   const support = Object.freeze({
     idleBreathing: supportMovement({
       id: "idleBreathing",
-      label: "LOCOMOTION // IDLE BREATHING",
+      label: "LOCOMOTION // PLANTED IDLE STANCE",
       category: "locomotion",
       folder: "animations/locomotion/idle-breathing",
       frameLabels: IDLE_PHASES,
@@ -571,8 +571,9 @@
       category: "defense",
       folder: "animations/defense/low-guard",
       frameLabels: GUARD_PHASES,
-      archiveSource: "animations/support/guards-v3.png",
-      archiveFrameOffset: 10,
+      archiveSource: "animations/support/guard-low-v4.png",
+      archiveGrid: grid(),
+      provenance: "normalized-v4-anatomical-scale-low-guard",
     }),
     guardHighFootwork: supportMovement({
       id: "guardHighFootwork",
@@ -590,9 +591,9 @@
       category: "defense",
       folder: "animations/defense/low-guard-footwork",
       frameLabels: FOOTWORK_PHASES,
-      archiveSource: "animations/support/low-guard-footwork-v2.png",
+      archiveSource: "animations/support/low-guard-footwork-v3.png",
       archiveGrid: grid(),
-      provenance: "generated-v2-scale-locked-low-guard-shuffle",
+      provenance: "generated-v3-anatomical-scale-low-guard-shuffle",
     }),
     hitReactionHead: supportMovement({
       id: "hitReactionHead",
@@ -694,7 +695,7 @@
   });
 
   const manifest = Object.freeze({
-    version: "10.0.1",
+    version: "10.0.2",
     assetSchemaVersion: "1.0.0",
     frameLimitPerMovement: 10,
     canonicalSourceFacing: "right",
