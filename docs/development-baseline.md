@@ -8,7 +8,7 @@ The canonical Neon Brawl baseline is version 0.24.0 at commit:
 
 This commit is the ancestry anchor for current and future iterations on `agent/mma-light-gameplay-v2`. New features must be implemented as descendants of this commit rather than by returning to an older gameplay, arena, animation, or network revision.
 
-Version 0.25.0 adds the universal input layer and Settings interface directly above that baseline. It does not change combat balance, animation timing, server authority, matchmaking, arena rendering, or the version 0.24.0 online simulation.
+Version 0.25.0 adds the universal input layer and complete remapping directly above that baseline. Version 0.26.0 reorganizes Settings, adds active-input detection and contextual in-match configuration, and introduces presentation preferences. Neither version changes combat balance, animation timing, server authority, matchmaking, arena rendering, or the version 0.24.0 online simulation.
 
 Before preparing a release, verify the relationship with:
 

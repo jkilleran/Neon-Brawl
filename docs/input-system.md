@@ -1,12 +1,30 @@
 # Universal Input and Settings
 
-Neon Brawl 0.25.0 routes keyboard, gamepad, and touch controls through one browser-side input manager. Every device produces the same combat input object, so movement, guards, stamina costs, strike priority, and server authority remain independent of the control method.
+Neon Brawl 0.26.0 routes keyboard, gamepad, and touch controls through one browser-side input manager. Every device produces the same combat input object, so movement, guards, stamina costs, strike priority, and server authority remain independent of the control method.
 
 ## Settings access
 
 Settings is a primary category beside Local and Online on the main menu. It can also be opened from the gear button in the application header or from the local pause screen. Settings cannot cover an active online match because online combat cannot pause. The panel can still be opened before joining a match or after returning to the lobby.
 
+The interface is divided into four categories:
+
+- **General** contains sound, screen-shake intensity, optional in-fight control hints, fullscreen, and a live overview of available input methods.
+- **Keyboard** contains independent Player 1 and Player 2 key maps.
+- **Gamepad** contains independent Player 1 and Player 2 button maps plus the analog deadzone.
+- **Touch** contains visibility, opacity, scale, and all ten remappable touch positions.
+
+The input manager records the most recent meaningful keyboard, controller, or touch action for each player. Settings shows that method in its status header. When Settings is opened from a paused local fight, it selects the most recently active player and opens that player's active input category immediately. The fight remains paused and control changes apply as soon as the player returns. The General category stays available from the same panel for important presentation changes.
+
 Settings are stored in `localStorage` under `neonBrawlInputSettingsV1`. Storage failure is non-fatal: the game falls back to defaults for that browser session.
+
+## General presentation preferences
+
+- **Sound** controls the existing synth mute state and stays synchronized with the header sound button.
+- **Screen shake** supports Full, Reduced, and Off without changing hit outcomes or timing.
+- **Control hints** can show a compact strike reference during a fight and remain hidden by default.
+- **Fullscreen** uses the browser Fullscreen API and safely does nothing when an embedded preview blocks that API.
+
+These preferences are presentation-only. They do not change combat balance, simulation speed, network packets, or server authority.
 
 ## Keyboard mapping
 
@@ -64,4 +82,6 @@ Online input continues to contain only normalized combat actions. Keyboard and t
 - Keep device mappings out of `online-simulation.cjs`; the server accepts normalized actions only.
 - Preserve edge-triggered strike inputs and held guard/modifier inputs.
 - Update `tests/input-manager.cjs` whenever an input preference or device mapping changes.
+- Keep active-method detection based on meaningful mapped input, not passive controller connection.
+- Preserve contextual Settings behavior: menu access opens General; paused local access opens the active device map.
 - Keep touch UI under `#game-viewport` so it shares the same responsive 16:9 coordinate surface as every other combat overlay.

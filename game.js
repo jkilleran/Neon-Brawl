@@ -1219,9 +1219,11 @@
       const SettingsUI = globalThis.NEON_BRAWL_SETTINGS_UI?.NeonBrawlSettingsUI;
       this.settingsUi = SettingsUI ? new SettingsUI(input, {
         onClose: () => this.closeSettings(),
+        onToggleFullscreen: () => this.toggleFullscreen(),
         onSettingsChanged: () => {
           this.updateControlLabels();
           this.syncTouchControlPresentation(true);
+          this.applyPresentationSettings();
         },
       }) : null;
       input.onInputChange(({ player }) => {
@@ -1231,6 +1233,7 @@
       });
       this.updateControlLabels();
       this.syncTouchControlPresentation(true);
+      this.applyPresentationSettings();
 
       requestAnimationFrame((time) => this.loop(time));
     }
@@ -1275,6 +1278,23 @@
       bodyModifierSummary.textContent = `${INPUT_API.formatCode(input.getBinding(1, "bodyModifier"))} / ${INPUT_API.formatCode(input.getBinding(2, "bodyModifier"))}`;
     }
 
+    applyPresentationSettings() {
+      this.synth.muted = !input.getPreference("soundEnabled");
+      soundButton.classList.toggle("is-muted", this.synth.muted);
+      soundIcon.textContent = this.synth.muted ? "×" : "♪";
+      soundButton.setAttribute("aria-label", this.synth.muted ? "Activar sonido" : "Silenciar sonido");
+      this.syncControlHints();
+    }
+
+    async toggleFullscreen() {
+      try {
+        if (!document.fullscreenElement) await shell.requestFullscreen();
+        else await document.exitFullscreen();
+      } catch {
+        // Fullscreen can be disabled inside an embedded preview.
+      }
+    }
+
     openSettings() {
       if (!this.settingsUi) return;
       if (this.mode === "online" && this.onlineRole && !["menu", "matchOver"].includes(this.state)) {
@@ -1288,7 +1308,13 @@
       }
       input.releaseAll();
       pauseScreen.classList.add("is-hidden");
-      this.settingsUi.open();
+      const settingsPlayer = this.mode === "local" ? input.getMostRecentPlayer() : 1;
+      this.settingsUi.open({
+        inMatch: this.settingsOpenedFromPause,
+        mode: this.mode,
+        round: this.round,
+        player: settingsPlayer,
+      });
     }
 
     closeSettings() {
@@ -1339,6 +1365,15 @@
         input.releaseTouch(1);
         for (const button of touchButtons) button.classList.remove("is-pressed");
       }
+    }
+
+    syncControlHints() {
+      const active = Boolean(input.getPreference("showControlHints"))
+        && this.state === "fighting"
+        && !this.settingsUi?.isOpen
+        && input.getActiveInputMethod(1) !== "touch";
+      combatControls.classList.toggle("is-hidden", !active);
+      combatControls.setAttribute("aria-hidden", String(!active));
     }
 
     openOnlineLobby() {
@@ -2826,6 +2861,7 @@
       } else if (!["paused", "menu", "matchOver"].includes(this.state)) this.update(deltaTime);
       else if (this.state === "menu") this.elapsed += deltaTime;
       this.syncTouchControlPresentation();
+      this.syncControlHints();
       if (!document.hidden) this.draw();
       input.endFrame();
       requestAnimationFrame((nextTime) => this.loop(nextTime));
@@ -2835,7 +2871,14 @@
       ctx.setTransform(canvasRenderScale, 0, 0, canvasRenderScale, 0, 0);
       ctx.clearRect(0, 0, WIDTH, HEIGHT);
       ctx.save();
-      if (this.shake > 0.1) ctx.translate(random(-this.shake, this.shake), random(-this.shake, this.shake));
+      const shakeMode = input.getPreference("screenShake");
+      const shakeScale = shakeMode === "off" ? 0 : shakeMode === "reduced" ? 0.35 : 1;
+      if (this.shake > 0.1 && shakeScale > 0) {
+        ctx.translate(
+          random(-this.shake, this.shake) * shakeScale,
+          random(-this.shake, this.shake) * shakeScale,
+        );
+      }
       this.drawOctagon(ctx);
       if (this.state !== "menu") {
         if (this.state === "ground" && this.ground) this.drawGround(ctx);
@@ -3448,6 +3491,7 @@
   pauseSettingsButton.addEventListener("click", () => game.openSettings());
   touchPauseButton.addEventListener("pointerdown", (event) => {
     event.preventDefault();
+    input.noteInputMethod(1, "touch");
     game.togglePause();
   });
   for (const button of touchButtons) {
@@ -3484,21 +3528,12 @@
   });
 
   soundButton.addEventListener("click", () => {
-    game.synth.muted = !game.synth.muted;
-    soundButton.classList.toggle("is-muted", game.synth.muted);
-    soundIcon.textContent = game.synth.muted ? "×" : "♪";
-    soundButton.setAttribute("aria-label", game.synth.muted ? "Activar sonido" : "Silenciar sonido");
-    if (!game.synth.muted) game.synth.tone(420, 0.08, "sine", 0.02, 640);
+    const enabled = !input.getPreference("soundEnabled");
+    input.setPreference("soundEnabled", enabled);
+    if (enabled) game.synth.tone(420, 0.08, "sine", 0.02, 640);
   });
 
-  document.querySelector("#fullscreen-button").addEventListener("click", async () => {
-    try {
-      if (!document.fullscreenElement) await shell.requestFullscreen();
-      else await document.exitFullscreen();
-    } catch {
-      // Fullscreen can be disabled inside an embedded preview.
-    }
-  });
+  document.querySelector("#fullscreen-button").addEventListener("click", () => game.toggleFullscreen());
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = { game, input, Fighter, ATTACKS, GAMEPLAY_RULES, getHudHealthState };

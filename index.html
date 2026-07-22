@@ -260,53 +260,89 @@
           <div class="dialog-card dialog-card--settings">
             <header class="settings-header">
               <div>
-                <p class="eyebrow"><span></span> INPUT SYSTEM // v2</p>
+                <p id="settings-context-label" class="eyebrow"><span></span> SYSTEM CONFIGURATION</p>
                 <h2 id="settings-title">SETTINGS</h2>
               </div>
-              <div id="settings-device-status" class="settings-device-status" data-connected="false">
-                <i></i><span>TECLADO ACTIVO</span><small>0 MANDOS</small>
+              <div id="settings-device-status" class="settings-device-status" data-connected="false" data-method="keyboard">
+                <i></i><span>USANDO TECLADO</span><small>PLAYER 1 · 0 MANDOS</small>
               </div>
             </header>
 
-            <nav class="settings-tabs" aria-label="Jugador que se desea configurar">
+            <nav class="settings-category-tabs" aria-label="Categoría de ajustes">
+              <button class="settings-category-tab is-active" data-settings-section-target="general" type="button"><b>01</b><span>GENERAL<small>AJUSTES RÁPIDOS</small></span></button>
+              <button class="settings-category-tab" data-settings-section-target="keyboard" type="button"><b>02</b><span>KEYBOARD<small>TECLADO</small></span></button>
+              <button class="settings-category-tab" data-settings-section-target="gamepad" type="button"><b>03</b><span>GAMEPAD<small>MANDO</small></span></button>
+              <button class="settings-category-tab" data-settings-section-target="touch" type="button"><b>04</b><span>TOUCH<small>TÁCTIL</small></span></button>
+            </nav>
+
+            <nav id="settings-player-tabs" class="settings-tabs is-hidden" aria-label="Jugador que se desea configurar">
               <button class="settings-tab is-active" data-settings-player="1" type="button">PLAYER 1 <small>LOCAL / ONLINE</small></button>
               <button class="settings-tab" data-settings-player="2" type="button">PLAYER 2 <small>LOCAL</small></button>
             </nav>
 
             <div class="settings-body">
-              <section class="settings-panel" data-settings-panel="1">
-                <header><span><small>KEYBOARD MAPPING</small><strong>PLAYER 1</strong></span><button data-reset-player="1" type="button">RESET P1</button></header>
-                <div class="binding-grid">
-                  <label><span>Mover izquierda</span><button data-binding-player="1" data-binding-action="moveLeft" type="button">A</button></label>
-                  <label><span>Mover derecha</span><button data-binding-player="1" data-binding-action="moveRight" type="button">D</button></label>
-                  <label><span>Guardia alta</span><button data-binding-player="1" data-binding-action="guardHigh" type="button">W</button></label>
-                  <label><span>Guardia baja</span><button data-binding-player="1" data-binding-action="guardLow" type="button">S</button></label>
-                  <label><span>Puño izquierdo</span><button data-binding-player="1" data-binding-action="leftPunch" type="button">T</button></label>
-                  <label><span>Puño derecho</span><button data-binding-player="1" data-binding-action="rightPunch" type="button">Y</button></label>
-                  <label><span>Patada izquierda</span><button data-binding-player="1" data-binding-action="leftKick" type="button">G</button></label>
-                  <label><span>Patada derecha</span><button data-binding-player="1" data-binding-action="rightKick" type="button">H</button></label>
-                  <label><span>Golpe al cuerpo</span><button data-binding-player="1" data-binding-action="bodyModifier" type="button">SPACE</button></label>
-                  <label><span>Evasión</span><button data-binding-player="1" data-binding-action="evade" type="button">E</button></label>
+              <section class="settings-section" data-settings-section="general">
+                <div class="settings-general-grid">
+                  <article class="settings-overview-card">
+                    <header><small>ACTIVE INPUT</small><strong>MÉTODO EN USO</strong></header>
+                    <div class="input-method-list">
+                      <button data-method-shortcut="keyboard" type="button"><i>⌨</i><span>KEYBOARD<small id="keyboard-method-state">ACTIVO</small></span></button>
+                      <button data-method-shortcut="gamepad" type="button"><i>◉</i><span>GAMEPAD<small id="gamepad-method-state">NO DETECTADO</small></span></button>
+                      <button data-method-shortcut="touch" type="button"><i>◎</i><span>TOUCH<small id="touch-method-state">AUTO</small></span></button>
+                    </div>
+                    <p>Selecciona un método para revisar o reasignar sus controles. Durante una pausa se abre automáticamente el último utilizado.</p>
+                  </article>
+
+                  <article class="settings-quick-card">
+                    <header><small>PRESENTATION</small><strong>AJUSTES IMPORTANTES</strong></header>
+                    <label><span>Sonido</span><select id="sound-mode"><option value="on">ACTIVADO</option><option value="off">SILENCIADO</option></select></label>
+                    <label><span>Vibración visual</span><select id="screen-shake-mode"><option value="full">COMPLETA</option><option value="reduced">REDUCIDA</option><option value="off">DESACTIVADA</option></select></label>
+                    <label><span>Ayuda de controles</span><select id="control-hints-mode"><option value="off">OCULTA</option><option value="on">VISIBLE</option></select></label>
+                    <button id="settings-fullscreen-button" class="settings-inline-button" type="button">CAMBIAR PANTALLA COMPLETA</button>
+                  </article>
+
+                  <article id="settings-match-card" class="settings-match-card">
+                    <header><small id="settings-context-mode">MAIN MENU</small><strong id="settings-context-title">CONFIGURACIÓN COMPLETA</strong></header>
+                    <p id="settings-context-copy">Configura tus dispositivos antes de entrar al octágono. Los cambios se guardan automáticamente en este navegador.</p>
+                    <div><span>PERFIL ACTIVO</span><b id="settings-active-profile">PLAYER 1 · KEYBOARD</b></div>
+                  </article>
                 </div>
               </section>
 
-              <section class="settings-panel is-hidden" data-settings-panel="2">
-                <header><span><small>KEYBOARD MAPPING</small><strong>PLAYER 2</strong></span><button data-reset-player="2" type="button">RESET P2</button></header>
-                <div class="binding-grid">
-                  <label><span>Mover izquierda</span><button data-binding-player="2" data-binding-action="moveLeft" type="button">←</button></label>
-                  <label><span>Mover derecha</span><button data-binding-player="2" data-binding-action="moveRight" type="button">→</button></label>
-                  <label><span>Guardia alta</span><button data-binding-player="2" data-binding-action="guardHigh" type="button">↑</button></label>
-                  <label><span>Guardia baja</span><button data-binding-player="2" data-binding-action="guardLow" type="button">↓</button></label>
-                  <label><span>Puño izquierdo</span><button data-binding-player="2" data-binding-action="leftPunch" type="button">I</button></label>
-                  <label><span>Puño derecho</span><button data-binding-player="2" data-binding-action="rightPunch" type="button">O</button></label>
-                  <label><span>Patada izquierda</span><button data-binding-player="2" data-binding-action="leftKick" type="button">K</button></label>
-                  <label><span>Patada derecha</span><button data-binding-player="2" data-binding-action="rightKick" type="button">L</button></label>
-                  <label><span>Golpe al cuerpo</span><button data-binding-player="2" data-binding-action="bodyModifier" type="button">R SHIFT</button></label>
-                  <label><span>Evasión</span><button data-binding-player="2" data-binding-action="evade" type="button">P</button></label>
-                </div>
+              <section class="settings-section is-hidden" data-settings-section="keyboard">
+                <section class="settings-panel" data-settings-panel="1">
+                  <header><span><small>KEYBOARD MAPPING</small><strong>PLAYER 1</strong></span><button data-reset-player="1" type="button">RESET P1</button></header>
+                  <div class="binding-grid">
+                    <label><span>Mover izquierda</span><button data-binding-player="1" data-binding-action="moveLeft" type="button">A</button></label>
+                    <label><span>Mover derecha</span><button data-binding-player="1" data-binding-action="moveRight" type="button">D</button></label>
+                    <label><span>Guardia alta</span><button data-binding-player="1" data-binding-action="guardHigh" type="button">W</button></label>
+                    <label><span>Guardia baja</span><button data-binding-player="1" data-binding-action="guardLow" type="button">S</button></label>
+                    <label><span>Puño izquierdo</span><button data-binding-player="1" data-binding-action="leftPunch" type="button">T</button></label>
+                    <label><span>Puño derecho</span><button data-binding-player="1" data-binding-action="rightPunch" type="button">Y</button></label>
+                    <label><span>Patada izquierda</span><button data-binding-player="1" data-binding-action="leftKick" type="button">G</button></label>
+                    <label><span>Patada derecha</span><button data-binding-player="1" data-binding-action="rightKick" type="button">H</button></label>
+                    <label><span>Golpe al cuerpo</span><button data-binding-player="1" data-binding-action="bodyModifier" type="button">SPACE</button></label>
+                    <label><span>Evasión</span><button data-binding-player="1" data-binding-action="evade" type="button">E</button></label>
+                  </div>
+                </section>
+                <section class="settings-panel is-hidden" data-settings-panel="2">
+                  <header><span><small>KEYBOARD MAPPING</small><strong>PLAYER 2</strong></span><button data-reset-player="2" type="button">RESET P2</button></header>
+                  <div class="binding-grid">
+                    <label><span>Mover izquierda</span><button data-binding-player="2" data-binding-action="moveLeft" type="button">←</button></label>
+                    <label><span>Mover derecha</span><button data-binding-player="2" data-binding-action="moveRight" type="button">→</button></label>
+                    <label><span>Guardia alta</span><button data-binding-player="2" data-binding-action="guardHigh" type="button">↑</button></label>
+                    <label><span>Guardia baja</span><button data-binding-player="2" data-binding-action="guardLow" type="button">↓</button></label>
+                    <label><span>Puño izquierdo</span><button data-binding-player="2" data-binding-action="leftPunch" type="button">I</button></label>
+                    <label><span>Puño derecho</span><button data-binding-player="2" data-binding-action="rightPunch" type="button">O</button></label>
+                    <label><span>Patada izquierda</span><button data-binding-player="2" data-binding-action="leftKick" type="button">K</button></label>
+                    <label><span>Patada derecha</span><button data-binding-player="2" data-binding-action="rightKick" type="button">L</button></label>
+                    <label><span>Golpe al cuerpo</span><button data-binding-player="2" data-binding-action="bodyModifier" type="button">R SHIFT</button></label>
+                    <label><span>Evasión</span><button data-binding-player="2" data-binding-action="evade" type="button">P</button></label>
+                  </div>
+                </section>
               </section>
 
-              <aside class="settings-options">
+              <section class="settings-section is-hidden" data-settings-section="gamepad">
                 <section class="controller-card">
                   <header><span><small>GAMEPAD MAPPING</small><strong id="gamepad-mapping-player">PLAYER 1</strong></span><button id="reset-gamepad-bindings" type="button">RESET PAD</button></header>
                   <p class="mapping-note">El stick izquierdo siempre mueve. Selecciona una acción y presiona el nuevo botón.</p>
@@ -324,7 +360,9 @@
                   </div>
                   <label class="settings-range"><span><b>DEADZONE</b><output id="gamepad-deadzone-value">22%</output></span><input id="gamepad-deadzone" type="range" min="8" max="45" step="1" value="22" /></label>
                 </section>
+              </section>
 
+              <section class="settings-section is-hidden" data-settings-section="touch">
                 <section class="touch-settings-card">
                   <header><span><small>TOUCH MAPPING</small><strong>PLAYER 1</strong></span><button id="reset-touch-bindings" type="button">RESET TOUCH</button></header>
                   <label><span>Visibilidad</span><select id="touch-mode"><option value="auto">AUTO</option><option value="on">VISIBLE</option><option value="off">OCULTO</option></select></label>
@@ -347,7 +385,7 @@
                   </details>
                   <small>Solo usa botones HTML ligeros; no cambia la resolución ni el render del combate.</small>
                 </section>
-              </aside>
+              </section>
             </div>
 
             <div id="binding-capture-status" class="binding-capture-status" aria-live="polite">Selecciona una tecla para reasignarla. ESC cancela.</div>
@@ -405,7 +443,7 @@
       <footer class="footer-note">
         <span><i></i> SYSTEM ONLINE</span>
         <p>ESC para pausar · Cada crítico tiene 1 de 2.2 de probabilidad de knockdown</p>
-        <span>BUILD 0.25.0 // UNIVERSAL INPUT</span>
+        <span>BUILD 0.26.0 // CONTEXTUAL SETTINGS</span>
       </footer>
     </main>
 

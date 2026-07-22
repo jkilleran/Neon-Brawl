@@ -98,6 +98,7 @@
     Object.freeze({ id: "utilityRight", label: "Utilidad derecha" }),
   ]);
   const TOUCH_SLOT_IDS = Object.freeze(TOUCH_SLOTS.map((slot) => slot.id));
+  const INPUT_METHODS = Object.freeze(["keyboard", "gamepad", "touch"]);
   const DEFAULT_TOUCH_BINDINGS = Object.freeze({
     guardTop: "guardHigh",
     moveLeft: "moveLeft",
@@ -124,7 +125,7 @@
   const cloneTouchBindings = () => ({ ...DEFAULT_TOUCH_BINDINGS });
 
   const defaultSettings = () => ({
-    version: 2,
+    version: 3,
     bindings: cloneBindings(),
     gamepadBindings: cloneGamepadBindings(),
     touchBindings: cloneTouchBindings(),
@@ -132,6 +133,9 @@
     touchMode: "auto",
     touchOpacity: 0.72,
     touchScale: 1,
+    soundEnabled: true,
+    screenShake: "full",
+    showControlHints: false,
   });
 
   const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
@@ -239,6 +243,13 @@
     normalized.touchOpacity = clamp(Number(candidate.touchOpacity) || 0.72, 0.35, 1);
     normalized.touchScale = clamp(Number(candidate.touchScale) || 1, 0.8, 1.2);
     normalized.gamepadDeadzone = clamp(Number(candidate.gamepadDeadzone) || 0.22, 0.08, 0.45);
+    if (typeof candidate.soundEnabled === "boolean") normalized.soundEnabled = candidate.soundEnabled;
+    if (["full", "reduced", "off"].includes(candidate.screenShake)) {
+      normalized.screenShake = candidate.screenShake;
+    }
+    if (typeof candidate.showControlHints === "boolean") {
+      normalized.showControlHints = candidate.showControlHints;
+    }
     return normalized;
   }
 
@@ -262,6 +273,10 @@
       this.changeListeners = new Set();
       this.inputListeners = new Set();
       this.gamepadButtonListeners = new Set();
+      this.inputMethodListeners = new Set();
+      this.activeInputMethods = { 1: "keyboard", 2: "keyboard" };
+      this.inputMethodChangedAt = { 1: 0, 2: 0 };
+      this.inputMethodSequence = 0;
     }
 
     detectTouchCapability() {
@@ -325,6 +340,31 @@
     onGamepadButtonPress(listener) {
       this.gamepadButtonListeners.add(listener);
       return () => this.gamepadButtonListeners.delete(listener);
+    }
+
+    onInputMethodChange(listener) {
+      this.inputMethodListeners.add(listener);
+      return () => this.inputMethodListeners.delete(listener);
+    }
+
+    noteInputMethod(player, method) {
+      player = Number(player);
+      if (![1, 2].includes(player) || !INPUT_METHODS.includes(method)) return false;
+      const changed = this.activeInputMethods[player] !== method;
+      this.activeInputMethods[player] = method;
+      this.inputMethodChangedAt[player] = ++this.inputMethodSequence;
+      if (changed) {
+        for (const listener of this.inputMethodListeners) listener({ player, method });
+      }
+      return true;
+    }
+
+    getActiveInputMethod(player = 1) {
+      return this.activeInputMethods[Number(player)] || "keyboard";
+    }
+
+    getMostRecentPlayer() {
+      return this.inputMethodChangedAt[2] > this.inputMethodChangedAt[1] ? 2 : 1;
     }
 
     emitInputChange(player, action, active) {
@@ -436,6 +476,12 @@
         this.settings.touchScale = clamp(Number(value) || 1, 0.8, 1.2);
       } else if (name === "gamepadDeadzone") {
         this.settings.gamepadDeadzone = clamp(Number(value) || 0.22, 0.08, 0.45);
+      } else if (name === "soundEnabled" && typeof value === "boolean") {
+        this.settings.soundEnabled = value;
+      } else if (name === "screenShake" && ["full", "reduced", "off"].includes(value)) {
+        this.settings.screenShake = value;
+      } else if (name === "showControlHints" && typeof value === "boolean") {
+        this.settings.showControlHints = value;
       } else {
         return false;
       }
@@ -451,7 +497,10 @@
       if (!newlyHeld) return;
       for (const player of [1, 2]) {
         const action = ACTION_IDS.find((candidate) => this.getBinding(player, candidate) === code);
-        if (action) this.emitInputChange(player, action, true);
+        if (action) {
+          this.noteInputMethod(player, "keyboard");
+          this.emitInputChange(player, action, true);
+        }
       }
     }
 
@@ -479,6 +528,7 @@
       const held = this.touchHeld[player];
       const wasActive = held.has(action);
       if (active) {
+        this.noteInputMethod(player, "touch");
         if (!wasActive) this.touchPressed[player].add(action);
         held.add(action);
       } else {
@@ -525,6 +575,10 @@
               for (const listener of this.gamepadButtonListeners) listener({ player, button });
             }
           }
+          const newButtonPressed = [...activeButtons].some((button) => (
+            !this.previousGamepadButtons[player].has(button)
+          ));
+          if (Math.abs(move) > 0 || newButtonPressed) this.noteInputMethod(player, "gamepad");
           for (const [action, button] of Object.entries(this.settings.gamepadBindings[player])) {
             if (activeButtons.has(button)) held.add(action);
           }
@@ -639,6 +693,7 @@
     DEFAULT_TOUCH_BINDINGS,
     TOUCH_SLOTS,
     TOUCH_SLOT_IDS,
+    INPUT_METHODS,
     GAMEPAD_LAYOUT,
     RESERVED_GAMEPAD_BUTTONS,
     RESERVED_CODES,

@@ -47,11 +47,15 @@ const input = new NeonBrawlInputManager({
 assert.deepEqual(input.getSettings().bindings[1], DEFAULT_BINDINGS[1]);
 assert.deepEqual(input.getSettings().gamepadBindings[1], DEFAULT_GAMEPAD_BINDINGS[1]);
 assert.deepEqual(input.getSettings().touchBindings, DEFAULT_TOUCH_BINDINGS);
+assert.equal(input.getPreference("soundEnabled"), true);
+assert.equal(input.getPreference("screenShake"), "full");
+assert.equal(input.getPreference("showControlHints"), false);
 assert.equal(formatCode("ArrowLeft"), "←");
 assert.equal(formatCode("KeyT"), "T");
 assert.equal(formatGamepadButton(2), "X / □");
 
 input.handleKeyDown("KeyD");
+assert.equal(input.getActiveInputMethod(1), "keyboard");
 assert.equal(input.getPlayerInput(1).move, 1, "P1 keyboard should move right");
 input.handleKeyDown("KeyT");
 assert.equal(input.getPlayerInput(1).leftPunch, true, "Strike should fire on its press edge");
@@ -70,6 +74,7 @@ assert.equal(restored.getBinding(1, "leftPunch"), "KeyY", "Bindings should persi
 input.resetBindings(1);
 input.setTouchAction("bodyModifier", true);
 input.setTouchAction("rightKick", true);
+assert.equal(input.getActiveInputMethod(1), "touch");
 let playerOne = input.getPlayerInput(1);
 assert.equal(playerOne.bodyModifier, true);
 assert.equal(playerOne.rightKick, true, "Multi-touch modifier and strike should combine");
@@ -100,6 +105,7 @@ input.onGamepadButtonPress(({ player, button: buttonIndex }) => {
   capturedGamepadButton = { player, button: buttonIndex };
 });
 input.pollGamepads();
+assert.equal(input.getActiveInputMethod(1), "gamepad");
 assert.deepEqual(capturedGamepadButton, { player: 1, button: 8 }, "New button edges should be available to the mapping UI");
 playerOne = input.getPlayerInput(1);
 assert(playerOne.move > 0.5 && playerOne.move <= 1, "Analog movement should apply its deadzone");
@@ -118,6 +124,8 @@ input.pollGamepads();
 const playerTwo = input.getPlayerInput(2);
 assert.equal(playerTwo.move, -1, "Second connected controller should drive P2");
 assert.equal(playerTwo.rightKick, true, "B/Circle should trigger P2 right kick");
+assert.equal(input.getActiveInputMethod(2), "gamepad");
+assert.equal(input.getMostRecentPlayer(), 2);
 
 const persistedMappings = new NeonBrawlInputManager({ storage, navigator });
 assert.equal(persistedMappings.getGamepadBinding(1, "leftPunch"), 8, "Gamepad mapping should persist");
@@ -127,5 +135,11 @@ input.setPreference("touchMode", "on");
 assert.equal(input.shouldShowTouchControls(), true);
 input.setPreference("touchMode", "off");
 assert.equal(input.shouldShowTouchControls(), false);
+input.setPreference("soundEnabled", false);
+input.setPreference("screenShake", "reduced");
+input.setPreference("showControlHints", true);
+assert.equal(input.getPreference("soundEnabled"), false);
+assert.equal(input.getPreference("screenShake"), "reduced");
+assert.equal(input.getPreference("showControlHints"), true);
 
-console.log("Input manager test passed: remapping, persistence, gamepads, touch and anti-spam edges.");
+console.log("Input manager test passed: remapping, persistence, active-method detection and all device types.");

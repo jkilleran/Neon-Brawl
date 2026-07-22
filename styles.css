@@ -1330,6 +1330,7 @@ h1 em {
 
 .settings-header,
 .settings-device-status,
+.settings-category-tabs,
 .settings-tabs,
 .settings-panel > header,
 .controller-card > header,
@@ -1386,6 +1387,78 @@ h1 em {
   box-shadow: 0 0 9px var(--lime);
 }
 
+.settings-device-status[data-method="keyboard"] {
+  border-color: rgba(53, 242, 229, 0.3);
+  color: var(--cyan);
+}
+
+.settings-device-status[data-method="keyboard"] i {
+  background: var(--cyan);
+  box-shadow: 0 0 9px var(--cyan);
+}
+
+.settings-device-status[data-method="touch"] {
+  border-color: rgba(255, 59, 157, 0.32);
+  color: var(--pink);
+}
+
+.settings-device-status[data-method="touch"] i {
+  background: var(--pink);
+  box-shadow: 0 0 9px var(--pink);
+}
+
+.settings-category-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+  margin: 14px 0 8px;
+}
+
+.settings-category-tab {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  align-items: center;
+  min-height: 48px;
+  padding: 6px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.018);
+  color: #77788e;
+  text-align: left;
+  cursor: pointer;
+}
+
+.settings-category-tab > b {
+  color: #55576c;
+  font: 700 8px "Orbitron", sans-serif;
+}
+
+.settings-category-tab span,
+.settings-category-tab small {
+  display: block;
+}
+
+.settings-category-tab span {
+  font: 700 9px "Orbitron", sans-serif;
+}
+
+.settings-category-tab small {
+  margin-top: 2px;
+  color: #585a6e;
+  font: 600 6px "Chakra Petch", sans-serif;
+  letter-spacing: 0.12em;
+}
+
+.settings-category-tab:hover,
+.settings-category-tab.is-active {
+  border-color: rgba(53, 242, 229, 0.4);
+  background: linear-gradient(90deg, rgba(53, 242, 229, 0.09), transparent);
+  color: var(--cyan);
+}
+
+.settings-category-tab.is-active > b {
+  color: var(--cyan);
+}
+
 .settings-tabs {
   gap: 8px;
   margin: 14px 0 12px;
@@ -1418,9 +1491,165 @@ h1 em {
 }
 
 .settings-body {
+  min-height: 292px;
+}
+
+.settings-section {
+  animation: menu-panel-in 170ms ease-out both;
+}
+
+.settings-general-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.22fr) minmax(270px, 0.78fr);
-  gap: 12px;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr) minmax(220px, 0.82fr);
+  gap: 10px;
+}
+
+.settings-overview-card,
+.settings-quick-card,
+.settings-match-card {
+  min-height: 252px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(4, 4, 15, 0.72);
+}
+
+.settings-overview-card > header,
+.settings-quick-card > header,
+.settings-match-card > header {
+  margin-bottom: 11px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.settings-overview-card header small,
+.settings-quick-card header small,
+.settings-match-card header small {
+  display: block;
+  color: #686a7f;
+  font-size: 7px;
+  letter-spacing: 0.15em;
+}
+
+.settings-overview-card header strong,
+.settings-quick-card header strong,
+.settings-match-card header strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--cyan);
+  font: 700 11px "Orbitron", sans-serif;
+}
+
+.input-method-list {
+  display: grid;
+  gap: 6px;
+}
+
+.input-method-list button {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  align-items: center;
+  min-height: 47px;
+  padding: 6px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.02);
+  color: #8c8ea2;
+  text-align: left;
+  cursor: pointer;
+}
+
+.input-method-list button > i {
+  color: #696b80;
+  font: normal 16px "Orbitron", sans-serif;
+}
+
+.input-method-list button span,
+.input-method-list button small {
+  display: block;
+}
+
+.input-method-list button span {
+  font: 700 9px "Orbitron", sans-serif;
+}
+
+.input-method-list button small {
+  margin-top: 2px;
+  color: #64667a;
+  font: 600 6px "Chakra Petch", sans-serif;
+}
+
+.input-method-list button:hover,
+.input-method-list button.is-active {
+  border-color: rgba(214, 255, 125, 0.35);
+  background: rgba(214, 255, 125, 0.055);
+  color: var(--lime);
+}
+
+.input-method-list button.is-active > i {
+  color: var(--lime);
+}
+
+.settings-overview-card > p,
+.settings-match-card > p {
+  margin: 9px 0 0;
+  color: #707286;
+  font-size: 8px;
+  line-height: 1.35;
+}
+
+.settings-quick-card > label {
+  display: grid;
+  grid-template-columns: 1fr 126px;
+  align-items: center;
+  min-height: 42px;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #999bae;
+  font-size: 8px;
+}
+
+.settings-quick-card select {
+  min-height: 28px;
+  border: 1px solid rgba(53, 242, 229, 0.22);
+  background: #090916;
+  color: var(--cyan);
+  font: 700 7px "Orbitron", sans-serif;
+}
+
+.settings-inline-button {
+  width: 100%;
+  min-height: 34px;
+  margin-top: 10px;
+  border: 1px solid rgba(255, 59, 157, 0.25);
+  background: rgba(255, 59, 157, 0.05);
+  color: var(--pink);
+  font: 700 7px "Orbitron", sans-serif;
+  cursor: pointer;
+}
+
+.settings-match-card {
+  background:
+    linear-gradient(145deg, rgba(255, 59, 157, 0.07), transparent 55%),
+    rgba(4, 4, 15, 0.72);
+}
+
+.settings-match-card > div {
+  display: grid;
+  gap: 4px;
+  margin-top: 24px;
+  padding: 10px;
+  border-left: 2px solid var(--pink);
+  background: rgba(255, 59, 157, 0.035);
+}
+
+.settings-match-card > div span {
+  color: #66687c;
+  font-size: 6px;
+  letter-spacing: 0.13em;
+}
+
+.settings-match-card > div b {
+  color: var(--pink);
+  font: 700 8px "Orbitron", sans-serif;
 }
 
 .settings-panel,
@@ -1568,6 +1797,11 @@ h1 em {
 .controller-card,
 .touch-settings-card {
   padding: 11px 12px;
+}
+
+.settings-section > .controller-card,
+.settings-section > .touch-settings-card {
+  min-height: 292px;
 }
 
 .controller-layout {
@@ -2621,6 +2855,41 @@ h1 em {
     margin: 7px 0;
   }
 
+  .settings-category-tabs {
+    gap: 4px;
+    margin: 7px 0 5px;
+  }
+
+  .settings-category-tab {
+    min-height: 37px;
+    grid-template-columns: 18px 1fr;
+    padding: 4px 6px;
+  }
+
+  .settings-category-tab span {
+    font-size: 7px;
+  }
+
+  .settings-general-grid {
+    gap: 5px;
+  }
+
+  .settings-overview-card,
+  .settings-quick-card,
+  .settings-match-card {
+    min-height: 220px;
+    padding: 8px;
+  }
+
+  .input-method-list button {
+    min-height: 37px;
+  }
+
+  .settings-quick-card > label {
+    min-height: 34px;
+    grid-template-columns: 1fr 100px;
+  }
+
   .settings-tab {
     min-width: 145px;
     padding: 5px 8px;
@@ -2695,6 +2964,29 @@ h1 em {
     gap: 5px;
   }
 
+  .settings-category-tab {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .settings-category-tab > b,
+  .settings-category-tab small {
+    display: none;
+  }
+
+  .settings-general-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .settings-match-card {
+    min-height: 100px;
+    grid-column: 1 / -1;
+  }
+
+  .settings-match-card > div {
+    margin-top: 8px;
+  }
+
   .controller-layout {
     grid-template-columns: 1fr;
   }
@@ -2705,7 +2997,6 @@ h1 em {
 }
 
 @container game (max-width: 460px) {
-  .settings-device-status,
   .settings-panel > header small,
   .touch-settings-card > header small,
   .settings-actions .dialog-button:first-child {
@@ -2727,6 +3018,19 @@ h1 em {
 
   .settings-body {
     grid-template-columns: 1fr;
+  }
+
+  .settings-category-tab {
+    min-height: 30px;
+    padding: 3px;
+  }
+
+  .settings-general-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-match-card {
+    grid-column: auto;
   }
 
   .settings-options {

@@ -49,6 +49,19 @@ screen.classList.add("is-hidden");
 element("#settings-close");
 element("#settings-reset-all");
 element("#binding-capture-status");
+element("#settings-context-label");
+element("#settings-context-mode");
+element("#settings-context-title");
+element("#settings-context-copy");
+element("#settings-active-profile");
+element("#settings-player-tabs");
+element("#sound-mode");
+element("#screen-shake-mode");
+element("#control-hints-mode");
+element("#settings-fullscreen-button");
+element("#keyboard-method-state");
+element("#gamepad-method-state");
+element("#touch-method-state");
 const deviceStatus = element("#settings-device-status");
 const deviceLabel = new FakeElement();
 const deviceCount = new FakeElement();
@@ -76,6 +89,17 @@ const playerPanels = [
   new FakeElement({ settingsPanel: "2" }),
 ];
 const resetButtons = [new FakeElement({ resetPlayer: "1" })];
+const sectionTabs = ["general", "keyboard", "gamepad", "touch"].map((section) => (
+  new FakeElement({ settingsSectionTarget: section })
+));
+const sections = ["general", "keyboard", "gamepad", "touch"].map((section, index) => {
+  const panel = new FakeElement({ settingsSection: section });
+  if (index > 0) panel.classList.add("is-hidden");
+  return panel;
+});
+const methodShortcuts = ["keyboard", "gamepad", "touch"].map((method) => (
+  new FakeElement({ methodShortcut: method })
+));
 
 global.document = {
   createElement: () => new FakeElement(),
@@ -87,6 +111,9 @@ global.document = {
     if (selector === "[data-reset-player]") return resetButtons;
     if (selector === "[data-gamepad-binding-action]") return [gamepadBindingButton];
     if (selector === "[data-touch-binding-slot]") return [touchBindingSelect];
+    if (selector === "[data-settings-section-target]") return sectionTabs;
+    if (selector === "[data-settings-section]") return sections;
+    if (selector === "[data-method-shortcut]") return methodShortcuts;
     return [];
   },
 };
@@ -97,22 +124,31 @@ const input = new NeonBrawlInputManager({
   navigator: { getGamepads: () => [], maxTouchPoints: 0 },
 });
 let closeRequested = false;
-const ui = new NeonBrawlSettingsUI(input, { onClose: () => { closeRequested = true; } });
+let fullscreenRequested = false;
+const ui = new NeonBrawlSettingsUI(input, {
+  onClose: () => { closeRequested = true; },
+  onToggleFullscreen: () => { fullscreenRequested = true; },
+});
 
 ui.open();
 assert.equal(ui.isOpen, true);
+assert.equal(ui.activeSection, "general");
+sectionTabs[1].dispatch("click");
+assert.equal(ui.activeSection, "keyboard");
 bindingButton.dispatch("click");
 assert.equal(bindingButton.textContent, "PRESS KEY");
 assert.equal(ui.captureKey({ code: "KeyQ", preventDefault() {}, stopPropagation() {} }), true);
 assert.equal(input.getBinding(1, "leftPunch"), "KeyQ");
 assert.equal(bindingButton.textContent, "Q");
 
+sectionTabs[2].dispatch("click");
 gamepadBindingButton.dispatch("click");
 assert.equal(gamepadBindingButton.textContent, "PRESS BUTTON");
 assert.equal(ui.captureGamepadButton(1, 8), true);
 assert.equal(input.getGamepadBinding(1, "leftPunch"), 8);
 assert.equal(gamepadBindingButton.textContent, "VIEW / SHARE");
 
+sectionTabs[3].dispatch("click");
 touchBindingSelect.value = "rightPunch";
 touchBindingSelect.dispatch("change");
 assert.equal(input.getTouchBinding("attackTopLeft"), "rightPunch");
@@ -125,7 +161,26 @@ selectors.get("#touch-mode").value = "on";
 selectors.get("#touch-mode").dispatch("change");
 assert.equal(input.shouldShowTouchControls(), true);
 
+selectors.get("#sound-mode").value = "off";
+selectors.get("#sound-mode").dispatch("change");
+assert.equal(input.getPreference("soundEnabled"), false);
+selectors.get("#screen-shake-mode").value = "reduced";
+selectors.get("#screen-shake-mode").dispatch("change");
+assert.equal(input.getPreference("screenShake"), "reduced");
+selectors.get("#control-hints-mode").value = "on";
+selectors.get("#control-hints-mode").dispatch("change");
+assert.equal(input.getPreference("showControlHints"), true);
+selectors.get("#settings-fullscreen-button").dispatch("click");
+assert.equal(fullscreenRequested, true);
+
+input.setTouchAction("guardHigh", true, 1);
+ui.open({ inMatch: true, mode: "local", round: 2, player: 1 });
+assert.equal(ui.activeSection, "touch", "In-match settings should open the current input method");
+assert.equal(selectors.get("#settings-close").textContent, "VOLVER AL COMBATE");
+assert.match(deviceLabel.textContent, /TÁCTIL/);
+input.releaseTouch(1);
+
 selectors.get("#settings-close").dispatch("click");
 assert.equal(closeRequested, true);
 
-console.log("Settings UI test passed: keyboard, gamepad, touch mapping, player tabs and close flow.");
+console.log("Settings UI test passed: organized sections, contextual input, preferences and full remapping.");

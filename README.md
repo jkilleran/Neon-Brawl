@@ -23,7 +23,7 @@ Open `http://localhost:3000` in both tabs, enter two different fighter names, an
 
 ## Controls
 
-Open Settings directly from the main menu, the header gear, or the local pause screen. Keyboard, gamepad, and all ten touch positions can be reassigned, and mappings persist in the current browser. If a replacement is already in use by that player or layout, the two actions swap safely.
+Open Settings directly from the main menu, the header gear, or the local pause screen. The panel is organized into General, Keyboard, Gamepad, and Touch categories. It identifies the last input method used by each player and, when opened from a paused fight, jumps directly to that method's mapping. Keyboard, gamepad, and all ten touch positions can be reassigned, and mappings persist in the current browser. If a replacement is already in use by that player or layout, the two actions swap safely.
 
 | Action | Player 1 / Rook | Player 2 / Vex |
 | --- | --- | --- |
@@ -125,7 +125,7 @@ npm run build
 - Dedicated Neon MMA arena plate with reference-aligned fighter placement and dual-foot contact shadows
 - Fixed transparent cage and floor over a 2.1-second low/takeoff/jump-apex crowd loop with no procedural lighting pass
 - Aspect-safe 16:9 viewport, fullscreen letterboxing, high-density Canvas rendering up to 2×, and container-responsive menus
-- Persistent keyboard remapping, standard dual-gamepad support, and an optional performance-safe touch overlay
+- Context-aware Settings with active-device detection, presentation preferences, persistent keyboard remapping, standard dual-gamepad support, and an optional performance-safe touch overlay
 - Quick Fight, Local Sparring, and infinite-time Practice Lab
 - Three 3-minute rounds with 10-9 scoring
 - Separate head and body damage
