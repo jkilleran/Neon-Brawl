@@ -16,6 +16,15 @@
   const resultScorecard = document.querySelector("#result-scorecard");
   const rematchButton = document.querySelector("#rematch-button");
   const combatControls = document.querySelector("#combat-controls");
+  const touchControls = document.querySelector("#touch-controls");
+  const touchPauseButton = document.querySelector("#touch-pause-button");
+  const touchButtons = [...document.querySelectorAll("[data-touch-action]")];
+  const settingsButton = document.querySelector("#settings-button");
+  const pauseSettingsButton = document.querySelector("#pause-settings-button");
+  const controlLabels = [...document.querySelectorAll("[data-control-player][data-control-action]")];
+  const pauseSummaryOne = document.querySelector("#pause-summary-p1");
+  const pauseSummaryTwo = document.querySelector("#pause-summary-p2");
+  const bodyModifierSummary = document.querySelector("#body-modifier-summary");
   const soundButton = document.querySelector("#sound-button");
   const soundIcon = document.querySelector("#sound-icon");
   const onlineScreen = document.querySelector("#online-screen");
@@ -37,6 +46,10 @@
   const onlineDecline = document.querySelector("#online-decline");
   const onlineBack = document.querySelector("#online-back");
   const menuPanels = [...document.querySelectorAll("[data-menu-panel]")];
+
+  const INPUT_API = globalThis.NEON_BRAWL_INPUT;
+  if (!INPUT_API) throw new Error("Input manager must load before game.js");
+  const input = new INPUT_API.NeonBrawlInputManager();
 
   const WIDTH = 1280;
   const HEIGHT = 720;
@@ -1153,6 +1166,8 @@
       this.onlineLastEventSequence = 0;
       this.onlineLobby = { players: [], searchingCount: 0 };
       this.pendingChallenger = null;
+      this.settingsOpenedFromPause = false;
+      this.touchPresentationSignature = "";
       this.lastTime = performance.now();
 
       this.fighterOne = new Fighter(this, {
@@ -1200,6 +1215,22 @@
         },
       }) : null;
 
+      const SettingsUI = globalThis.NEON_BRAWL_SETTINGS_UI?.NeonBrawlSettingsUI;
+      this.settingsUi = SettingsUI ? new SettingsUI(input, {
+        onClose: () => this.closeSettings(),
+        onSettingsChanged: () => {
+          this.updateControlLabels();
+          this.syncTouchControlPresentation(true);
+        },
+      }) : null;
+      input.onInputChange(({ player }) => {
+        if (player === 1 && this.mode === "online" && this.onlineRole) {
+          this.sendOnlineInputNow(true);
+        }
+      });
+      this.updateControlLabels();
+      this.syncTouchControlPresentation(true);
+
       requestAnimationFrame((time) => this.loop(time));
     }
 
@@ -1228,7 +1259,70 @@
       menuScreen.dataset.menuSection = requestedSection;
     }
 
+    updateControlLabels() {
+      for (const label of controlLabels) {
+        const player = Number(label.dataset.controlPlayer);
+        label.textContent = INPUT_API.formatCode(
+          input.getBinding(player, label.dataset.controlAction),
+        );
+      }
+      const compact = (player, actions) => actions
+        .map((action) => INPUT_API.formatCode(input.getBinding(player, action)))
+        .join(" ");
+      pauseSummaryOne.textContent = compact(1, ["moveLeft", "moveRight", "leftPunch", "rightPunch", "leftKick", "rightKick"]);
+      pauseSummaryTwo.textContent = compact(2, ["moveLeft", "moveRight", "leftPunch", "rightPunch", "leftKick", "rightKick"]);
+      bodyModifierSummary.textContent = `${INPUT_API.formatCode(input.getBinding(1, "bodyModifier"))} / ${INPUT_API.formatCode(input.getBinding(2, "bodyModifier"))}`;
+    }
+
+    openSettings() {
+      if (!this.settingsUi) return;
+      if (this.mode === "online" && this.onlineRole && !["menu", "matchOver"].includes(this.state)) {
+        this.showCallout("SETTINGS UNAVAILABLE DURING ONLINE MATCH", "#d6ff7d", 0.9);
+        return;
+      }
+      this.settingsOpenedFromPause = this.state === "paused";
+      if (["intro", "fighting", "ground"].includes(this.state)) {
+        this.togglePause();
+        this.settingsOpenedFromPause = this.state === "paused";
+      }
+      input.releaseAll();
+      pauseScreen.classList.add("is-hidden");
+      this.settingsUi.open();
+    }
+
+    closeSettings() {
+      if (!this.settingsUi?.isOpen) return;
+      this.settingsUi.close();
+      input.releaseAll();
+      if (this.settingsOpenedFromPause && this.state === "paused") {
+        pauseScreen.classList.remove("is-hidden");
+      }
+      this.settingsOpenedFromPause = false;
+      canvas.focus();
+    }
+
+    syncTouchControlPresentation(force = false) {
+      const touchOpacity = input.getPreference("touchOpacity");
+      const touchScale = input.getPreference("touchScale");
+      const active = input.shouldShowTouchControls()
+        && this.state === "fighting"
+        && !this.settingsUi?.isOpen;
+      const signature = `${active}:${touchOpacity}:${touchScale}`;
+      if (!force && signature === this.touchPresentationSignature) return;
+      this.touchPresentationSignature = signature;
+      touchControls.classList.toggle("is-hidden", !active);
+      touchControls.classList.toggle("is-active", active);
+      touchControls.style.setProperty?.("--touch-opacity", String(touchOpacity));
+      touchControls.style.setProperty?.("--touch-scale", String(touchScale));
+      if (!active) {
+        input.releaseTouch(1);
+        for (const button of touchButtons) button.classList.remove("is-pressed");
+      }
+    }
+
     openOnlineLobby() {
+      this.settingsUi?.close();
+      input.releaseAll();
       menuScreen.classList.add("is-hidden");
       resultScreen.classList.add("is-hidden");
       pauseScreen.classList.add("is-hidden");
@@ -1375,6 +1469,8 @@
     }
 
     returnToOnlineLobby() {
+      this.settingsUi?.close();
+      input.releaseAll();
       this.online?.leaveMatch();
       this.onlineRole = null;
       this.onlineOpponent = null;
@@ -1404,6 +1500,8 @@
     }
 
     start(mode) {
+      this.settingsUi?.close();
+      input.releaseAll();
       this.synth.ensure();
       this.mode = mode;
       this.round = 1;
@@ -1457,6 +1555,8 @@
     }
 
     returnToMenu(menuSection = "root") {
+      this.settingsUi?.close();
+      input.releaseAll();
       if (this.mode === "online") {
         this.online?.leaveMatch();
         this.online?.disconnect();
@@ -1508,34 +1608,7 @@
     }
 
     getKeyboardInput(player) {
-      if (player === 1) {
-        const forward = this.fighterOne.facing;
-        return {
-          move: (keys.has("KeyD") ? forward : 0) - (keys.has("KeyA") ? forward : 0),
-          guardHigh: keys.has("KeyW"),
-          guardLow: keys.has("KeyS"),
-          leftPunch: pressed.has("KeyT"),
-          rightPunch: pressed.has("KeyY"),
-          leftKick: pressed.has("KeyG"),
-          rightKick: pressed.has("KeyH"),
-          bodyModifier: keys.has("Space"),
-          takedown: FEATURES.takedowns && pressed.has("KeyE"),
-          evade: keys.has("KeyE"),
-        };
-      }
-      const forward = this.fighterTwo.facing;
-      return {
-        move: (keys.has("ArrowLeft") ? forward : 0) - (keys.has("ArrowRight") ? forward : 0),
-        guardHigh: keys.has("ArrowUp"),
-        guardLow: keys.has("ArrowDown"),
-        leftPunch: pressed.has("KeyI"),
-        rightPunch: pressed.has("KeyO"),
-        leftKick: pressed.has("KeyK"),
-        rightKick: pressed.has("KeyL"),
-        bodyModifier: keys.has("ShiftLeft") || keys.has("ShiftRight"),
-        takedown: FEATURES.takedowns && pressed.has("Slash"),
-        evade: keys.has("KeyP"),
-      };
+      return input.getPlayerInput(player, true);
     }
 
     getCpuInput(deltaTime) {
@@ -2346,18 +2419,7 @@
     }
 
     getOnlineKeyboardInput(includeActions = true) {
-      return {
-        move: (keys.has("KeyD") ? 1 : 0) - (keys.has("KeyA") ? 1 : 0),
-        guardHigh: keys.has("KeyW"),
-        guardLow: keys.has("KeyS"),
-        leftPunch: includeActions && pressed.has("KeyT"),
-        rightPunch: includeActions && pressed.has("KeyY"),
-        leftKick: includeActions && pressed.has("KeyG"),
-        rightKick: includeActions && pressed.has("KeyH"),
-        bodyModifier: keys.has("Space"),
-        takedown: false,
-        evade: keys.has("KeyE"),
-      };
+      return input.getPlayerInput(1, includeActions);
     }
 
     getPredictedStrikeType(input) {
@@ -2469,25 +2531,26 @@
       if (this.mode !== "online" || !this.onlineRole || !this.online?.connected) return false;
       if (["menu", "matchOver"].includes(this.state)) return false;
       this.onlineInputSequence += 1;
-      const input = this.getOnlineKeyboardInput(includeActions);
+      const onlineInput = this.getOnlineKeyboardInput(includeActions);
       const sent = this.online.sendInput(
-        input,
+        onlineInput,
         this.onlineInputSequence,
       );
       if (sent) {
         this.onlineInputTimer = ONLINE_INPUT_INTERVAL;
         const controlSignature = [
-          input.move,
-          input.guardHigh,
-          input.guardLow,
-          input.bodyModifier,
-          input.evade,
+          onlineInput.move,
+          onlineInput.guardHigh,
+          onlineInput.guardLow,
+          onlineInput.bodyModifier,
+          onlineInput.evade,
         ].join(":");
         if (controlSignature !== this.onlineLastControlSignature) {
           this.onlineLastControlSignature = controlSignature;
           this.onlineLastControlChangeSequence = this.onlineInputSequence;
         }
-        this.predictOnlineLocalInput(input, this.onlineInputSequence);
+        this.predictOnlineLocalInput(onlineInput, this.onlineInputSequence);
+        if (includeActions) input.consumeActions(1);
       }
       return sent;
     }
@@ -2734,13 +2797,16 @@
     loop(time) {
       const deltaTime = Math.min((time - this.lastTime) / 1000 || 0, 1 / 30);
       this.lastTime = time;
+      input.pollGamepads();
+      if (input.pausePressed() && !this.settingsUi?.isOpen) this.togglePause();
       if (this.hitStop > 0) this.hitStop -= deltaTime;
       else if (this.mode === "online" && this.onlineRole && !["menu", "matchOver"].includes(this.state)) {
         this.updateOnlineReplica(deltaTime);
       } else if (!["paused", "menu", "matchOver"].includes(this.state)) this.update(deltaTime);
       else if (this.state === "menu") this.elapsed += deltaTime;
+      this.syncTouchControlPresentation();
       if (!document.hidden) this.draw();
-      pressed.clear();
+      input.endFrame();
       requestAnimationFrame((nextTime) => this.loop(nextTime));
     }
 
@@ -3272,22 +3338,18 @@
     }
   }
 
-  const keys = new Set();
-  const pressed = new Set();
-  const onlineControlCodes = new Set([
-    "KeyW", "KeyA", "KeyS", "KeyD", "KeyT", "KeyY", "KeyG", "KeyH", "KeyE", "Space",
-  ]);
-  const onlineActionCodes = new Set(["KeyT", "KeyY", "KeyG", "KeyH"]);
   const game = new NeonMMA();
 
   window.addEventListener("keydown", (event) => {
-    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(event.code)
-      && game.state !== "menu") event.preventDefault();
-    if (!keys.has(event.code)) pressed.add(event.code);
-    keys.add(event.code);
-    if (!event.repeat && onlineControlCodes.has(event.code) && game.sendOnlineInputNow()) {
-      if (onlineActionCodes.has(event.code)) pressed.delete(event.code);
+    if (game.settingsUi?.captureKey(event)) return;
+    if (game.settingsUi?.isOpen) {
+      if (event.code === "Escape" && !event.repeat) game.closeSettings();
+      event.preventDefault();
+      return;
     }
+    if ((input.isMappedCode(event.code) || ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(event.code))
+      && game.state !== "menu") event.preventDefault();
+    input.handleKeyDown(event.code, event.repeat);
     if (event.code === "Escape" && !event.repeat) {
       if (game.state === "menu"
         && !menuScreen.classList.contains("is-hidden")
@@ -3305,14 +3367,20 @@
   });
 
   window.addEventListener("keyup", (event) => {
-    keys.delete(event.code);
-    if (onlineControlCodes.has(event.code)) game.sendOnlineInputNow(false);
+    input.handleKeyUp(event.code);
   });
   window.addEventListener("blur", () => {
-    keys.clear();
-    pressed.clear();
+    input.releaseAll();
     game.sendOnlineInputNow(false);
     if (["fighting", "ground"].includes(game.state)) game.togglePause();
+  });
+  window.addEventListener("gamepadconnected", () => {
+    input.pollGamepads();
+    game.settingsUi?.refreshDevices();
+  });
+  window.addEventListener("gamepaddisconnected", () => {
+    input.pollGamepads();
+    game.settingsUi?.refreshDevices();
   });
   window.addEventListener("resize", syncCanvasResolution);
   document.addEventListener?.("visibilitychange", () => game.syncOnlineBackgroundTicker());
@@ -3354,6 +3422,30 @@
     game.returnToMenu("online");
   });
   document.querySelector("#resume-button").addEventListener("click", () => game.togglePause());
+  settingsButton.addEventListener("click", () => game.openSettings());
+  pauseSettingsButton.addEventListener("click", () => game.openSettings());
+  touchPauseButton.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    game.togglePause();
+  });
+  for (const button of touchButtons) {
+    const action = button.dataset.touchAction;
+    const release = (event) => {
+      event.preventDefault?.();
+      input.setTouchAction(action, false, 1);
+      button.classList.remove("is-pressed");
+    };
+    button.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      button.setPointerCapture?.(event.pointerId);
+      input.setTouchAction(action, true, 1);
+      button.classList.add("is-pressed");
+    });
+    button.addEventListener("pointerup", release);
+    button.addEventListener("pointercancel", release);
+    button.addEventListener("lostpointercapture", release);
+    button.addEventListener("contextmenu", (event) => event.preventDefault());
+  }
   rematchButton.addEventListener("click", () => {
     if (game.mode === "online") game.returnToOnlineLobby();
     else game.start(game.mode);
@@ -3384,6 +3476,6 @@
   });
 
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { game, Fighter, ATTACKS, GAMEPLAY_RULES, getHudHealthState };
+    module.exports = { game, input, Fighter, ATTACKS, GAMEPLAY_RULES, getHudHealthState };
   }
 })();

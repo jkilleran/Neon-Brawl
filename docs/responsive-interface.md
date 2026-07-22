@@ -2,7 +2,7 @@
 
 ## One shared viewport
 
-The Canvas, HUD, main menu, online lobby, pause dialog, round messages, and result scorecard all live inside `#game-viewport`. That container always keeps a 16:9 aspect ratio, so the arena plate, fighters, effects, hit positions, and interface cannot scale at different rates.
+The Canvas, HUD, main menu, online lobby, pause dialog, Settings panel, touch overlay, round messages, and result scorecard all live inside `#game-viewport`. That container always keeps a 16:9 aspect ratio, so the arena plate, fighters, effects, hit positions, and interface cannot scale at different rates.
 
 Fullscreen mode centers the same viewport and adds natural letterboxing on screens that are wider, taller, or portrait-oriented. The logical game resolution remains 1280 × 720 while the Canvas backing store scales up to 2× on high-density displays.
 
@@ -14,6 +14,8 @@ Menu adaptation is based on the rendered game viewport instead of the browser wi
 - 1000 px and below: compressed navigation, dialogs, lobby rows, pause controls, and scorecards.
 - 720 px and below: single-column main menu, hidden decorative fighter card, compact actions, and edge-safe dialogs.
 - 520 px and below: essential labels only, vertically scrollable dialogs, compact online controls, and horizontally scrollable score tables.
+
+The Settings panel keeps keyboard mapping and device controls in two columns while space allows, then removes secondary controller hints and collapses to one column on the narrowest viewports. Touch controls use container-relative sizing, user-adjustable scale, and fixed corner anchors, so they remain reachable without changing the Canvas coordinate system.
 
 The scorecard keeps its complete statistics at small sizes through local horizontal scrolling instead of deleting match information. The pause and online panels use bounded vertical scrolling so every action remains reachable.
 

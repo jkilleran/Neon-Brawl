@@ -23,6 +23,8 @@ Open `http://localhost:3000` in both tabs, enter two different fighter names, an
 
 ## Controls
 
+Open the gear button to access Settings. Both keyboard layouts can be reassigned, and mappings persist in the current browser. If a replacement key is already in use by that player, the two actions swap safely.
+
 | Action | Player 1 / Rook | Player 2 / Vex |
 | --- | --- | --- |
 | Advance | `D` | `←` |
@@ -42,6 +44,10 @@ Without a modifier, strikes target the head. Hold that player's modifier while p
 Takedowns and ground control remain disabled. Their prototype logic and legacy sprites are preserved for a future grappling animation pass.
 
 In Online Arena, both players use the Player 1 keyboard layout on their own computer. Online matches cannot be paused.
+
+Standard Xbox- and PlayStation-style controllers are detected automatically. The first connected controller controls Player 1 and the second controls Player 2 in Local Sparring. The left stick or D-pad moves, shoulder buttons control guards and the body modifier, face buttons produce the four strikes, and the right trigger evades.
+
+Optional touch controls can be set to Auto, Visible, or Hidden. They provide movement, both guards, all four strikes, the body modifier, and evade without changing Canvas resolution or gameplay timing. See [Universal Input and Settings](docs/input-system.md) for the complete mapping and architecture.
 
 ## Online Arena
 
@@ -119,6 +125,7 @@ npm run build
 - Dedicated Neon MMA arena plate with reference-aligned fighter placement and dual-foot contact shadows
 - Fixed transparent cage and floor over a 2.1-second low/takeoff/jump-apex crowd loop with no procedural lighting pass
 - Aspect-safe 16:9 viewport, fullscreen letterboxing, high-density Canvas rendering up to 2×, and container-responsive menus
+- Persistent keyboard remapping, standard dual-gamepad support, and an optional performance-safe touch overlay
 - Quick Fight, Local Sparring, and infinite-time Practice Lab
 - Three 3-minute rounds with 10-9 scoring
 - Separate head and body damage

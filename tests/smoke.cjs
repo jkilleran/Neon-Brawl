@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const combatConfig = require("../combat-config.js");
 const animationManifest = require("../animation-manifest.js");
+const inputApi = require("../input-manager.js");
 const arenaMetadata = require("../public/assets/arenas/neon-octagon/arena.json");
 const { OnlineMatchSimulation } = require("../online-simulation.cjs");
 
@@ -48,8 +49,11 @@ assert.match(markup, /pause-controls-grid/, "Pause menu should expose the comple
 assert.match(markup, /id="game-viewport" class="game-viewport"/, "Canvas and overlays should share one responsive viewport");
 assert.match(markup, /WASD \+ TYGH/, "Pause menu should list Player 1 controls");
 assert.match(markup, /FLECHAS \+ IOKL/, "Pause menu should list Player 2 controls");
-assert.match(markup, /SPACE \/ SHIFT<\/kbd><span>mantener \+ cualquier golpe/, "Pause menu should explain the body modifier");
-assert.match(markup, /combat-config\.js[\s\S]*animation-manifest\.js[\s\S]*game\.js/, "Shared combat config and animation manifest must load before the game");
+assert.match(markup, /body-modifier-summary[\s\S]*mantener \+ cualquier golpe/, "Pause menu should explain the body modifier");
+assert.match(markup, /combat-config\.js[\s\S]*animation-manifest\.js[\s\S]*input-manager\.js[\s\S]*settings-ui\.js[\s\S]*game\.js/, "Shared configs and universal input modules must load before the game");
+assert.match(markup, /id="settings-screen"[\s\S]*KEYBOARD MAPPING[\s\S]*GAMEPAD \/\/ STANDARD[\s\S]*TOUCH OVERLAY/, "Settings should expose keyboard, controller and touch options");
+assert.match(markup, /id="touch-controls"[\s\S]*data-touch-action="bodyModifier"[\s\S]*data-touch-action="evade"/, "The optional touch overlay should expose modifier and evade actions");
+assert.equal(inputApi.DEFAULT_BINDINGS[1].leftPunch, "KeyT");
 assert.match(markup, /Tres asaltos de 3 minutos/, "Menu should explain round duration");
 assert.match(markup, /data-menu-target="local"/, "Main menu should expose the local category");
 assert.match(markup, /data-menu-target="online"/, "Main menu should expose the online category");
@@ -240,6 +244,14 @@ const make = (selector) => {
   "#sound-button",
   "#sound-icon",
   "#combat-controls",
+  "#touch-controls",
+  "#touch-pause-button",
+  "#settings-screen",
+  "#settings-button",
+  "#pause-settings-button",
+  "#pause-summary-p1",
+  "#pause-summary-p2",
+  "#body-modifier-summary",
   "#online-screen",
   "#online-connect-form",
   "#online-name",
@@ -283,6 +295,10 @@ const menuCategoryButtons = [
 ];
 const menuBackButtons = [new FakeElement(), new FakeElement()];
 const menuButtons = [new FakeElement(), new FakeElement()];
+const touchButtons = [
+  "guardHigh", "moveLeft", "moveRight", "guardLow", "leftPunch",
+  "rightPunch", "leftKick", "rightKick", "bodyModifier", "evade",
+].map((touchAction) => new FakeElement({ touchAction }));
 selectors.get("#menu-screen").dataset.menuSection = "root";
 const windowListeners = new Map();
 const animationFrames = [];
@@ -320,6 +336,8 @@ global.document = {
     if (selector === "[data-menu-target]") return menuCategoryButtons;
     if (selector === "[data-menu-back]") return menuBackButtons;
     if (selector === ".menu-button") return menuButtons;
+    if (selector === "[data-touch-action]") return touchButtons;
+    if (selector === "[data-control-player][data-control-action]") return [];
     return [];
   },
   async exitFullscreen() {
@@ -357,7 +375,7 @@ global.requestAnimationFrame = (callback) => {
   animationFrames.push(callback);
 };
 
-const { game, ATTACKS, getHudHealthState } = require("../game.js");
+const { game, input, ATTACKS, getHudHealthState } = require("../game.js");
 
 assert.equal(getHudHealthState(100).tier, "stable", "Healthy fighters should show a calm status icon");
 assert.equal(getHudHealthState(69).tier, "worn", "Moderate damage should turn the status icon yellow");
@@ -388,6 +406,19 @@ dispatchWindowKey("keyup", "KeyA");
 dispatchWindowKey("keydown", "KeyD");
 assert.equal(game.getOnlineKeyboardInput().move, 1, "Online D must always send screen-right movement");
 dispatchWindowKey("keyup", "KeyD");
+
+input.setBinding(1, "leftPunch", "KeyQ");
+dispatchWindowKey("keydown", "KeyQ");
+assert.equal(game.getOnlineKeyboardInput().leftPunch, true, "Online play should use the remapped P1 strike");
+dispatchWindowKey("keyup", "KeyQ");
+input.resetBindings(1);
+
+const touchLeftPunch = touchButtons.find((button) => button.dataset.touchAction === "leftPunch");
+touchLeftPunch.dispatch("pointerdown", { pointerId: 1, preventDefault() {} });
+assert.equal(game.getOnlineKeyboardInput().leftPunch, true, "Touch should enter the same normalized online input");
+touchLeftPunch.dispatch("pointerup", { pointerId: 1, preventDefault() {} });
+input.endFrame();
+assert.equal(game.getOnlineKeyboardInput().leftPunch, false, "Touch release should clear the normalized action");
 
 game.fighterOne.resetRound(380, 1);
 game.fighterTwo.resetRound(900, -1);

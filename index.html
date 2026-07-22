@@ -29,6 +29,9 @@
         </a>
 
         <div class="topbar__actions">
+          <button id="settings-button" class="icon-button" type="button" aria-label="Abrir ajustes">
+            <span aria-hidden="true">⚙</span>
+          </button>
           <button id="sound-button" class="icon-button" type="button" aria-label="Activar o silenciar sonido">
             <span id="sound-icon" aria-hidden="true">♪</span>
           </button>
@@ -143,8 +146,8 @@
           </div>
 
           <div class="menu-controls">
-            <div><span>P1</span><b>W A S D</b> defensa/mov. <b>T Y</b> puños <b>G H</b> patadas <b>SPACE</b> cuerpo <b>E</b> evade</div>
-            <div><span>P2</span><b>↑ ← ↓ →</b> defensa/mov. <b>I O</b> puños <b>K L</b> patadas <b>SHIFT</b> cuerpo <b>P</b> evade</div>
+            <div id="menu-controls-p1"><span>P1</span><b>W A S D</b> defensa/mov. <b>T Y</b> puños <b>G H</b> patadas <b>SPACE</b> cuerpo <b>E</b> evade</div>
+            <div id="menu-controls-p2"><span>P2</span><b>↑ ← ↓ →</b> defensa/mov. <b>I O</b> puños <b>K L</b> patadas <b>SHIFT</b> cuerpo <b>P</b> evade</div>
           </div>
         </div>
 
@@ -209,35 +212,118 @@
             <h2>PAUSA</h2>
             <div class="pause-controls-grid">
               <section class="pause-control-card pause-control-card--p1">
-                <header><b>P1</b><span>WASD + TYGH</span></header>
-                <div><kbd>W</kbd> guardia alta</div>
-                <div><kbd>A</kbd> retroceder</div>
-                <div><kbd>S</kbd> guardia baja</div>
-                <div><kbd>D</kbd> avanzar</div>
-                <div><kbd>T</kbd> puño izquierdo</div>
-                <div><kbd>Y</kbd> puño derecho</div>
-                <div><kbd>G</kbd> patada izquierda</div>
-                <div><kbd>H</kbd> patada derecha</div>
-                <div><kbd>E</kbd> evade</div>
+                <header><b>P1</b><span id="pause-summary-p1">WASD + TYGH</span></header>
+                <div><kbd data-control-player="1" data-control-action="guardHigh">W</kbd> guardia alta</div>
+                <div><kbd data-control-player="1" data-control-action="moveLeft">A</kbd> mover izquierda</div>
+                <div><kbd data-control-player="1" data-control-action="guardLow">S</kbd> guardia baja</div>
+                <div><kbd data-control-player="1" data-control-action="moveRight">D</kbd> mover derecha</div>
+                <div><kbd data-control-player="1" data-control-action="leftPunch">T</kbd> puño izquierdo</div>
+                <div><kbd data-control-player="1" data-control-action="rightPunch">Y</kbd> puño derecho</div>
+                <div><kbd data-control-player="1" data-control-action="leftKick">G</kbd> patada izquierda</div>
+                <div><kbd data-control-player="1" data-control-action="rightKick">H</kbd> patada derecha</div>
+                <div><kbd data-control-player="1" data-control-action="evade">E</kbd> evade</div>
               </section>
               <section class="pause-control-card pause-control-card--p2">
-                <header><b>P2</b><span>FLECHAS + IOKL</span></header>
-                <div><kbd>↑</kbd> guardia alta</div>
-                <div><kbd>←</kbd> avanzar</div>
-                <div><kbd>↓</kbd> guardia baja</div>
-                <div><kbd>→</kbd> retroceder</div>
-                <div><kbd>I</kbd> puño izquierdo</div>
-                <div><kbd>O</kbd> puño derecho</div>
-                <div><kbd>K</kbd> patada izquierda</div>
-                <div><kbd>L</kbd> patada derecha</div>
-                <div><kbd>P</kbd> evade</div>
+                <header><b>P2</b><span id="pause-summary-p2">FLECHAS + IOKL</span></header>
+                <div><kbd data-control-player="2" data-control-action="guardHigh">↑</kbd> guardia alta</div>
+                <div><kbd data-control-player="2" data-control-action="moveLeft">←</kbd> mover izquierda</div>
+                <div><kbd data-control-player="2" data-control-action="guardLow">↓</kbd> guardia baja</div>
+                <div><kbd data-control-player="2" data-control-action="moveRight">→</kbd> mover derecha</div>
+                <div><kbd data-control-player="2" data-control-action="leftPunch">I</kbd> puño izquierdo</div>
+                <div><kbd data-control-player="2" data-control-action="rightPunch">O</kbd> puño derecho</div>
+                <div><kbd data-control-player="2" data-control-action="leftKick">K</kbd> patada izquierda</div>
+                <div><kbd data-control-player="2" data-control-action="rightKick">L</kbd> patada derecha</div>
+                <div><kbd data-control-player="2" data-control-action="evade">P</kbd> evade</div>
               </section>
             </div>
-            <div class="body-modifier"><kbd>SPACE / SHIFT</kbd><span>mantener + cualquier golpe = ataque al cuerpo</span></div>
+            <div class="body-modifier"><kbd id="body-modifier-summary">SPACE / R SHIFT</kbd><span>mantener + cualquier golpe = ataque al cuerpo</span></div>
             <div class="body-modifier"><kbd>STA</kbd><span>brillante = stamina actual · tenue = límite recuperable</span></div>
             <div class="pause-actions">
               <button id="resume-button" class="dialog-button dialog-button--primary" type="button">CONTINUAR</button>
+              <button id="pause-settings-button" class="dialog-button" type="button">SETTINGS</button>
               <button class="dialog-button menu-button" type="button">VOLVER AL MENÚ</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="settings-screen" class="screen screen--dialog is-hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+          <div class="dialog-card dialog-card--settings">
+            <header class="settings-header">
+              <div>
+                <p class="eyebrow"><span></span> INPUT SYSTEM // v1</p>
+                <h2 id="settings-title">SETTINGS</h2>
+              </div>
+              <div id="settings-device-status" class="settings-device-status" data-connected="false">
+                <i></i><span>TECLADO ACTIVO</span><small>0 MANDOS</small>
+              </div>
+            </header>
+
+            <nav class="settings-tabs" aria-label="Jugador que se desea configurar">
+              <button class="settings-tab is-active" data-settings-player="1" type="button">PLAYER 1 <small>LOCAL / ONLINE</small></button>
+              <button class="settings-tab" data-settings-player="2" type="button">PLAYER 2 <small>LOCAL</small></button>
+            </nav>
+
+            <div class="settings-body">
+              <section class="settings-panel" data-settings-panel="1">
+                <header><span><small>KEYBOARD MAPPING</small><strong>PLAYER 1</strong></span><button data-reset-player="1" type="button">RESET P1</button></header>
+                <div class="binding-grid">
+                  <label><span>Mover izquierda</span><button data-binding-player="1" data-binding-action="moveLeft" type="button">A</button></label>
+                  <label><span>Mover derecha</span><button data-binding-player="1" data-binding-action="moveRight" type="button">D</button></label>
+                  <label><span>Guardia alta</span><button data-binding-player="1" data-binding-action="guardHigh" type="button">W</button></label>
+                  <label><span>Guardia baja</span><button data-binding-player="1" data-binding-action="guardLow" type="button">S</button></label>
+                  <label><span>Puño izquierdo</span><button data-binding-player="1" data-binding-action="leftPunch" type="button">T</button></label>
+                  <label><span>Puño derecho</span><button data-binding-player="1" data-binding-action="rightPunch" type="button">Y</button></label>
+                  <label><span>Patada izquierda</span><button data-binding-player="1" data-binding-action="leftKick" type="button">G</button></label>
+                  <label><span>Patada derecha</span><button data-binding-player="1" data-binding-action="rightKick" type="button">H</button></label>
+                  <label><span>Golpe al cuerpo</span><button data-binding-player="1" data-binding-action="bodyModifier" type="button">SPACE</button></label>
+                  <label><span>Evasión</span><button data-binding-player="1" data-binding-action="evade" type="button">E</button></label>
+                </div>
+              </section>
+
+              <section class="settings-panel is-hidden" data-settings-panel="2">
+                <header><span><small>KEYBOARD MAPPING</small><strong>PLAYER 2</strong></span><button data-reset-player="2" type="button">RESET P2</button></header>
+                <div class="binding-grid">
+                  <label><span>Mover izquierda</span><button data-binding-player="2" data-binding-action="moveLeft" type="button">←</button></label>
+                  <label><span>Mover derecha</span><button data-binding-player="2" data-binding-action="moveRight" type="button">→</button></label>
+                  <label><span>Guardia alta</span><button data-binding-player="2" data-binding-action="guardHigh" type="button">↑</button></label>
+                  <label><span>Guardia baja</span><button data-binding-player="2" data-binding-action="guardLow" type="button">↓</button></label>
+                  <label><span>Puño izquierdo</span><button data-binding-player="2" data-binding-action="leftPunch" type="button">I</button></label>
+                  <label><span>Puño derecho</span><button data-binding-player="2" data-binding-action="rightPunch" type="button">O</button></label>
+                  <label><span>Patada izquierda</span><button data-binding-player="2" data-binding-action="leftKick" type="button">K</button></label>
+                  <label><span>Patada derecha</span><button data-binding-player="2" data-binding-action="rightKick" type="button">L</button></label>
+                  <label><span>Golpe al cuerpo</span><button data-binding-player="2" data-binding-action="bodyModifier" type="button">R SHIFT</button></label>
+                  <label><span>Evasión</span><button data-binding-player="2" data-binding-action="evade" type="button">P</button></label>
+                </div>
+              </section>
+
+              <aside class="settings-options">
+                <section class="controller-card">
+                  <header><small>GAMEPAD // STANDARD</small><strong>AUTO DETECT</strong></header>
+                  <div class="controller-layout">
+                    <span><kbd>STICK / D-PAD</kbd> movimiento</span>
+                    <span><kbd>LB / LT</kbd> guardias alta / baja</span>
+                    <span><kbd>X / Y</kbd> puños izquierdo / derecho</span>
+                    <span><kbd>A / B</kbd> patadas izquierda / derecha</span>
+                    <span><kbd>RB</kbd> modificador al cuerpo</span>
+                    <span><kbd>RT</kbd> evasión</span>
+                  </div>
+                  <label class="settings-range"><span><b>DEADZONE</b><output id="gamepad-deadzone-value">22%</output></span><input id="gamepad-deadzone" type="range" min="8" max="45" step="1" value="22" /></label>
+                </section>
+
+                <section class="touch-settings-card">
+                  <header><small>TOUCH OVERLAY</small><strong>OPTIONAL</strong></header>
+                  <label><span>Visibilidad</span><select id="touch-mode"><option value="auto">AUTO</option><option value="on">VISIBLE</option><option value="off">OCULTO</option></select></label>
+                  <label class="settings-range"><span><b>OPACIDAD</b><output id="touch-opacity-value">72%</output></span><input id="touch-opacity" type="range" min="35" max="100" step="1" value="72" /></label>
+                  <label class="settings-range"><span><b>TAMAÑO</b><output id="touch-scale-value">100%</output></span><input id="touch-scale" type="range" min="80" max="120" step="5" value="100" /></label>
+                  <small>Solo usa botones HTML ligeros; no cambia la resolución ni el render del combate.</small>
+                </section>
+              </aside>
+            </div>
+
+            <div id="binding-capture-status" class="binding-capture-status" aria-live="polite">Selecciona una tecla para reasignarla. ESC cancela.</div>
+            <div class="settings-actions">
+              <button id="settings-reset-all" class="dialog-button" type="button">RESTAURAR TODO</button>
+              <button id="settings-close" class="dialog-button dialog-button--primary" type="button">GUARDAR Y VOLVER</button>
             </div>
           </div>
         </div>
@@ -259,11 +345,29 @@
         </div>
 
           <div id="combat-controls" class="combat-controls is-hidden" aria-hidden="true">
-            <span><kbd>T</kbd> LEFT PUNCH</span>
-            <span><kbd>Y</kbd> RIGHT PUNCH</span>
-            <span><kbd>G</kbd> LEFT KICK</span>
-            <span><kbd>H</kbd> RIGHT KICK</span>
-            <span><kbd>SPACE +</kbd> BODY</span>
+            <span><kbd data-control-player="1" data-control-action="leftPunch">T</kbd> LEFT PUNCH</span>
+            <span><kbd data-control-player="1" data-control-action="rightPunch">Y</kbd> RIGHT PUNCH</span>
+            <span><kbd data-control-player="1" data-control-action="leftKick">G</kbd> LEFT KICK</span>
+            <span><kbd data-control-player="1" data-control-action="rightKick">H</kbd> RIGHT KICK</span>
+            <span><kbd data-control-player="1" data-control-action="bodyModifier">SPACE</kbd> + BODY</span>
+          </div>
+
+          <div id="touch-controls" class="touch-controls is-hidden" aria-label="Controles táctiles del jugador 1">
+            <button id="touch-pause-button" class="touch-pause-button" type="button" aria-label="Pausar partida">Ⅱ</button>
+            <div class="touch-cluster touch-cluster--movement">
+              <button class="touch-button touch-button--guard-high" data-touch-action="guardHigh" type="button"><b>H</b><small>GUARD</small></button>
+              <button class="touch-button touch-button--left" data-touch-action="moveLeft" type="button" aria-label="Mover izquierda">←</button>
+              <button class="touch-button touch-button--right" data-touch-action="moveRight" type="button" aria-label="Mover derecha">→</button>
+              <button class="touch-button touch-button--guard-low" data-touch-action="guardLow" type="button"><b>L</b><small>GUARD</small></button>
+            </div>
+            <div class="touch-cluster touch-cluster--actions">
+              <button class="touch-button touch-button--punch-left" data-touch-action="leftPunch" type="button"><b>LP</b></button>
+              <button class="touch-button touch-button--punch-right" data-touch-action="rightPunch" type="button"><b>RP</b></button>
+              <button class="touch-button touch-button--kick-left" data-touch-action="leftKick" type="button"><b>LK</b></button>
+              <button class="touch-button touch-button--kick-right" data-touch-action="rightKick" type="button"><b>RK</b></button>
+              <button class="touch-button touch-button--body" data-touch-action="bodyModifier" type="button"><b>BODY</b></button>
+              <button class="touch-button touch-button--evade" data-touch-action="evade" type="button"><b>EVADE</b></button>
+            </div>
           </div>
         </div>
       </section>
@@ -271,13 +375,15 @@
       <footer class="footer-note">
         <span><i></i> SYSTEM ONLINE</span>
         <p>ESC para pausar · Cada crítico tiene 1 de 2.2 de probabilidad de knockdown</p>
-        <span>BUILD 0.24.0 // JUMPING CROWD</span>
+        <span>BUILD 0.25.0 // UNIVERSAL INPUT</span>
       </footer>
     </main>
 
     <script type="module" src="combat-config.js"></script>
     <script type="module" src="animation-manifest.js"></script>
     <script type="module" src="online-client.js"></script>
+    <script type="module" src="input-manager.js"></script>
+    <script type="module" src="settings-ui.js"></script>
     <script type="module" src="game.js"></script>
   </body>
 </html>

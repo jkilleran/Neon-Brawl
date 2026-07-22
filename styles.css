@@ -1290,8 +1290,291 @@ h1 em {
 
 .pause-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+}
+
+.dialog-card--settings {
+  width: min(1040px, calc(100% - 42px));
+  max-height: calc(100% - 36px);
+  padding: 22px 26px 20px;
+  overflow: auto;
+}
+
+.settings-header,
+.settings-device-status,
+.settings-tabs,
+.settings-panel > header,
+.controller-card > header,
+.touch-settings-card > header,
+.settings-range > span,
+.settings-actions {
+  display: flex;
+  align-items: center;
+}
+
+.settings-header {
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.dialog-card--settings h2 {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 48px);
+}
+
+.settings-device-status {
+  min-width: 185px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px 8px;
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  color: var(--muted);
+  font: 700 9px "Orbitron", sans-serif;
+  letter-spacing: 0.08em;
+}
+
+.settings-device-status i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #77788e;
+}
+
+.settings-device-status small {
+  width: 100%;
+  color: #77788e;
+  font-size: 7px;
+  text-align: right;
+}
+
+.settings-device-status[data-connected="true"] {
+  border-color: rgba(214, 255, 125, 0.3);
+  color: var(--lime);
+}
+
+.settings-device-status[data-connected="true"] i {
+  background: var(--lime);
+  box-shadow: 0 0 9px var(--lime);
+}
+
+.settings-tabs {
+  gap: 8px;
+  margin: 14px 0 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.settings-tab {
+  min-width: 180px;
+  padding: 8px 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #77788e;
+  font: 700 10px "Orbitron", sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+
+.settings-tab small {
+  display: block;
+  margin-top: 2px;
+  font: 600 7px "Chakra Petch", sans-serif;
+  letter-spacing: 0.12em;
+}
+
+.settings-tab.is-active {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: linear-gradient(180deg, transparent, rgba(53, 242, 229, 0.08));
+}
+
+.settings-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.22fr) minmax(270px, 0.78fr);
+  gap: 12px;
+}
+
+.settings-panel,
+.controller-card,
+.touch-settings-card {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(4, 4, 15, 0.72);
+}
+
+.settings-panel {
+  padding: 12px;
+}
+
+.settings-panel > header,
+.controller-card > header,
+.touch-settings-card > header {
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 9px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.settings-panel > header small,
+.controller-card > header small,
+.touch-settings-card > header small {
+  display: block;
+  color: #6e7085;
+  font-size: 7px;
+  letter-spacing: 0.16em;
+}
+
+.settings-panel > header strong,
+.controller-card > header strong,
+.touch-settings-card > header strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--cyan);
+  font: 700 11px "Orbitron", sans-serif;
+}
+
+.settings-panel > header button {
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.025);
+  color: #8f90a5;
+  font-size: 7px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.binding-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.binding-grid label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 86px;
+  align-items: center;
+  min-height: 31px;
+  gap: 8px;
+  padding: 4px 5px 4px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  background: rgba(255, 255, 255, 0.018);
+  color: #a4a5b9;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.binding-grid button {
+  min-height: 23px;
+  border: 1px solid rgba(53, 242, 229, 0.26);
+  background: rgba(53, 242, 229, 0.06);
+  color: var(--cyan);
+  font: 700 8px "Orbitron", sans-serif;
+  cursor: pointer;
+}
+
+.binding-grid button:hover,
+.binding-grid button.is-listening {
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+.settings-options {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.controller-card,
+.touch-settings-card {
+  padding: 11px 12px;
+}
+
+.controller-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 8px;
+}
+
+.controller-layout span {
+  color: #8c8da2;
+  font-size: 7px;
+}
+
+.controller-layout kbd {
+  display: inline-block;
+  min-width: 51px;
+  margin-right: 3px;
+  color: var(--lime);
+  font: 700 7px "Orbitron", sans-serif;
+}
+
+.settings-range {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.settings-range > span {
+  justify-content: space-between;
+  color: #77788e;
+  font-size: 7px;
+  letter-spacing: 0.1em;
+}
+
+.settings-range output {
+  color: var(--cyan);
+  font-family: "Orbitron", sans-serif;
+}
+
+.settings-range input {
+  width: 100%;
+  accent-color: var(--cyan);
+}
+
+.touch-settings-card > label:not(.settings-range) {
+  display: grid;
+  grid-template-columns: 1fr 116px;
+  align-items: center;
+  gap: 8px;
+  color: #9a9bae;
+  font-size: 8px;
+}
+
+.touch-settings-card select {
+  min-height: 28px;
+  border: 1px solid rgba(255, 59, 157, 0.28);
+  background: #090916;
+  color: var(--pink);
+  font: 700 8px "Orbitron", sans-serif;
+}
+
+.touch-settings-card > small {
+  display: block;
+  margin-top: 7px;
+  color: #66677b;
+  font-size: 7px;
+  line-height: 1.25;
+}
+
+.binding-capture-status {
+  min-height: 24px;
+  padding: 7px 10px;
+  border-left: 2px solid var(--yellow);
+  background: rgba(255, 230, 109, 0.045);
+  color: #9b9caf;
+  font-size: 8px;
+}
+
+.settings-actions {
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.settings-actions .dialog-button {
+  width: auto;
+  min-width: 160px;
 }
 
 .dialog-button {
@@ -1389,6 +1672,110 @@ h1 em {
   color: var(--cyan);
   font: 700 8px "Orbitron", sans-serif;
   text-align: center;
+}
+
+.touch-controls {
+  --touch-opacity: 0.72;
+  --touch-scale: 1;
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.touch-controls.is-active {
+  display: block;
+}
+
+.touch-pause-button {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(8px, 1.4cqw, 18px);
+  min-width: clamp(30px, 3.2cqw, 42px);
+  min-height: clamp(25px, 2.6cqw, 34px);
+  padding: 0;
+  pointer-events: auto;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  background: rgba(5, 5, 16, 0.68);
+  color: rgba(255, 255, 255, 0.72);
+  font: 700 clamp(8px, 0.9cqw, 11px) "Orbitron", sans-serif;
+  transform: translateX(-50%);
+  touch-action: none;
+}
+
+.touch-cluster {
+  position: absolute;
+  bottom: clamp(10px, 2.2cqw, 28px);
+  opacity: var(--touch-opacity);
+  transform: scale(var(--touch-scale));
+}
+
+.touch-cluster--movement {
+  left: clamp(10px, 2.5cqw, 34px);
+  display: grid;
+  grid-template: repeat(3, clamp(34px, 5cqw, 64px)) / repeat(3, clamp(34px, 5cqw, 64px));
+  transform-origin: left bottom;
+}
+
+.touch-cluster--actions {
+  right: clamp(10px, 2.5cqw, 34px);
+  display: grid;
+  grid-template: repeat(3, clamp(34px, 4.7cqw, 60px)) / repeat(4, clamp(34px, 4.7cqw, 60px));
+  gap: clamp(2px, 0.35cqw, 5px);
+  transform-origin: right bottom;
+}
+
+.touch-button {
+  pointer-events: auto;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+  background: rgba(5, 5, 16, 0.7);
+  color: #f4f6ff;
+  box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.035), 0 4px 14px rgba(0, 0, 0, 0.28);
+  font: 700 clamp(8px, 1.05cqw, 13px) "Orbitron", sans-serif;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-button small {
+  display: block;
+  margin-top: 1px;
+  font: 600 clamp(5px, 0.52cqw, 7px) "Chakra Petch", sans-serif;
+}
+
+.touch-button:active,
+.touch-button.is-pressed {
+  border-color: var(--cyan);
+  background: rgba(53, 242, 229, 0.22);
+  color: #fff;
+  transform: scale(0.93);
+}
+
+.touch-button--guard-high { grid-area: 1 / 2; border-color: rgba(53, 242, 229, 0.44); }
+.touch-button--left { grid-area: 2 / 1; }
+.touch-button--right { grid-area: 2 / 3; }
+.touch-button--guard-low { grid-area: 3 / 2; border-color: rgba(53, 242, 229, 0.44); }
+.touch-button--punch-left { grid-area: 1 / 2; border-color: rgba(255, 59, 157, 0.48); }
+.touch-button--punch-right { grid-area: 1 / 3; border-color: rgba(255, 59, 157, 0.48); }
+.touch-button--kick-left { grid-area: 2 / 1; border-color: rgba(255, 195, 91, 0.5); }
+.touch-button--kick-right { grid-area: 2 / 4; border-color: rgba(255, 195, 91, 0.5); }
+.touch-button--body {
+  grid-area: 3 / 2;
+  border-radius: 8px;
+  border-color: rgba(214, 255, 125, 0.48);
+  color: var(--lime);
+}
+
+.touch-button--evade {
+  grid-area: 3 / 3;
+  border-radius: 8px;
+  border-color: rgba(141, 92, 255, 0.5);
+  color: #bca9ff;
 }
 
 .footer-note {
@@ -2097,6 +2484,148 @@ h1 em {
 
   .scorecard-total article {
     padding: 5px;
+  }
+}
+
+@container game (max-width: 1000px) {
+  .dialog-card--settings {
+    width: calc(100% - 20px);
+    max-height: calc(100% - 18px);
+    padding: 12px 14px;
+  }
+
+  .settings-header .eyebrow,
+  .binding-capture-status {
+    display: none;
+  }
+
+  .dialog-card--settings h2 {
+    font-size: clamp(22px, 4cqw, 36px);
+  }
+
+  .settings-tabs {
+    margin: 7px 0;
+  }
+
+  .settings-tab {
+    min-width: 145px;
+    padding: 5px 8px;
+    font-size: 8px;
+  }
+
+  .settings-panel,
+  .controller-card,
+  .touch-settings-card {
+    padding: 7px 8px;
+  }
+
+  .binding-grid {
+    gap: 3px;
+  }
+
+  .binding-grid label {
+    grid-template-columns: minmax(0, 1fr) 66px;
+    min-height: 25px;
+    padding: 2px 3px 2px 6px;
+    font-size: 7px;
+  }
+
+  .binding-grid button {
+    min-height: 20px;
+    font-size: 6px;
+  }
+
+  .settings-options {
+    gap: 5px;
+  }
+
+  .controller-card > header,
+  .touch-settings-card > header,
+  .settings-panel > header {
+    margin-bottom: 5px;
+    padding-bottom: 4px;
+  }
+
+  .controller-layout {
+    gap: 2px 5px;
+  }
+
+  .settings-range {
+    margin-top: 4px;
+  }
+
+  .settings-actions .dialog-button {
+    min-width: 130px;
+    min-height: 30px;
+    margin-top: 5px;
+    font-size: 7px;
+  }
+}
+
+@container game (max-width: 620px) {
+  .settings-device-status {
+    min-width: 120px;
+    padding: 5px 7px;
+    font-size: 7px;
+  }
+
+  .settings-device-status small,
+  .settings-tab small,
+  .controller-layout span:nth-child(n + 5),
+  .touch-settings-card > small {
+    display: none;
+  }
+
+  .settings-body {
+    grid-template-columns: minmax(0, 1fr) minmax(190px, 0.72fr);
+    gap: 5px;
+  }
+
+  .controller-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .touch-settings-card > label:not(.settings-range) {
+    grid-template-columns: 1fr 80px;
+  }
+}
+
+@container game (max-width: 460px) {
+  .settings-device-status,
+  .controller-card,
+  .settings-panel > header small,
+  .touch-settings-card > header small,
+  .settings-actions .dialog-button:first-child {
+    display: none;
+  }
+
+  .settings-header {
+    justify-content: flex-start;
+  }
+
+  .settings-tabs {
+    gap: 3px;
+  }
+
+  .settings-tab {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .settings-body {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-options {
+    display: block;
+  }
+
+  .touch-settings-card {
+    margin-top: 4px;
+  }
+
+  .settings-actions .dialog-button {
+    width: 100%;
   }
 }
 
