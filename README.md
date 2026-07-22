@@ -62,7 +62,7 @@ The first online version includes:
 - immediate action delivery from both players to a fixed 60 Hz server simulation;
 - 30 Hz authoritative snapshots sent from the same server frame to both players;
 - identical local prediction for each player's movement, guard changes, and strike animation startup;
-- non-rewinding guard transitions with smooth ten-frame interpolation for local and remote fighters;
+- non-rewinding guard transitions with frame-count-aware interpolation for local and remote fighters;
 - stable strike-to-guard recovery even when the authoritative attack snapshot arrives late;
 - per-player input acknowledgements, bounded motion extrapolation, and smooth reconciliation;
 - screen-direction WASD online movement (`A` left, `D` right), including the right-side fighter;
@@ -94,6 +94,8 @@ public/assets/characters/
 ```
 
 Each movement folder contains `movement.json`, the runtime `sheet.png`, and a `frames/` directory with individually named PNGs. This makes it possible to replace one frame or one complete movement for only one character.
+
+Rook and Vex retain their approved classic sheets. New characters use the `production15` animation profile: 15 labeled frames per movement in a 5 × 3 atlas. The runtime supports both profiles in the same match without duplicating legacy frames.
 
 See [Character Sprite Library](docs/character-sprite-library.md) for maintenance workflows and [Animation Catalog](docs/animation-catalog.md) for the complete movement inventory.
 

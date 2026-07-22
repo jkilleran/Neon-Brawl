@@ -157,6 +157,31 @@ for (const id of ["leftPunchBody", "rightKickHead", "rightKickBody"]) {
   assert.equal(animationManifest.strikes[id].grid.fallbackWidth, 1920);
   assert.equal(animationManifest.strikes[id].grid.fallbackHeight, 682);
 }
+assert.deepEqual(animationManifest.supportedFrameCounts, [8, 10, 15]);
+assert.equal(animationManifest.productionFrameCount, 15);
+const productionCharacter = animationManifest.createCharacterDefinition({
+  id: "production-contract-test",
+  displayName: "Production Contract Test",
+  role: "Validation Only",
+  palette: { primary: "#35f2e5", accent: "#ff3b9d" },
+  animationProfile: "production15",
+});
+const productionStrike = animationManifest.resolveMovement(productionCharacter, "rightPunchHead");
+assert.equal(productionStrike.frameCount, 15);
+assert.equal(productionStrike.contactFrame, 8);
+assert.equal(productionStrike.frameLabels[7], "contact");
+assert.deepEqual(
+  [productionStrike.grid.columns, productionStrike.grid.rows, productionStrike.grid.frames],
+  [5, 3, 15],
+);
+const runtimeAnimationManifest = {
+  ...animationManifest,
+  characters: {
+    ...animationManifest.characters,
+    productionTest: productionCharacter,
+  },
+};
+globalThis.NEON_BRAWL_ANIMATIONS = runtimeAnimationManifest;
 
 class FakeClassList {
   constructor() {
@@ -330,7 +355,7 @@ const windowListeners = new Map();
 const animationFrames = [];
 const imageSources = [];
 const animationSheetsBySource = new Map(
-  Object.values(animationManifest.characters).flatMap((character) => (
+  Object.values(runtimeAnimationManifest.characters).flatMap((character) => (
     Object.values(character.sheets).map((sheet) => [sheet.src, sheet])
   )),
 );
@@ -402,6 +427,38 @@ global.requestAnimationFrame = (callback) => {
 };
 
 const { game, input, ATTACKS, getHudHealthState } = require("../game.js");
+
+const productionFighter = game.fighterOne;
+const originalCharacterId = productionFighter.characterId;
+productionFighter.characterId = "productionTest";
+productionFighter.resetRound(380, 1);
+productionFighter.guard = "high";
+productionFighter.guardBlend = 1;
+assert.equal(productionFighter.getVisualFrame().frame, 14, "A 15-frame guard must reach its final frame");
+productionFighter.guard = null;
+productionFighter.guardBlend = 0;
+productionFighter.hitReaction = { target: "head", elapsed: 0.99, duration: 1 };
+assert.equal(productionFighter.getVisualFrame().frame, 14, "A 15-frame hit reaction must use all frames");
+productionFighter.hitReaction = null;
+productionFighter.startAttack("rightPunchHead");
+productionFighter.attack.elapsed = ATTACKS.rightPunchHead.startup;
+assert.equal(productionFighter.getAttackFrameFloat(), 7, "Production strikes must contact on frame 8");
+const productionContactPoint = productionFighter.getStrikePoint();
+productionFighter.attack = null;
+productionFighter.finishAnimation = { animation: "headKnockout", elapsed: 0.99, duration: 1 };
+assert.equal(productionFighter.getVisualFrame().frame, 14, "A 15-frame finish must reach its final pose");
+productionFighter.finishAnimation = null;
+productionFighter.characterId = originalCharacterId;
+productionFighter.resetRound(380, 1);
+productionFighter.startAttack("rightPunchHead");
+productionFighter.attack.elapsed = ATTACKS.rightPunchHead.startup;
+const classicContactPoint = productionFighter.getStrikePoint();
+assert.deepEqual(
+  productionContactPoint,
+  classicContactPoint,
+  "The 15-frame profile must preserve the approved gameplay contact point",
+);
+productionFighter.attack = null;
 
 assert.equal(getHudHealthState(100).tier, "stable", "Healthy fighters should show a calm status icon");
 assert.equal(getHudHealthState(69).tier, "worn", "Moderate damage should turn the status icon yellow");
@@ -1049,7 +1106,11 @@ menuBackButtons[0].dispatch("click");
 assert.equal(selectors.get("#menu-screen").dataset.menuSection, "root");
 assert.equal(modeButtons[0].listeners.has("click"), true, "CPU mode should be interactive");
 assert.equal(modeButtons[2].listeners.has("click"), true, "Practice mode should be interactive");
-assert.equal(imageSources.length, 70, "The layered arena and all 33 movements for both fighters should preload without the obsolete full plate");
+assert.equal(
+  imageSources.length,
+  Object.keys(runtimeAnimationManifest.characters).length * 33 + 1 + arenaMetadata.layers.crowd.frames.length,
+  "The layered arena and every registered character movement should preload without the obsolete full plate",
+);
 assert(imageSources.includes(arenaMetadata.runtimeAsset), "The approved arena plate should preload");
 assert(imageSources.includes(arenaMetadata.layers.foreground), "The fixed transparent arena layer should preload");
 for (const crowdFrame of arenaMetadata.layers.crowd.frames) {

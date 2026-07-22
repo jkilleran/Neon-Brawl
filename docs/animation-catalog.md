@@ -18,9 +18,19 @@ Each character currently owns 33 independent movements:
 
 Rook and Vex contain the same approved art at this checkpoint, but they load different file paths. Either library can therefore diverge without changing the other fighter.
 
+## Animation profiles
+
+The runtime supports mixed frame counts per character. Frame count, atlas grid, contact frame, and phase labels are resolved from the character's `animationProfile`; gameplay code never assumes that every fighter uses the same count.
+
+| Profile | Intended use | Frames | Grid | Strike contact |
+| --- | --- | ---: | --- | ---: |
+| `classic` | Existing Rook and Vex assets | 10 modern / 8 legacy | Existing per-movement grids | Existing approved frame 4 or 6 |
+| `production15` | Every newly generated character | 15 for all 33 movements | 5 columns × 3 rows, 1920 × 1023 | Frame 8 |
+
 ## Production rules
 
-- A modern movement uses exactly 10 frames.
+- New characters use `animationProfile: "production15"` and exactly 15 frames per movement.
+- Rook and Vex remain on `classic`; no legacy art is padded or duplicated merely to reach 15 frames.
 - Source art faces screen-right. Runtime mirroring handles a fighter facing left.
 - An attack locks its facing when it starts, preventing a mid-animation direction flip.
 - Every frame has an English phase label and a stable one-based number.
@@ -30,7 +40,7 @@ Rook and Vex contain the same approved art at this checkpoint, but they load dif
 - Frame 6 is the contact frame for punches and the approved right kicks. `leftKickHead` keeps its earlier contact at frame 4.
 - `sheet.png` is consumed by the game; the PNGs in `frames/` are the editable source for future frame replacement.
 
-## Standard strike phases
+## Classic strike phases
 
 | Frame | Label | Function |
 | ---: | --- | --- |
@@ -46,6 +56,18 @@ Rook and Vex contain the same approved art at this checkpoint, but they load dif
 | 10 | `guard-return` | Return to neutral guard |
 
 The early-contact left head kick uses `contact` at frame 4 and follow-through labels for frames 5–6.
+
+## Production 15-frame strike phases
+
+| Frames | Function |
+| --- | --- |
+| 1–5 | Guard, anticipation, weight shift, load, and chamber |
+| 6–7 | Two extension phases |
+| 8 | Contact |
+| 9–11 | Follow-through and two recoil phases |
+| 12–15 | Two recovery and two guard-return phases |
+
+The 15-frame profile also defines category-specific 15-frame labels for locomotion, defense, reactions, knockdowns, knockouts, and the disabled legacy movement. Those labels are executable metadata in `animation-manifest.js` and are emitted into every generated movement catalog.
 
 ## Strike list
 
@@ -98,7 +120,7 @@ Knockout frames progress from guard to decisive impact, collapse, mat contact, s
 
 ## Support and legacy movements
 
-The former 20-frame combined atlases were split into independent 10-frame movements. This removes offsets from gameplay code and makes individual maintenance safer.
+The former 20-frame combined atlases were split into independent classic 10-frame movements. New `production15` characters receive independent 15-frame movements from the beginning. This removes offsets from gameplay code and makes individual maintenance safer.
 
 | Movement ID | Purpose | Movement folder |
 | --- | --- | --- |
@@ -112,7 +134,7 @@ The former 20-frame combined atlases were split into independent 10-frame moveme
 
 ## Runtime selection
 
-`game.js` assigns `characterId: "rook"` to Player 1 and `characterId: "vex"` to Player 2. The renderer selects `ANIMATIONS[characterId][movementId]`. Both libraries use canonical right-facing artwork, and `facing` mirrors the selected frame toward the opponent.
+`game.js` assigns `characterId: "rook"` to Player 1 and `characterId: "vex"` to Player 2. The renderer selects `ANIMATIONS[characterId][movementId]` and derives its last frame, contact frame, cycles, reactions, guards, knockdowns, and finishes from that sheet's metadata. All libraries use canonical right-facing artwork, and `facing` mirrors the selected frame toward the opponent.
 
 ## Verification
 

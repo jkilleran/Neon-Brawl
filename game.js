@@ -182,10 +182,11 @@
     return image;
   });
 
-  function animationSheet({ src, columns, rows, frames, fallbackWidth, fallbackHeight }) {
+  function animationSheet(definition) {
+    const { src, ...metadata } = definition;
     const image = new Image();
     image.src = src;
-    return { image, columns, rows, frames, fallbackWidth, fallbackHeight };
+    return { image, src, ...metadata };
   }
 
   const ANIMATIONS = Object.fromEntries(
@@ -637,6 +638,18 @@
       return this.attack ? ATTACKS[this.attack.type] : null;
     }
 
+    getAnimationSheet(animationId) {
+      return ANIMATIONS[this.characterId][animationId] ?? null;
+    }
+
+    getAnimationFrameCount(animationId) {
+      return Math.max(1, this.getAnimationSheet(animationId)?.frames ?? 1);
+    }
+
+    getAnimationLastFrame(animationId) {
+      return this.getAnimationFrameCount(animationId) - 1;
+    }
+
     get attackFacing() {
       return this.attack?.facing ?? this.facing;
     }
@@ -893,8 +906,9 @@
     getAttackFrameFloat() {
       const definition = this.currentAttack;
       if (!definition || !this.attack) return 0;
-      const frameCount = definition.frameCount ?? definition.strikePath.length;
-      const contactFrame = definition.contactFrame
+      const animation = this.getAnimationSheet(definition.animation);
+      const frameCount = animation?.frames ?? definition.frameCount ?? definition.strikePath.length;
+      const contactFrame = animation?.contactFrame ?? definition.contactFrame
         ?? Math.min(frameCount - 2, Math.max(1, Math.floor(frameCount * 0.56)));
       const elapsed = this.attack.elapsed;
       if (elapsed < definition.startup) {
@@ -915,9 +929,20 @@
     getStrikePoint(definition = this.currentAttack) {
       const path = definition.strikePath;
       const frameFloat = this.getAttackFrameFloat();
-      const lowerIndex = clamp(Math.floor(frameFloat), 0, path.length - 1);
-      const upperIndex = clamp(Math.ceil(frameFloat), 0, path.length - 1);
-      const fraction = frameFloat - lowerIndex;
+      const frameCount = this.getAnimationFrameCount(definition.animation);
+      const runtimeContact = this.getAnimationSheet(definition.animation)?.contactFrame
+        ?? definition.contactFrame
+        ?? Math.floor((frameCount - 1) * 0.56);
+      const pathContact = definition.contactFrame
+        ?? Math.floor((path.length - 1) * 0.56);
+      const pathFloat = frameFloat <= runtimeContact
+        ? frameFloat / Math.max(1, runtimeContact) * pathContact
+        : pathContact + (frameFloat - runtimeContact)
+          / Math.max(1, frameCount - 1 - runtimeContact)
+          * (path.length - 1 - pathContact);
+      const lowerIndex = clamp(Math.floor(pathFloat), 0, path.length - 1);
+      const upperIndex = clamp(Math.ceil(pathFloat), 0, path.length - 1);
+      const fraction = pathFloat - lowerIndex;
       const localX = lerp(path[lowerIndex].x, path[upperIndex].x, fraction);
       const localY = lerp(path[lowerIndex].y, path[upperIndex].y, fraction);
       return {
@@ -1091,10 +1116,9 @@
           0,
           0.999,
         );
-        return {
-          animation: this.finishAnimation.animation,
-          frame: Math.min(9, 1 + Math.floor(progress * 9)),
-        };
+        const animation = this.finishAnimation.animation;
+        const lastFrame = this.getAnimationLastFrame(animation);
+        return { animation, frame: Math.min(lastFrame, 1 + Math.floor(progress * lastFrame)) };
       }
       if (this.knockdownTimer > 0) {
         const progress = clamp(
@@ -1102,10 +1126,9 @@
           0,
           0.999,
         );
-        return {
-          animation: this.knockdownAnimation,
-          frame: Math.min(9, 1 + Math.floor(progress * 9)),
-        };
+        const animation = this.knockdownAnimation;
+        const lastFrame = this.getAnimationLastFrame(animation);
+        return { animation, frame: Math.min(lastFrame, 1 + Math.floor(progress * lastFrame)) };
       }
       if (this.attack) {
         return {
@@ -1116,31 +1139,41 @@
       }
       if (this.blockReaction) {
         const progress = clamp(this.blockReaction.elapsed / this.blockReaction.duration, 0, 0.999);
-        const blockFrames = [9, 8, 7, 8, 9];
+        const animation = this.blockReaction.guard === "low" ? "guardLow" : "guardHigh";
+        const lastFrame = this.getAnimationLastFrame(animation);
+        const blockFrames = [lastFrame, lastFrame - 1, lastFrame - 2, lastFrame - 1, lastFrame]
+          .map((frame) => clamp(frame, 0, lastFrame));
         return {
-          animation: this.blockReaction.guard === "low" ? "guardLow" : "guardHigh",
+          animation,
           frame: blockFrames[Math.floor(progress * blockFrames.length)],
         };
       }
       if (this.hitReaction) {
         const reactionProgress = clamp(this.hitReaction.elapsed / this.hitReaction.duration, 0, 0.999);
+        const animation = this.hitReaction.target === "body" ? "hitReactionBody" : "hitReactionHead";
         return {
-          animation: this.hitReaction.target === "body" ? "hitReactionBody" : "hitReactionHead",
-          frame: Math.floor(reactionProgress * 10),
+          animation,
+          frame: Math.floor(reactionProgress * this.getAnimationFrameCount(animation)),
         };
       }
       const visibleGuard = this.guard ?? (this.guardBlend > 0 ? this.guardVisual : null);
       if (visibleGuard === "high") {
-        return { animation: "guardHigh", frame: clamp(Math.floor(this.guardBlend * 9), 0, 9) };
+        const lastFrame = this.getAnimationLastFrame("guardHigh");
+        return { animation: "guardHigh", frame: clamp(Math.floor(this.guardBlend * lastFrame), 0, lastFrame) };
       }
       if (visibleGuard === "low") {
-        return { animation: "guardLow", frame: clamp(Math.floor(this.guardBlend * 9), 0, 9) };
+        const lastFrame = this.getAnimationLastFrame("guardLow");
+        return { animation: "guardLow", frame: clamp(Math.floor(this.guardBlend * lastFrame), 0, lastFrame) };
       }
-      if (this.evadeTimer > 0) return { animation: "footworkBackward", frame: 5 };
+      if (this.evadeTimer > 0) {
+        const lastFrame = this.getAnimationLastFrame("footworkBackward");
+        return { animation: "footworkBackward", frame: Math.round(lastFrame * 0.56) };
+      }
       if (Math.abs(this.velocityX) > 18) {
-        const cycle = Math.floor(this.animationTime * 14) % 10;
+        const animation = this.velocityX * this.facing >= 0 ? "footworkForward" : "footworkBackward";
+        const cycle = Math.floor(this.animationTime * 14) % this.getAnimationFrameCount(animation);
         return {
-          animation: this.velocityX * this.facing >= 0 ? "footworkForward" : "footworkBackward",
+          animation,
           frame: cycle,
         };
       }

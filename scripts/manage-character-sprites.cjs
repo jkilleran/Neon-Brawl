@@ -19,6 +19,7 @@ const archiveRoot = path.join(
 
 const movementEntries = Object.entries(manifest.movements);
 const characterEntries = Object.entries(manifest.characters);
+const resolveMovement = (characterId, movement) => manifest.resolveMovement(characterId, movement);
 
 function findImageMagick() {
   for (const command of ["magick", "convert"]) {
@@ -124,13 +125,16 @@ function writeCatalog(characterId) {
   const character = manifest.characters[characterId];
   assert(character, `Unknown character: ${characterId}`);
   const characterRoot = path.join(charactersRoot, characterId);
-  const movements = movementEntries.map(([, movement]) => movementRecord(characterId, movement));
+  const movements = movementEntries.map(([, movement]) => (
+    movementRecord(characterId, resolveMovement(characterId, movement))
+  ));
 
   writeJson(path.join(characterRoot, "character.json"), {
     schemaVersion: manifest.assetSchemaVersion,
     id: character.id,
     displayName: character.displayName,
     role: character.role,
+    animationProfile: character.animationProfile,
     palette: character.palette,
     canonicalFacing: manifest.canonicalSourceFacing,
     movementList: "movement-list.json",
@@ -151,7 +155,8 @@ function writeCatalog(characterId) {
     movements,
   });
 
-  for (const [, movement] of movementEntries) {
+  for (const [, baseMovement] of movementEntries) {
+    const movement = resolveMovement(characterId, baseMovement);
     writeJson(
       path.join(movementFolder(characterId, movement), "movement.json"),
       movementRecord(characterId, movement),
@@ -229,6 +234,7 @@ function buildMovement(characterId, movement) {
 }
 
 function seedMovement(characterId, movement, overwrite) {
+  assert(movement.archiveSource, `${characterId}/${movement.id} has no archived seed; add generated frames and run sprites:build`);
   const source = path.join(archiveRoot, movement.archiveSource);
   const output = sheetFile(characterId, movement);
   assert(fs.existsSync(source), `Missing archived source: ${source}`);
@@ -282,7 +288,8 @@ function validateLibrary() {
       `${characterId} movement list is out of sync`,
     );
 
-    for (const [movementId, movement] of movementEntries) {
+    for (const [movementId, baseMovement] of movementEntries) {
+      const movement = resolveMovement(characterId, baseMovement);
       const runtimeSheet = sheetFile(characterId, movement);
       assert(fs.existsSync(runtimeSheet), `${characterId}/${movementId} runtime sheet is missing`);
       assert.deepEqual(readPngSize(runtimeSheet), {
@@ -308,7 +315,9 @@ function validateLibrary() {
 
 function listLibrary() {
   console.log("CHARACTERS");
-  characterEntries.forEach(([id, character]) => console.log(`- ${id}: ${character.displayName} (${character.role})`));
+  characterEntries.forEach(([id, character]) => (
+    console.log(`- ${id}: ${character.displayName} (${character.role}) [${character.animationProfile}]`)
+  ));
   console.log("\nMOVEMENTS");
   movementEntries.forEach(([id, movement]) => {
     console.log(`- ${id.padEnd(30)} ${movement.category.padEnd(12)} ${movement.folder}`);
@@ -322,19 +331,19 @@ const selected = selectedEntries(characterId, movementId);
 switch (command) {
   case "seed":
     selected.characters.forEach(([id]) => {
-      selected.movements.forEach(([, movement]) => seedMovement(id, movement, overwrite));
+      selected.movements.forEach(([, movement]) => seedMovement(id, resolveMovement(id, movement), overwrite));
       writeCatalog(id);
     });
     break;
   case "extract":
     selected.characters.forEach(([id]) => {
-      selected.movements.forEach(([, movement]) => extractMovement(id, movement, overwrite));
+      selected.movements.forEach(([, movement]) => extractMovement(id, resolveMovement(id, movement), overwrite));
       writeCatalog(id);
     });
     break;
   case "build":
     assert(characterId && movementId, "Usage: npm run sprites:build -- <characterId> <movementId>");
-    buildMovement(characterId, manifest.movements[movementId]);
+    buildMovement(characterId, resolveMovement(characterId, manifest.movements[movementId]));
     writeCatalog(characterId);
     break;
   case "catalog":

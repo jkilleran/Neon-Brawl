@@ -44,8 +44,12 @@ Every movement directory has the same internal contract:
     ├── frame-01-guard.png
     ├── frame-02-anticipation.png
     ├── ...
-    └── frame-10-guard-return.png
+    ├── frame-10-recoil-1.png
+    ├── ...
+    └── frame-15-guard-return.png
 ```
+
+The example above is the `production15` contract for new characters. Existing Rook and Vex directories intentionally retain their approved `classic` 10-frame modern movements and 8-frame disabled legacy movement.
 
 ## Source of truth
 
@@ -84,9 +88,11 @@ Atlas extraction and rebuilding require ImageMagick (`magick` or `convert`). Val
 
 Example: replace Rook's right body kick contact frame.
 
-1. Locate the frame:
+1. Locate the frame. For Rook's classic sheet this is:
 
    `public/assets/characters/rook/animations/strikes/body/right-kick/frames/frame-06-contact.png`
+
+   For a `production15` character, strike contact is `frame-08-contact.png`.
 
 2. Preserve its exact pixel dimensions. The dimensions are recorded in `movement.json` through the movement grid.
 3. Keep a transparent background and enough padding so visible pixels do not touch a cell edge.
@@ -157,14 +163,14 @@ Remove runtime references first, then remove the manifest entry and its characte
 ## Add a character
 
 1. Choose a stable lowercase `characterId`.
-2. Copy an existing character directory as a structural template.
-3. Replace frames and rebuild movements as the new art becomes available.
-4. Register the character in `animation-manifest.js`.
+2. Register the character in `animation-manifest.js` with `animationProfile: "production15"`.
+3. Create its directory with all 33 movement paths from the generated prompt/catalog; do not copy Rook's 10-frame grids into the new profile.
+4. Add the 15 transparent frame PNGs for every movement and rebuild each `sheet.png`.
 5. Run `npm run sprites:catalog -- <characterId>`.
 6. Assign the new `characterId` to a `Fighter` configuration in `game.js`.
 7. Validate and test both facing directions.
 
-A registered character must currently provide all 33 movement IDs. This strict rule prevents a missing animation from appearing only during a rare outcome.
+A registered character must provide all 33 movement IDs. The `production15` profile resolves every one to a 5 × 3 atlas (1920 × 1023), 15 labeled frames, and frame 8 contact for strikes. This strict rule prevents a missing animation from appearing only during a rare outcome.
 
 ## Regenerate metadata
 
@@ -198,7 +204,7 @@ Use `--force` only when intentionally discarding the current frames for that mov
 
 Before accepting a movement change, confirm:
 
-- exactly 10 modern frames exist;
+- the frame count matches the character profile: classic Rook/Vex assets remain 10 modern / 8 legacy, while new `production15` movements contain exactly 15;
 - the intended hand or leg remains consistent in every frame;
 - the support leg remains anatomically consistent for kicks;
 - the target height is visibly head or body as declared;

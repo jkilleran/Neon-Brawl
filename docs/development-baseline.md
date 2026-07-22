@@ -8,7 +8,7 @@ The historical Neon Brawl gameplay baseline was version 0.24.0 at commit:
 
 That reference is retained only for historical recovery. Normal development now proceeds from the latest accepted commit on `agent/mma-light-gameplay-v2`; routine releases do not return to or revalidate the old baseline.
 
-Version 0.32.0 resumed normal sequential releases with contextual Settings. Version 0.33.0 added the draggable touch layout and trigger-chord controller scheme. Version 0.34.0 finalized that scheme with free shoulder buttons and unassigned evade. Version 0.35.0 swaps the default trigger roles and adds the approved guard-to-movement touch gesture with the compact strike layout. Future work continues from the latest accepted release as v0.36.0, v0.37.0, and so on.
+Version 0.32.0 resumed normal sequential releases with contextual Settings. Version 0.33.0 added the draggable touch layout and trigger-chord controller scheme. Version 0.34.0 finalized that scheme with free shoulder buttons and unassigned evade. Version 0.35.0 swaps the default trigger roles and adds the approved guard-to-movement touch gesture with the compact strike layout. Version 0.36.0 adds mixed per-character animation profiles so classic 8/10-frame fighters and new 15-frame fighters can run together. Future work continues from the latest accepted release as v0.37.0, v0.38.0, and so on.
 
 The historical commit should only be inspected when explicitly recovering or comparing an older behavior:
 

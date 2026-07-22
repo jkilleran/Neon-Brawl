@@ -1,8 +1,9 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
   "id": "rook",
   "displayName": "Rook",
   "role": "Pressure Striker",
+  "animationProfile": "classic",
   "palette": {
     "primary": "#35f2e5",
     "accent": "#d6ff7d"

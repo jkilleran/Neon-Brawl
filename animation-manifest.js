@@ -92,6 +92,132 @@
     "stance-return",
   ]);
 
+  const FIFTEEN_FRAME_PHASES = Object.freeze([
+    "guard",
+    "anticipation",
+    "weight-shift",
+    "load",
+    "chamber",
+    "extension-1",
+    "extension-2",
+    "contact",
+    "follow-through",
+    "recoil-1",
+    "recoil-2",
+    "recovery-1",
+    "recovery-2",
+    "guard-return-1",
+    "guard-return",
+  ]);
+
+  const FIFTEEN_FRAME_KNOCKDOWN_PHASES = Object.freeze([
+    "guard",
+    "impact",
+    "recoil",
+    "balance-break",
+    "legs-buckle",
+    "fall-start",
+    "fall-mid",
+    "mat-contact",
+    "stunned",
+    "brace",
+    "rise-start",
+    "kneeling-rise",
+    "stand-up",
+    "guard-recovery",
+    "guard-return",
+  ]);
+
+  const FIFTEEN_FRAME_KNOCKOUT_PHASES = Object.freeze([
+    "guard",
+    "decisive-impact",
+    "recoil",
+    "balance-lost",
+    "collapse-start",
+    "collapse-mid",
+    "near-mat",
+    "mat-contact",
+    "settle-1",
+    "settle-2",
+    "motionless-1",
+    "motionless-2",
+    "motionless-3",
+    "final-settle",
+    "final-ko-pose",
+  ]);
+
+  const FIFTEEN_FRAME_FOOTWORK_PHASES = Object.freeze([
+    "stance",
+    "weight-shift",
+    "step-preparation",
+    "foot-lift",
+    "step-start",
+    "stride-1",
+    "stride-2",
+    "mid-step",
+    "plant",
+    "weight-transfer",
+    "trailing-foot-recovery",
+    "balance-recovery",
+    "stabilize-1",
+    "stabilize-2",
+    "stance-return",
+  ]);
+
+  const FIFTEEN_FRAME_GUARD_PHASES = Object.freeze([
+    "stance",
+    "guard-enter-1",
+    "guard-enter-2",
+    "guard-enter-3",
+    "guard-enter-4",
+    "guard-set",
+    "guard-hold-1",
+    "guard-hold-2",
+    "guard-hold-3",
+    "guard-hold-4",
+    "guard-release-1",
+    "guard-release-2",
+    "guard-release-3",
+    "guard-release-4",
+    "stance-return",
+  ]);
+
+  const FIFTEEN_FRAME_HIT_REACTION_PHASES = Object.freeze([
+    "stance",
+    "impact",
+    "recoil-1",
+    "recoil-2",
+    "recoil-3",
+    "recoil-4",
+    "recoil-peak",
+    "stagger",
+    "stabilize-1",
+    "stabilize-2",
+    "recovery-1",
+    "recovery-2",
+    "recovery-3",
+    "stance-return-1",
+    "stance-return",
+  ]);
+
+  const FIFTEEN_FRAME_LEGACY_PHASES = Object.freeze([
+    "standing-entry",
+    "level-change",
+    "clinch-entry",
+    "takedown-transition-1",
+    "takedown-transition-2",
+    "top-control-entry",
+    "top-control",
+    "ground-strike-load",
+    "ground-strike-contact",
+    "bottom-defense",
+    "escape-start",
+    "escape-transition",
+    "stand-up-1",
+    "stand-up-2",
+    "stance-reset",
+  ]);
+
   const grid = ({
     columns = 5,
     rows = 2,
@@ -608,26 +734,89 @@
     ...legacy,
   });
 
-  const characterDefinition = ({ id, displayName, role, palette }) => Object.freeze({
+  const animationProfiles = Object.freeze({
+    classic: Object.freeze({
+      id: "classic",
+      description: "Current Rook and Vex sheets (10 modern frames, 8 legacy frames).",
+      supportedFrameCounts: Object.freeze([8, 10]),
+    }),
+    production15: Object.freeze({
+      id: "production15",
+      description: "New-character production contract with 15 frames for every movement.",
+      supportedFrameCounts: Object.freeze([15]),
+      frameCount: 15,
+      contactFrame: 8,
+      grid: grid({
+        columns: 5,
+        rows: 3,
+        frames: 15,
+        fallbackWidth: 1920,
+        fallbackHeight: 1023,
+      }),
+    }),
+  });
+
+  const fifteenFrameLabels = (movement) => {
+    if (movement.category === "strikes") return FIFTEEN_FRAME_PHASES;
+    if (movement.category === "locomotion") return FIFTEEN_FRAME_FOOTWORK_PHASES;
+    if (movement.category === "defense") return FIFTEEN_FRAME_GUARD_PHASES;
+    if (movement.category === "reactions") return FIFTEEN_FRAME_HIT_REACTION_PHASES;
+    if (movement.category === "knockdowns") return FIFTEEN_FRAME_KNOCKDOWN_PHASES;
+    if (movement.category === "knockouts") return FIFTEEN_FRAME_KNOCKOUT_PHASES;
+    return FIFTEEN_FRAME_LEGACY_PHASES;
+  };
+
+  const resolveMovementForProfile = (movementOrId, profileId = "classic") => {
+    const movement = typeof movementOrId === "string" ? movements[movementOrId] : movementOrId;
+    if (!movement) throw new Error(`Unknown movement: ${movementOrId}`);
+    const profile = animationProfiles[profileId];
+    if (!profile) throw new Error(`Unknown animation profile: ${profileId}`);
+    if (profileId === "classic") return movement;
+
+    return Object.freeze({
+      ...movement,
+      frameCount: profile.frameCount,
+      contactFrame: movement.category === "strikes" ? profile.contactFrame : undefined,
+      frameLabels: fifteenFrameLabels(movement),
+      archiveSource: null,
+      archiveGrid: undefined,
+      archiveFrameOffset: 0,
+      provenance: "new-character-production15",
+      grid: profile.grid,
+    });
+  };
+
+  const characterDefinition = ({
     id,
     displayName,
     role,
+    palette,
+    animationProfile = "classic",
+  }) => Object.freeze({
+    id,
+    displayName,
+    role,
+    animationProfile,
     palette: Object.freeze(palette),
     metadata: `/assets/characters/${id}/character.json`,
     movementList: `/assets/characters/${id}/movement-list.json`,
-    sheets: Object.freeze(Object.fromEntries(Object.values(movements).map((movement) => [
-      movement.sheet,
-      Object.freeze({
-        src: `/assets/characters/${id}/${movement.folder}/sheet.png`,
-        columns: movement.grid.columns,
-        rows: movement.grid.rows,
-        frames: movement.grid.frames,
-        fallbackWidth: movement.grid.fallbackWidth,
-        fallbackHeight: movement.grid.fallbackHeight,
-        isolatedCells: movement.grid.isolatedCells,
-        minCellPadding: movement.grid.minCellPadding,
-      }),
-    ]))),
+    sheets: Object.freeze(Object.fromEntries(Object.values(movements).map((baseMovement) => {
+      const movement = resolveMovementForProfile(baseMovement, animationProfile);
+      return [
+        movement.sheet,
+        Object.freeze({
+          src: `/assets/characters/${id}/${movement.folder}/sheet.png`,
+          columns: movement.grid.columns,
+          rows: movement.grid.rows,
+          frames: movement.grid.frames,
+          fallbackWidth: movement.grid.fallbackWidth,
+          fallbackHeight: movement.grid.fallbackHeight,
+          isolatedCells: movement.grid.isolatedCells,
+          minCellPadding: movement.grid.minCellPadding,
+          contactFrame: movement.contactFrame ? movement.contactFrame - 1 : null,
+        }),
+      ];
+    }))),
   });
 
   const characters = Object.freeze({
@@ -645,17 +834,29 @@
     }),
   });
 
+  const resolveMovement = (characterOrId, movementOrId) => {
+    const character = typeof characterOrId === "string" ? characters[characterOrId] : characterOrId;
+    if (!character) throw new Error(`Unknown character: ${characterOrId}`);
+    return resolveMovementForProfile(movementOrId, character.animationProfile);
+  };
+
   const manifest = Object.freeze({
-    version: "9.0.0",
-    assetSchemaVersion: "1.0.0",
-    frameLimitPerMovement: 10,
+    version: "10.0.0",
+    assetSchemaVersion: "1.1.0",
+    supportedFrameCounts: Object.freeze([8, 10, 15]),
+    productionFrameCount: 15,
+    maxFramesPerMovement: 15,
     canonicalSourceFacing: "right",
+    animationProfiles,
     characters,
     movements,
     strikes,
     outcomes,
     support,
     legacy,
+    createCharacterDefinition: characterDefinition,
+    resolveMovementForProfile,
+    resolveMovement,
   });
 
   globalThis.NEON_BRAWL_ANIMATIONS = manifest;
