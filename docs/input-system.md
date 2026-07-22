@@ -1,6 +1,6 @@
 # Universal Input and Settings
 
-Neon Brawl 0.34.0 routes keyboard, gamepad, and touch controls through one browser-side input manager. Every device produces the same combat input object, so movement, guards, stamina costs, strike priority, and server authority remain independent of the control method.
+Neon Brawl 0.35.0 routes keyboard, gamepad, and touch controls through one browser-side input manager. Every device produces the same combat input object, so movement, guards, stamina costs, strike priority, and server authority remain independent of the control method.
 
 ## Settings access
 
@@ -48,19 +48,19 @@ Controllers are detected with the standard browser Gamepad API and can be used a
 | Action | Xbox-style | PlayStation-style |
 | --- | --- | --- |
 | Movement | Left stick or D-pad | Left stick or D-pad |
-| High guard | `LT` | `L2` |
-| Low guard | Hold `LT + RT` | Hold `L2 + R2` |
+| High guard | `RT` | `R2` |
+| Low guard | Hold `RT + LT` | Hold `R2 + L2` |
 | Left punch | `X` | `Square` |
 | Right punch | `Y` | `Triangle` |
 | Left kick | `A` | `Cross` |
 | Right kick | `B` | `Circle` |
-| Body modifier | `RT` | `R2` |
+| Body modifier | `LT` | `L2` |
 | Evade | Unassigned | Unassigned |
 | Pause local match | `Menu` | `Options` |
 
 Every direct D-pad and combat action can be remapped independently for Player 1 and Player 2. Select an action, then press the desired controller button. Conflicts swap assignments; press Delete while listening to leave an action unassigned. `LB / L1` and `RB / R1` have no default action, evade begins unassigned, and `Menu` / `Options` remains reserved for pause. Low guard is derived from the buttons currently assigned to High Guard + Body Modifier, so the chord remains correct after either trigger is remapped. The left analog stick always controls movement so a custom D-pad layout cannot strand a player.
 
-Holding only the Body Modifier and pressing any face-button strike selects that strike's body animation. Holding High Guard and Body Modifier together replaces high guard with low guard and gives that defensive chord priority over controller strike buttons. Controller settings saved before v0.34.0 migrate once to this final trigger layout so old direct low-guard, body, or evade assignments cannot override it.
+Holding only the Body Modifier and pressing any face-button strike selects that strike's body animation. Holding High Guard and Body Modifier together replaces high guard with low guard and gives that defensive chord priority over controller strike buttons. Version 0.35.0 swaps the two default trigger roles. A saved v0.34.0 default pair migrates once from L2-high/R2-body to R2-high/L2-body; custom trigger assignments are preserved.
 
 The analog deadzone is adjustable from 8% to 45%. Strike buttons use a rising-edge check, so holding a button cannot repeatedly spam a strike.
 
@@ -68,11 +68,13 @@ The analog deadzone is adjustable from 8% to 45%. Strike buttons use a rising-ed
 
 The touch overlay supports `Auto`, `Visible`, and `Hidden` modes. Auto mode appears only when the browser reports touch points or a coarse pointer. It controls Player 1 in Quick Fight, Practice Lab, Local Sparring, and Online Arena.
 
-The left cluster contains movement and both guards. The right cluster contains four distinct strikes, a holdable body modifier, and evade. A small center button pauses local matches. Pointer capture and independent pointer IDs allow a body modifier and strike button to be held together.
+The left cluster contains movement, both guards, and the holdable Body Modifier. It sits slightly higher to keep the lower edge clear. The right cluster contains the same four distinct circular strikes in a compact two-by-two quadrant, with Evade below it. A small center button pauses local matches. Pointer capture and independent pointer IDs allow a body modifier and strike button to be held together.
+
+Either guard also supports a combined drag gesture. Press High Guard or Low Guard, slide the same finger onto the left or right movement button, and the input manager keeps the original guard held while adding that direction. Sliding between direction buttons changes only movement; releasing the finger clears both actions. Buttons remain independent controls, so tapping a guard or movement button by itself behaves exactly as before.
 
 All ten gameplay actions are remappable. Open **Edit all 10 buttons**, choose a new action for a slot, and any conflicting action swaps into the previous slot. This keeps exactly one reachable button per combat action. The pause button remains fixed outside the remappable layout.
 
-The **Button Position** editor represents the complete gameplay surface. Drag a labeled control to any convenient location, or focus it and use the arrow keys for precise movement. Positions are stored as bounded normalized coordinates, so a layout preserves its proportions across phones and tablets with different resolutions. Reset Positions restores the ergonomic default, including the Body Modifier on the left half of the screen.
+The **Button Position** editor represents the complete gameplay surface. Drag a labeled control to any convenient location, or focus it and use the arrow keys for precise movement. Positions are stored as bounded normalized coordinates, so a layout preserves its proportions across phones and tablets with different resolutions. Reset Positions restores the ergonomic v0.35 layout, including Body on the left and the compact strike quadrant on the right. Browsers still using the untouched v0.34 default positions migrate once; a customized layout is preserved.
 
 Touch controls are regular lightweight HTML buttons layered over the Canvas. They do not increase the Canvas resolution, add draw calls to the arena, change the 60 Hz simulation, or alter online packets. Opacity and scale are presentation-only preferences.
 

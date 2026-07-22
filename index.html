@@ -345,17 +345,17 @@
               <section class="settings-section is-hidden" data-settings-section="gamepad">
                 <section class="controller-card">
                   <header><span><small>GAMEPAD MAPPING</small><strong id="gamepad-mapping-player">PLAYER 1</strong></span><button id="reset-gamepad-bindings" type="button">RESET PAD</button></header>
-                  <p class="mapping-note">L2: guardia alta · R2: cuerpo · L2 + R2: guardia baja. L1 y R1 quedan libres. DELETE desasigna una acción.</p>
+                  <p class="mapping-note">R2: guardia alta · L2: cuerpo · R2 + L2: guardia baja. L1 y R1 quedan libres. DELETE desasigna una acción.</p>
                   <div class="gamepad-binding-grid">
                     <label><span>Mover izquierda</span><button data-gamepad-binding-action="moveLeft" type="button">D-PAD ←</button></label>
                     <label><span>Mover derecha</span><button data-gamepad-binding-action="moveRight" type="button">D-PAD →</button></label>
-                    <label><span>Guardia alta</span><button data-gamepad-binding-action="guardHigh" type="button">LT / L2</button></label>
-                    <label class="gamepad-derived-binding"><span>Guardia baja</span><output id="gamepad-low-guard-chord">L2 + R2</output></label>
+                    <label><span>Guardia alta</span><button data-gamepad-binding-action="guardHigh" type="button">RT / R2</button></label>
+                    <label class="gamepad-derived-binding"><span>Guardia baja</span><output id="gamepad-low-guard-chord">R2 + L2</output></label>
                     <label><span>Puño izquierdo</span><button data-gamepad-binding-action="leftPunch" type="button">X / □</button></label>
                     <label><span>Puño derecho</span><button data-gamepad-binding-action="rightPunch" type="button">Y / △</button></label>
                     <label><span>Patada izquierda</span><button data-gamepad-binding-action="leftKick" type="button">A / ✕</button></label>
                     <label><span>Patada derecha</span><button data-gamepad-binding-action="rightKick" type="button">B / ○</button></label>
-                    <label><span>Golpe al cuerpo</span><button data-gamepad-binding-action="bodyModifier" type="button">RT / R2</button></label>
+                    <label><span>Golpe al cuerpo</span><button data-gamepad-binding-action="bodyModifier" type="button">LT / L2</button></label>
                     <label><span>Evasión</span><button data-gamepad-binding-action="evade" type="button">SIN ASIGNAR</button></label>
                   </div>
                   <label class="settings-range"><span><b>DEADZONE</b><output id="gamepad-deadzone-value">22%</output></span><input id="gamepad-deadzone" type="range" min="8" max="45" step="1" value="22" /></label>
@@ -402,7 +402,7 @@
                       <label><span>Utilidad der.</span><select data-touch-binding-slot="utilityRight"></select></label>
                     </div>
                   </details>
-                  <small>Solo usa botones HTML ligeros; no cambia la resolución ni el render del combate.</small>
+                  <small>Mantén una guardia y arrastra hacia ← o → para desplazarte sin soltarla. Solo usa botones HTML ligeros; no cambia la resolución ni el render del combate.</small>
                 </section>
               </section>
             </div>
@@ -458,7 +458,7 @@
       <footer class="footer-note">
         <span><i></i> SYSTEM ONLINE</span>
         <p>ESC para pausar · Cada crítico tiene 1 de 2.2 de probabilidad de knockdown</p>
-        <span>BUILD 0.34.0 // TRIGGER CONTROL SCHEME</span>
+        <span>BUILD 0.35.0 // TOUCH COMBINATION LAYOUT</span>
       </footer>
     </main>
 

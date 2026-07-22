@@ -49,8 +49,8 @@ assert.deepEqual(input.getSettings().bindings[1], DEFAULT_BINDINGS[1]);
 assert.deepEqual(input.getSettings().gamepadBindings[1], DEFAULT_GAMEPAD_BINDINGS[1]);
 assert.deepEqual(input.getSettings().touchBindings, DEFAULT_TOUCH_BINDINGS);
 assert.deepEqual(input.getSettings().touchPositions, DEFAULT_TOUCH_POSITIONS);
-assert.equal(DEFAULT_GAMEPAD_BINDINGS[1].guardHigh, 6, "L2 should be the default high guard");
-assert.equal(DEFAULT_GAMEPAD_BINDINGS[1].bodyModifier, 7, "R2 should be the default body modifier");
+assert.equal(DEFAULT_GAMEPAD_BINDINGS[1].guardHigh, 7, "R2 should be the default high guard");
+assert.equal(DEFAULT_GAMEPAD_BINDINGS[1].bodyModifier, 6, "L2 should be the default body modifier");
 assert.equal(DEFAULT_GAMEPAD_BINDINGS[1].evade, null, "Evade should remain unassigned by default");
 assert.equal(input.getPreference("soundEnabled"), true);
 assert.equal(input.getPreference("screenShake"), "full");
@@ -111,7 +111,7 @@ pads = [gamepad({
   axis: 0.7,
   buttons: {
     8: button(true),
-    6: button(true),
+    7: button(true),
   },
 })];
 let capturedGamepadButton = null;
@@ -123,7 +123,7 @@ assert.equal(input.getActiveInputMethod(1), "gamepad");
 assert.deepEqual(capturedGamepadButton, { player: 1, button: 8 }, "New button edges should be available to the mapping UI");
 playerOne = input.getPlayerInput(1);
 assert(playerOne.move > 0.5 && playerOne.move <= 1, "Analog movement should apply its deadzone");
-assert.equal(playerOne.guardHigh, true, "L2 should hold high guard");
+assert.equal(playerOne.guardHigh, true, "R2 should hold high guard");
 assert.equal(playerOne.guardLow, false);
 assert.equal(playerOne.bodyModifier, false);
 assert.equal(playerOne.leftPunch, true, "X/Square should trigger the left punch");
@@ -134,11 +134,11 @@ assert.equal(input.getPlayerInput(1).leftPunch, false, "Held gamepad strikes mus
 pads = [gamepad({ id: "Pad One" })];
 input.pollGamepads();
 input.endFrame();
-pads = [gamepad({ id: "Pad One", buttons: { 7: button(true), 8: button(true) } })];
+pads = [gamepad({ id: "Pad One", buttons: { 6: button(true), 8: button(true) } })];
 input.pollGamepads();
 playerOne = input.getPlayerInput(1);
-assert.equal(playerOne.bodyModifier, true, "R2 should modify the next strike to the body");
-assert.equal(playerOne.leftPunch, true, "R2 and a strike should remain a valid strike combination");
+assert.equal(playerOne.bodyModifier, true, "L2 should modify the next strike to the body");
+assert.equal(playerOne.leftPunch, true, "L2 and a strike should remain a valid strike combination");
 
 pads = [gamepad({ id: "Pad One" })];
 input.pollGamepads();
@@ -147,8 +147,8 @@ pads = [gamepad({ id: "Pad One", buttons: { 6: button(true), 7: button(true), 8:
 input.pollGamepads();
 playerOne = input.getPlayerInput(1);
 assert.equal(playerOne.guardHigh, false, "The combined triggers should replace high guard");
-assert.equal(playerOne.guardLow, true, "L2 + R2 should derive low guard");
-assert.equal(playerOne.bodyModifier, true, "R2 remains held while low guard is active");
+assert.equal(playerOne.guardLow, true, "R2 + L2 should derive low guard");
+assert.equal(playerOne.bodyModifier, true, "L2 remains held while low guard is active");
 assert.equal(playerOne.leftPunch, false, "Low guard should take priority over gamepad strikes");
 
 pads = [
@@ -179,6 +179,49 @@ legacyStorage.setItem("neonBrawlInputSettingsV1", JSON.stringify({
 }));
 const migratedInput = new NeonBrawlInputManager({ storage: legacyStorage, navigator });
 assert.deepEqual(migratedInput.getSettings().gamepadBindings[1], DEFAULT_GAMEPAD_BINDINGS[1], "Legacy controller layouts should migrate to the final trigger defaults");
+
+const versionFiveStorage = new MemoryStorage();
+const versionFiveTouchPositions = {
+  guardTop: { x: 0.10, y: 0.73 },
+  moveLeft: { x: 0.05, y: 0.84 },
+  moveRight: { x: 0.15, y: 0.84 },
+  guardBottom: { x: 0.10, y: 0.94 },
+  attackTopLeft: { x: 0.84, y: 0.74 },
+  attackTopRight: { x: 0.91, y: 0.74 },
+  attackBottomLeft: { x: 0.80, y: 0.86 },
+  attackBottomRight: { x: 0.95, y: 0.86 },
+  utilityLeft: { x: 0.24, y: 0.91 },
+  utilityRight: { x: 0.72, y: 0.91 },
+};
+versionFiveStorage.setItem("neonBrawlInputSettingsV1", JSON.stringify({
+  version: 5,
+  bindings: DEFAULT_BINDINGS,
+  gamepadBindings: {
+    1: { ...DEFAULT_GAMEPAD_BINDINGS[1], guardHigh: 6, bodyModifier: 7 },
+    2: { ...DEFAULT_GAMEPAD_BINDINGS[2], guardHigh: 6, bodyModifier: 7 },
+  },
+  touchBindings: DEFAULT_TOUCH_BINDINGS,
+  touchPositions: versionFiveTouchPositions,
+}));
+const versionFiveInput = new NeonBrawlInputManager({ storage: versionFiveStorage, navigator });
+assert.equal(versionFiveInput.getGamepadBinding(1, "guardHigh"), 7, "Untouched v0.34 trigger defaults should migrate to R2 high guard");
+assert.equal(versionFiveInput.getGamepadBinding(1, "bodyModifier"), 6, "Untouched v0.34 trigger defaults should migrate to L2 body");
+assert.deepEqual(versionFiveInput.getSettings().touchPositions, DEFAULT_TOUCH_POSITIONS, "Untouched v0.34 touch positions should migrate to the approved compact layout");
+
+const customVersionFiveStorage = new MemoryStorage();
+customVersionFiveStorage.setItem("neonBrawlInputSettingsV1", JSON.stringify({
+  version: 5,
+  bindings: DEFAULT_BINDINGS,
+  gamepadBindings: {
+    1: { ...DEFAULT_GAMEPAD_BINDINGS[1], guardHigh: 4, bodyModifier: 5 },
+    2: { ...DEFAULT_GAMEPAD_BINDINGS[2], guardHigh: 4, bodyModifier: 5 },
+  },
+  touchBindings: DEFAULT_TOUCH_BINDINGS,
+  touchPositions: { ...versionFiveTouchPositions, utilityLeft: { x: 0.30, y: 0.80 } },
+}));
+const customVersionFiveInput = new NeonBrawlInputManager({ storage: customVersionFiveStorage, navigator });
+assert.equal(customVersionFiveInput.getGamepadBinding(1, "guardHigh"), 4, "Custom v0.34 controller mappings should be preserved");
+assert.deepEqual(customVersionFiveInput.getTouchPosition("utilityLeft"), { x: 0.30, y: 0.80 }, "Custom v0.34 touch positions should be preserved");
 
 input.setPreference("touchMode", "on");
 assert.equal(input.shouldShowTouchControls(), true);

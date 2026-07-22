@@ -52,8 +52,8 @@ assert.match(markup, /FLECHAS \+ IOKL/, "Pause menu should list Player 2 control
 assert.match(markup, /body-modifier-summary[\s\S]*mantener \+ cualquier golpe/, "Pause menu should explain the body modifier");
 assert.match(markup, /combat-config\.js[\s\S]*animation-manifest\.js[\s\S]*input-manager\.js[\s\S]*settings-ui\.js[\s\S]*game\.js/, "Shared configs and universal input modules must load before the game");
 assert.match(markup, /id="settings-screen"[\s\S]*KEYBOARD MAPPING[\s\S]*GAMEPAD MAPPING[\s\S]*TOUCH MAPPING/, "Settings should expose keyboard, controller and touch mapping");
-assert.match(markup, /Guardia alta[\s\S]*data-gamepad-binding-action="guardHigh"[\s\S]*LT \/ L2[\s\S]*gamepad-low-guard-chord[\s\S]*L2 \+ R2/, "Gamepad Settings should explain the trigger guard chord");
-assert.match(markup, /Golpe al cuerpo[\s\S]*data-gamepad-binding-action="bodyModifier"[\s\S]*RT \/ R2/, "R2 should be the default body modifier");
+assert.match(markup, /Guardia alta[\s\S]*data-gamepad-binding-action="guardHigh"[\s\S]*RT \/ R2[\s\S]*gamepad-low-guard-chord[\s\S]*R2 \+ L2/, "Gamepad Settings should explain the inverted trigger guard chord");
+assert.match(markup, /Golpe al cuerpo[\s\S]*data-gamepad-binding-action="bodyModifier"[\s\S]*LT \/ L2/, "L2 should be the default body modifier");
 assert.match(markup, /Evasión[\s\S]*data-gamepad-binding-action="evade"[\s\S]*SIN ASIGNAR/, "Evade should be unassigned by default");
 assert.match(markup, /id="touch-layout-stage"[\s\S]*data-touch-position-slot="utilityLeft"[\s\S]*BODY/, "Touch Settings should provide a graphical position editor");
 assert.match(markup, /data-settings-section-target="general"[\s\S]*data-settings-section-target="keyboard"[\s\S]*data-settings-section-target="gamepad"[\s\S]*data-settings-section-target="touch"/, "Settings should have four organized categories");
@@ -209,6 +209,12 @@ class FakeElement {
 
   async requestFullscreen() {
     document.fullscreenElement = this;
+  }
+
+  setPointerCapture() {}
+
+  getBoundingClientRect() {
+    return this.rect || { left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0 };
   }
 }
 
@@ -448,6 +454,38 @@ assert.equal(game.getOnlineKeyboardInput().rightPunch, true, "A remapped touch s
 touchLeftPunch.dispatch("pointerup", { pointerId: 2, preventDefault() {} });
 input.endFrame();
 input.resetTouchBindings();
+game.syncTouchControlPresentation(true);
+
+const touchHighGuard = touchButtons.find((button) => button.dataset.touchAction === "guardHigh");
+const touchLowGuard = touchButtons.find((button) => button.dataset.touchAction === "guardLow");
+const touchMoveLeft = touchButtons.find((button) => button.dataset.touchAction === "moveLeft");
+const touchMoveRight = touchButtons.find((button) => button.dataset.touchAction === "moveRight");
+touchHighGuard.rect = { left: 10, top: 10, right: 60, bottom: 60, width: 50, height: 50 };
+touchLowGuard.rect = { left: 10, top: 70, right: 60, bottom: 120, width: 50, height: 50 };
+touchMoveLeft.rect = { left: 70, top: 10, right: 120, bottom: 60, width: 50, height: 50 };
+touchMoveRight.rect = { left: 130, top: 10, right: 180, bottom: 60, width: 50, height: 50 };
+touchHighGuard.dispatch("pointerdown", { pointerId: 3, clientX: 35, clientY: 35, preventDefault() {} });
+touchHighGuard.dispatch("pointermove", { pointerId: 3, clientX: 95, clientY: 35, preventDefault() {} });
+let touchGuardMove = game.getOnlineKeyboardInput();
+assert.equal(touchGuardMove.guardHigh, true, "Dragging from high guard should keep the original guard active");
+assert.equal(touchGuardMove.move, -1, "Dragging a held guard onto the left movement button should combine both actions");
+assert.equal(touchMoveLeft.classList.contains("is-pressed"), true, "The movement destination should show pressed feedback during the combined gesture");
+touchHighGuard.dispatch("pointerup", { pointerId: 3, clientX: 95, clientY: 35, preventDefault() {} });
+touchGuardMove = game.getOnlineKeyboardInput();
+assert.equal(touchGuardMove.guardHigh, false, "Releasing the combined touch gesture should release guard");
+assert.equal(touchGuardMove.move, 0, "Releasing the combined touch gesture should release movement");
+
+touchLowGuard.dispatch("pointerdown", { pointerId: 4, clientX: 35, clientY: 95, preventDefault() {} });
+touchLowGuard.dispatch("pointermove", { pointerId: 4, clientX: 155, clientY: 35, preventDefault() {} });
+touchGuardMove = game.getOnlineKeyboardInput();
+assert.equal(touchGuardMove.guardLow, true, "The same combined gesture should work from low guard");
+assert.equal(touchGuardMove.move, 1, "Dragging low guard onto the right movement button should advance screen-right");
+touchLowGuard.dispatch("pointermove", { pointerId: 4, clientX: 220, clientY: 100, preventDefault() {} });
+touchGuardMove = game.getOnlineKeyboardInput();
+assert.equal(touchGuardMove.guardLow, true, "Leaving a direction button should not release the original guard");
+assert.equal(touchGuardMove.move, 0, "Leaving both movement buttons should stop movement");
+touchLowGuard.dispatch("pointerup", { pointerId: 4, clientX: 220, clientY: 100, preventDefault() {} });
+assert.equal(game.getOnlineKeyboardInput().guardLow, false, "Releasing the low-guard gesture should clear its guard");
 
 game.fighterOne.resetRound(380, 1);
 game.fighterTwo.resetRound(900, -1);

@@ -151,7 +151,7 @@ assert.equal(input.getBinding(1, "leftPunch"), "KeyQ");
 assert.equal(bindingButton.textContent, "Q");
 
 sectionTabs[2].dispatch("click");
-assert.match(selectors.get("#gamepad-low-guard-chord").textContent, /LT \/ L2.*RT \/ R2/);
+assert.match(selectors.get("#gamepad-low-guard-chord").textContent, /RT \/ R2.*LT \/ L2/);
 gamepadBindingButton.dispatch("click");
 assert.equal(gamepadBindingButton.textContent, "PRESS BUTTON");
 assert.equal(ui.captureGamepadButton(1, 8), true);
@@ -167,7 +167,7 @@ touchBindingSelect.value = "rightPunch";
 touchBindingSelect.dispatch("change");
 assert.equal(input.getTouchBinding("attackTopLeft"), "rightPunch");
 assert.equal(touchPositionButton.textContent, "BODY");
-assert.equal(touchPositionButton.style.left, "24.00%");
+assert.equal(touchPositionButton.style.left, "23.00%");
 touchPositionButton.dispatch("pointerdown", {
   pointerId: 4,
   button: 0,
@@ -183,7 +183,7 @@ touchPositionButton.dispatch("pointerup", {
 });
 assert.deepEqual(input.getTouchPosition("utilityLeft"), { x: 0.36, y: 0.7 });
 selectors.get("#reset-touch-positions").dispatch("click");
-assert.deepEqual(input.getTouchPosition("utilityLeft"), { x: 0.24, y: 0.91 });
+assert.deepEqual(input.getTouchPosition("utilityLeft"), { x: 0.23, y: 0.84 });
 
 playerTabs[1].dispatch("click");
 assert.equal(playerPanels[0].classList.contains("is-hidden"), true);

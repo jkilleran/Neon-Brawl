@@ -61,23 +61,23 @@
     1: Object.freeze({
       moveLeft: 14,
       moveRight: 15,
-      guardHigh: 6,
+      guardHigh: 7,
       leftPunch: 2,
       rightPunch: 3,
       leftKick: 0,
       rightKick: 1,
-      bodyModifier: 7,
+      bodyModifier: 6,
       evade: null,
     }),
     2: Object.freeze({
       moveLeft: 14,
       moveRight: 15,
-      guardHigh: 6,
+      guardHigh: 7,
       leftPunch: 2,
       rightPunch: 3,
       leftKick: 0,
       rightKick: 1,
-      bodyModifier: 7,
+      bodyModifier: 6,
       evade: null,
     }),
   });
@@ -117,6 +117,18 @@
     utilityRight: "evade",
   });
   const DEFAULT_TOUCH_POSITIONS = Object.freeze({
+    guardTop: Object.freeze({ x: 0.10, y: 0.63 }),
+    moveLeft: Object.freeze({ x: 0.05, y: 0.74 }),
+    moveRight: Object.freeze({ x: 0.15, y: 0.74 }),
+    guardBottom: Object.freeze({ x: 0.10, y: 0.84 }),
+    attackTopLeft: Object.freeze({ x: 0.84, y: 0.71 }),
+    attackTopRight: Object.freeze({ x: 0.92, y: 0.71 }),
+    attackBottomLeft: Object.freeze({ x: 0.84, y: 0.82 }),
+    attackBottomRight: Object.freeze({ x: 0.92, y: 0.82 }),
+    utilityLeft: Object.freeze({ x: 0.23, y: 0.84 }),
+    utilityRight: Object.freeze({ x: 0.90, y: 0.92 }),
+  });
+  const VERSION_FIVE_TOUCH_POSITIONS = Object.freeze({
     guardTop: Object.freeze({ x: 0.10, y: 0.73 }),
     moveLeft: Object.freeze({ x: 0.05, y: 0.84 }),
     moveRight: Object.freeze({ x: 0.15, y: 0.84 }),
@@ -151,7 +163,7 @@
   );
 
   const defaultSettings = () => ({
-    version: 5,
+    version: 6,
     bindings: cloneBindings(),
     gamepadBindings: cloneGamepadBindings(),
     touchBindings: cloneTouchBindings(),
@@ -268,6 +280,12 @@
           assignedButtons.add(button);
         }
         if (valid) {
+          if (Number(candidate.version) === 5
+            && candidateBindings.guardHigh === 6
+            && candidateBindings.bodyModifier === 7) {
+            candidateBindings.guardHigh = 7;
+            candidateBindings.bodyModifier = 6;
+          }
           normalized.gamepadBindings[player] = candidateBindings;
         }
       }
@@ -283,7 +301,14 @@
       }
     }
     const touchPositionsSource = candidate.touchPositions;
-    if (touchPositionsSource && typeof touchPositionsSource === "object") {
+    const usesVersionFiveDefaultPositions = Number(candidate.version) === 5
+      && TOUCH_SLOT_IDS.every((slot) => (
+        Number(touchPositionsSource?.[slot]?.x) === VERSION_FIVE_TOUCH_POSITIONS[slot].x
+        && Number(touchPositionsSource?.[slot]?.y) === VERSION_FIVE_TOUCH_POSITIONS[slot].y
+      ));
+    if (!usesVersionFiveDefaultPositions
+      && touchPositionsSource
+      && typeof touchPositionsSource === "object") {
       for (const slot of TOUCH_SLOT_IDS) {
         const x = Number(touchPositionsSource[slot]?.x);
         const y = Number(touchPositionsSource[slot]?.y);

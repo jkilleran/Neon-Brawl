@@ -51,6 +51,48 @@
   const INPUT_API = globalThis.NEON_BRAWL_INPUT;
   if (!INPUT_API) throw new Error("Input manager must load before game.js");
   const input = new INPUT_API.NeonBrawlInputManager();
+  const touchPointerStates = new Map();
+  let appliedTouchPointerActions = new Set();
+
+  const syncTouchPointerActions = () => {
+    const nextActions = new Set();
+    for (const state of touchPointerStates.values()) {
+      if (state.originAction) nextActions.add(state.originAction);
+      if (state.dragAction) nextActions.add(state.dragAction);
+    }
+    for (const action of appliedTouchPointerActions) {
+      if (!nextActions.has(action)) input.setTouchAction(action, false, 1);
+    }
+    for (const action of nextActions) {
+      if (!appliedTouchPointerActions.has(action)) input.setTouchAction(action, true, 1);
+    }
+    appliedTouchPointerActions = nextActions;
+    for (const button of touchButtons) {
+      button.classList.toggle("is-pressed", nextActions.has(button.dataset.touchAction));
+    }
+  };
+
+  const clearTouchPointerActions = () => {
+    touchPointerStates.clear();
+    syncTouchPointerActions();
+  };
+
+  const getTouchMovementActionAt = (clientX, clientY) => {
+    if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) return null;
+    for (const button of touchButtons) {
+      const action = button.dataset.touchAction;
+      if (!["moveLeft", "moveRight"].includes(action)) continue;
+      const rect = button.getBoundingClientRect?.();
+      if (!rect) continue;
+      const left = Number(rect.left);
+      const top = Number(rect.top);
+      const right = Number.isFinite(Number(rect.right)) ? Number(rect.right) : left + Number(rect.width);
+      const bottom = Number.isFinite(Number(rect.bottom)) ? Number(rect.bottom) : top + Number(rect.height);
+      if (![left, top, right, bottom].every(Number.isFinite)) continue;
+      if (clientX >= left && clientX <= right && clientY >= top && clientY <= bottom) return action;
+    }
+    return null;
+  };
 
   const WIDTH = 1280;
   const HEIGHT = 720;
@@ -1368,8 +1410,8 @@
       touchControls.style.setProperty?.("--touch-opacity", String(touchOpacity));
       touchControls.style.setProperty?.("--touch-scale", String(touchScale));
       if (!active) {
+        clearTouchPointerActions();
         input.releaseTouch(1);
-        for (const button of touchButtons) button.classList.remove("is-pressed");
       }
     }
 
@@ -3440,6 +3482,7 @@
     input.handleKeyUp(event.code);
   });
   window.addEventListener("blur", () => {
+    clearTouchPointerActions();
     input.releaseAll();
     game.sendOnlineInputNow(false);
     if (["fighting", "ground"].includes(game.state)) game.togglePause();
@@ -3503,18 +3546,28 @@
   for (const button of touchButtons) {
     const release = (event) => {
       event.preventDefault?.();
-      const action = button.dataset.activeTouchAction;
-      if (action) input.setTouchAction(action, false, 1);
-      delete button.dataset.activeTouchAction;
-      button.classList.remove("is-pressed");
+      if (!touchPointerStates.has(event.pointerId)) return;
+      touchPointerStates.delete(event.pointerId);
+      syncTouchPointerActions();
     };
     button.addEventListener("pointerdown", (event) => {
       event.preventDefault();
       button.setPointerCapture?.(event.pointerId);
       const action = button.dataset.touchAction;
-      button.dataset.activeTouchAction = action;
-      input.setTouchAction(action, true, 1);
-      button.classList.add("is-pressed");
+      touchPointerStates.set(event.pointerId, {
+        originAction: action,
+        dragAction: null,
+      });
+      syncTouchPointerActions();
+    });
+    button.addEventListener("pointermove", (event) => {
+      const state = touchPointerStates.get(event.pointerId);
+      if (!state || !["guardHigh", "guardLow"].includes(state.originAction)) return;
+      event.preventDefault?.();
+      const dragAction = getTouchMovementActionAt(Number(event.clientX), Number(event.clientY));
+      if (dragAction === state.dragAction) return;
+      state.dragAction = dragAction;
+      syncTouchPointerActions();
     });
     button.addEventListener("pointerup", release);
     button.addEventListener("pointercancel", release);
