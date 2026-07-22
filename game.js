@@ -1335,7 +1335,8 @@
         && this.state === "fighting"
         && !this.settingsUi?.isOpen;
       const touchBindings = input.getSettings().touchBindings;
-      const signature = `${active}:${touchOpacity}:${touchScale}:${JSON.stringify(touchBindings)}`;
+      const touchPositions = input.getSettings().touchPositions;
+      const signature = `${active}:${touchOpacity}:${touchScale}:${JSON.stringify(touchBindings)}:${JSON.stringify(touchPositions)}`;
       if (!force && signature === this.touchPresentationSignature) return;
       this.touchPresentationSignature = signature;
       const touchLabels = {
@@ -1353,9 +1354,14 @@
       const actionLabels = Object.fromEntries(INPUT_API.ACTIONS.map((action) => [action.id, action.label]));
       for (const button of touchButtons) {
         const action = input.getTouchBinding(button.dataset.touchSlot);
+        const position = input.getTouchPosition(button.dataset.touchSlot);
         button.dataset.touchAction = action;
         button.innerHTML = touchLabels[action] || `<b>${action}</b>`;
         button.setAttribute("aria-label", actionLabels[action] || action);
+        if (position) {
+          button.style.left = `${position.x * 100}%`;
+          button.style.top = `${position.y * 100}%`;
+        }
       }
       touchControls.classList.toggle("is-hidden", !active);
       touchControls.classList.toggle("is-active", active);

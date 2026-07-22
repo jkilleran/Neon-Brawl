@@ -23,6 +23,7 @@ class FakeElement {
     this.textContent = "";
     this.value = "";
     this.options = [];
+    this.style = {};
   }
 
   addEventListener(type, listener) {
@@ -36,6 +37,9 @@ class FakeElement {
 
   focus() {}
   append(child) { this.options.push(child); }
+  setAttribute() {}
+  setPointerCapture() {}
+  getBoundingClientRect() { return { left: 0, top: 0, width: 1000, height: 500 }; }
 }
 
 const selectors = new Map();
@@ -75,11 +79,15 @@ element("#gamepad-deadzone");
 element("#gamepad-deadzone-value");
 element("#reset-gamepad-bindings");
 element("#reset-touch-bindings");
+element("#reset-touch-positions");
 element("#gamepad-mapping-player");
+element("#gamepad-low-guard-chord");
+element("#touch-layout-stage");
 
 const bindingButton = new FakeElement({ bindingPlayer: "1", bindingAction: "leftPunch" });
 const gamepadBindingButton = new FakeElement({ gamepadBindingAction: "leftPunch" });
 const touchBindingSelect = new FakeElement({ touchBindingSlot: "attackTopLeft" });
+const touchPositionButton = new FakeElement({ touchPositionSlot: "utilityLeft" });
 const playerTabs = [
   new FakeElement({ settingsPlayer: "1" }),
   new FakeElement({ settingsPlayer: "2" }),
@@ -111,6 +119,7 @@ global.document = {
     if (selector === "[data-reset-player]") return resetButtons;
     if (selector === "[data-gamepad-binding-action]") return [gamepadBindingButton];
     if (selector === "[data-touch-binding-slot]") return [touchBindingSelect];
+    if (selector === "[data-touch-position-slot]") return [touchPositionButton];
     if (selector === "[data-settings-section-target]") return sectionTabs;
     if (selector === "[data-settings-section]") return sections;
     if (selector === "[data-method-shortcut]") return methodShortcuts;
@@ -142,6 +151,7 @@ assert.equal(input.getBinding(1, "leftPunch"), "KeyQ");
 assert.equal(bindingButton.textContent, "Q");
 
 sectionTabs[2].dispatch("click");
+assert.match(selectors.get("#gamepad-low-guard-chord").textContent, /LT \/ L2.*RT \/ R2/);
 gamepadBindingButton.dispatch("click");
 assert.equal(gamepadBindingButton.textContent, "PRESS BUTTON");
 assert.equal(ui.captureGamepadButton(1, 8), true);
@@ -152,6 +162,24 @@ sectionTabs[3].dispatch("click");
 touchBindingSelect.value = "rightPunch";
 touchBindingSelect.dispatch("change");
 assert.equal(input.getTouchBinding("attackTopLeft"), "rightPunch");
+assert.equal(touchPositionButton.textContent, "BODY");
+assert.equal(touchPositionButton.style.left, "24.00%");
+touchPositionButton.dispatch("pointerdown", {
+  pointerId: 4,
+  button: 0,
+  clientX: 360,
+  clientY: 350,
+  preventDefault() {},
+});
+touchPositionButton.dispatch("pointerup", {
+  pointerId: 4,
+  clientX: 360,
+  clientY: 350,
+  preventDefault() {},
+});
+assert.deepEqual(input.getTouchPosition("utilityLeft"), { x: 0.36, y: 0.7 });
+selectors.get("#reset-touch-positions").dispatch("click");
+assert.deepEqual(input.getTouchPosition("utilityLeft"), { x: 0.24, y: 0.91 });
 
 playerTabs[1].dispatch("click");
 assert.equal(playerPanels[0].classList.contains("is-hidden"), true);

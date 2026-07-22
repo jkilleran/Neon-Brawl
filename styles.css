@@ -1788,6 +1788,18 @@ h1 em {
   color: var(--yellow);
 }
 
+.gamepad-derived-binding output {
+  min-height: 20px;
+  display: grid;
+  place-items: center;
+  padding: 2px 4px;
+  border: 1px dashed rgba(53, 242, 229, 0.3);
+  background: rgba(53, 242, 229, 0.035);
+  color: var(--cyan);
+  font: 700 5.5px "Orbitron", sans-serif;
+  text-align: center;
+}
+
 .settings-options {
   display: grid;
   grid-template-columns: 1fr;
@@ -1869,6 +1881,123 @@ h1 em {
   color: #66677b;
   font-size: 7px;
   line-height: 1.25;
+}
+
+.touch-layout-editor {
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.touch-layout-editor > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.touch-layout-editor > header small,
+.touch-layout-editor > header strong {
+  display: block;
+}
+
+.touch-layout-editor > header small {
+  color: #66687d;
+  font-size: 6px;
+  letter-spacing: 0.14em;
+}
+
+.touch-layout-editor > header strong {
+  margin-top: 2px;
+  color: var(--pink);
+  font: 700 8px "Orbitron", sans-serif;
+}
+
+.touch-layout-editor > header button {
+  min-height: 24px;
+  padding: 3px 7px;
+  border: 1px solid rgba(214, 255, 125, 0.24);
+  background: rgba(214, 255, 125, 0.04);
+  color: var(--lime);
+  font: 700 6px "Orbitron", sans-serif;
+  cursor: pointer;
+}
+
+.touch-layout-editor > small {
+  display: block;
+  margin-top: 5px;
+  color: #686a7e;
+  font-size: 6.5px;
+}
+
+.touch-layout-stage {
+  position: relative;
+  width: 100%;
+  height: clamp(155px, 20cqw, 210px);
+  overflow: hidden;
+  border: 1px solid rgba(53, 242, 229, 0.18);
+  background:
+    linear-gradient(90deg, rgba(53, 242, 229, 0.04), transparent 42%, rgba(255, 59, 157, 0.04)),
+    repeating-linear-gradient(0deg, transparent 0 24px, rgba(255, 255, 255, 0.025) 25px),
+    #070713;
+  touch-action: none;
+}
+
+.touch-layout-stage__label {
+  position: absolute;
+  top: 8px;
+  color: rgba(255, 255, 255, 0.2);
+  font: 700 6px "Orbitron", sans-serif;
+  letter-spacing: 0.12em;
+  pointer-events: none;
+}
+
+.touch-layout-stage__label--left { left: 9px; color: rgba(53, 242, 229, 0.38); }
+.touch-layout-stage__label--right { right: 9px; color: rgba(255, 59, 157, 0.38); }
+
+.touch-layout-stage__center {
+  position: absolute;
+  top: 12%;
+  bottom: 6%;
+  left: 50%;
+  border-left: 1px dashed rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.touch-layout-stage > button {
+  position: absolute;
+  z-index: 1;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid rgba(255, 59, 157, 0.46);
+  border-radius: 50%;
+  background: rgba(12, 10, 28, 0.94);
+  color: #f0dce8;
+  font: 700 6px "Orbitron", sans-serif;
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  touch-action: none;
+}
+
+.touch-layout-stage > button:hover,
+.touch-layout-stage > button:focus-visible,
+.touch-layout-stage > button.is-dragging {
+  z-index: 2;
+  border-color: var(--yellow);
+  color: var(--yellow);
+  box-shadow: 0 0 12px rgba(255, 230, 109, 0.25);
+  outline: 0;
+}
+
+.touch-layout-stage > button.is-dragging { cursor: grabbing; }
+
+.touch-layout-stage > button.is-body {
+  width: 43px;
+  border-radius: 8px;
+  border-color: rgba(214, 255, 125, 0.6);
+  color: var(--lime);
 }
 
 .touch-mapping-details {
@@ -2055,30 +2184,14 @@ h1 em {
   touch-action: none;
 }
 
-.touch-cluster {
-  position: absolute;
-  bottom: clamp(10px, 2.2cqw, 28px);
-  opacity: var(--touch-opacity);
-  transform: scale(var(--touch-scale));
-}
-
-.touch-cluster--movement {
-  left: clamp(10px, 2.5cqw, 34px);
-  display: grid;
-  grid-template: repeat(3, clamp(34px, 5cqw, 64px)) / repeat(3, clamp(34px, 5cqw, 64px));
-  transform-origin: left bottom;
-}
-
-.touch-cluster--actions {
-  right: clamp(10px, 2.5cqw, 34px);
-  display: grid;
-  grid-template: repeat(3, clamp(34px, 4.7cqw, 60px)) / repeat(4, clamp(34px, 4.7cqw, 60px));
-  gap: clamp(2px, 0.35cqw, 5px);
-  transform-origin: right bottom;
-}
-
 .touch-button {
+  --touch-press-scale: 1;
+  position: absolute;
+  width: clamp(38px, 4.8cqw, 62px);
+  height: clamp(38px, 4.8cqw, 62px);
+  padding: 0;
   pointer-events: auto;
+  opacity: var(--touch-opacity);
   border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 50%;
   background: rgba(5, 5, 16, 0.7);
@@ -2088,6 +2201,8 @@ h1 em {
   cursor: pointer;
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
+  transform: translate(-50%, -50%) scale(var(--touch-scale)) scale(var(--touch-press-scale));
+  transform-origin: center;
 }
 
 .touch-button small {
@@ -2098,29 +2213,27 @@ h1 em {
 
 .touch-button:active,
 .touch-button.is-pressed {
+  --touch-press-scale: 0.93;
   border-color: var(--cyan);
   background: rgba(53, 242, 229, 0.22);
   color: #fff;
-  transform: scale(0.93);
 }
 
-.touch-button--guard-high { grid-area: 1 / 2; border-color: rgba(53, 242, 229, 0.44); }
-.touch-button--left { grid-area: 2 / 1; }
-.touch-button--right { grid-area: 2 / 3; }
-.touch-button--guard-low { grid-area: 3 / 2; border-color: rgba(53, 242, 229, 0.44); }
-.touch-button--punch-left { grid-area: 1 / 2; border-color: rgba(255, 59, 157, 0.48); }
-.touch-button--punch-right { grid-area: 1 / 3; border-color: rgba(255, 59, 157, 0.48); }
-.touch-button--kick-left { grid-area: 2 / 1; border-color: rgba(255, 195, 91, 0.5); }
-.touch-button--kick-right { grid-area: 2 / 4; border-color: rgba(255, 195, 91, 0.5); }
+.touch-button--guard-high,
+.touch-button--guard-low { border-color: rgba(53, 242, 229, 0.44); }
+.touch-button--punch-left,
+.touch-button--punch-right { border-color: rgba(255, 59, 157, 0.48); }
+.touch-button--kick-left,
+.touch-button--kick-right { border-color: rgba(255, 195, 91, 0.5); }
 .touch-button--body {
-  grid-area: 3 / 2;
+  width: clamp(52px, 6.4cqw, 82px);
   border-radius: 8px;
   border-color: rgba(214, 255, 125, 0.48);
   color: var(--lime);
 }
 
 .touch-button--evade {
-  grid-area: 3 / 3;
+  width: clamp(52px, 6.4cqw, 82px);
   border-radius: 8px;
   border-color: rgba(141, 92, 255, 0.5);
   color: #bca9ff;

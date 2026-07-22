@@ -52,6 +52,9 @@ assert.match(markup, /FLECHAS \+ IOKL/, "Pause menu should list Player 2 control
 assert.match(markup, /body-modifier-summary[\s\S]*mantener \+ cualquier golpe/, "Pause menu should explain the body modifier");
 assert.match(markup, /combat-config\.js[\s\S]*animation-manifest\.js[\s\S]*input-manager\.js[\s\S]*settings-ui\.js[\s\S]*game\.js/, "Shared configs and universal input modules must load before the game");
 assert.match(markup, /id="settings-screen"[\s\S]*KEYBOARD MAPPING[\s\S]*GAMEPAD MAPPING[\s\S]*TOUCH MAPPING/, "Settings should expose keyboard, controller and touch mapping");
+assert.match(markup, /Guardia alta[\s\S]*data-gamepad-binding-action="guardHigh"[\s\S]*LT \/ L2[\s\S]*gamepad-low-guard-chord[\s\S]*L2 \+ R2/, "Gamepad Settings should explain the trigger guard chord");
+assert.match(markup, /Golpe al cuerpo[\s\S]*data-gamepad-binding-action="bodyModifier"[\s\S]*RT \/ R2/, "R2 should be the default body modifier");
+assert.match(markup, /id="touch-layout-stage"[\s\S]*data-touch-position-slot="utilityLeft"[\s\S]*BODY/, "Touch Settings should provide a graphical position editor");
 assert.match(markup, /data-settings-section-target="general"[\s\S]*data-settings-section-target="keyboard"[\s\S]*data-settings-section-target="gamepad"[\s\S]*data-settings-section-target="touch"/, "Settings should have four organized categories");
 assert.match(markup, /id="sound-mode"[\s\S]*id="screen-shake-mode"[\s\S]*id="control-hints-mode"[\s\S]*id="settings-fullscreen-button"/, "General Settings should expose the essential presentation options");
 assert.match(markup, /id="settings-device-status"[\s\S]*USANDO TECLADO/, "Settings should identify the active input method");
@@ -110,6 +113,7 @@ assert.match(gameSource, /ONLINE_MAX_EXTRAPOLATION_SECONDS = 0\.2/, "Remote moti
 assert.match(gameSource, /sendOnlineInputNow/, "Guest controls should support immediate input delivery");
 assert.match(gameSource, /inMatch: this\.settingsOpenedFromPause[\s\S]*player: settingsPlayer/, "Paused Settings should receive the active match and player context");
 assert.match(gameSource, /screenShake[\s\S]*shakeMode === "reduced"/, "Visual shake should support full, reduced and disabled preferences");
+assert.match(gameSource, /touchPositions[\s\S]*position\.x \* 100[\s\S]*position\.y \* 100/, "Runtime touch controls should use persisted graphical positions");
 assert.match(onlineServerSource, /MAX_REALTIME_BUFFER_BYTES = 24 \* 1024/, "The relay should shed stale snapshots early");
 assert.match(
   gameSource,

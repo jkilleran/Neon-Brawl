@@ -345,18 +345,18 @@
               <section class="settings-section is-hidden" data-settings-section="gamepad">
                 <section class="controller-card">
                   <header><span><small>GAMEPAD MAPPING</small><strong id="gamepad-mapping-player">PLAYER 1</strong></span><button id="reset-gamepad-bindings" type="button">RESET PAD</button></header>
-                  <p class="mapping-note">El stick izquierdo siempre mueve. Selecciona una acción y presiona el nuevo botón.</p>
+                  <p class="mapping-note">El stick izquierdo siempre mueve. Guardia baja combina los botones asignados a guardia alta + cuerpo.</p>
                   <div class="gamepad-binding-grid">
                     <label><span>Mover izquierda</span><button data-gamepad-binding-action="moveLeft" type="button">D-PAD ←</button></label>
                     <label><span>Mover derecha</span><button data-gamepad-binding-action="moveRight" type="button">D-PAD →</button></label>
-                    <label><span>Guardia alta</span><button data-gamepad-binding-action="guardHigh" type="button">LB / L1</button></label>
-                    <label><span>Guardia baja</span><button data-gamepad-binding-action="guardLow" type="button">LT / L2</button></label>
+                    <label><span>Guardia alta</span><button data-gamepad-binding-action="guardHigh" type="button">LT / L2</button></label>
+                    <label class="gamepad-derived-binding"><span>Guardia baja</span><output id="gamepad-low-guard-chord">L2 + R2</output></label>
                     <label><span>Puño izquierdo</span><button data-gamepad-binding-action="leftPunch" type="button">X / □</button></label>
                     <label><span>Puño derecho</span><button data-gamepad-binding-action="rightPunch" type="button">Y / △</button></label>
                     <label><span>Patada izquierda</span><button data-gamepad-binding-action="leftKick" type="button">A / ✕</button></label>
                     <label><span>Patada derecha</span><button data-gamepad-binding-action="rightKick" type="button">B / ○</button></label>
-                    <label><span>Golpe al cuerpo</span><button data-gamepad-binding-action="bodyModifier" type="button">RB / R1</button></label>
-                    <label><span>Evasión</span><button data-gamepad-binding-action="evade" type="button">RT / R2</button></label>
+                    <label><span>Golpe al cuerpo</span><button data-gamepad-binding-action="bodyModifier" type="button">RT / R2</button></label>
+                    <label><span>Evasión</span><button data-gamepad-binding-action="evade" type="button">RB / R1</button></label>
                   </div>
                   <label class="settings-range"><span><b>DEADZONE</b><output id="gamepad-deadzone-value">22%</output></span><input id="gamepad-deadzone" type="range" min="8" max="45" step="1" value="22" /></label>
                 </section>
@@ -368,6 +368,25 @@
                   <label><span>Visibilidad</span><select id="touch-mode"><option value="auto">AUTO</option><option value="on">VISIBLE</option><option value="off">OCULTO</option></select></label>
                   <label class="settings-range"><span><b>OPACIDAD</b><output id="touch-opacity-value">72%</output></span><input id="touch-opacity" type="range" min="35" max="100" step="1" value="72" /></label>
                   <label class="settings-range"><span><b>TAMAÑO</b><output id="touch-scale-value">100%</output></span><input id="touch-scale" type="range" min="80" max="120" step="5" value="100" /></label>
+                  <div class="touch-layout-editor">
+                    <header><span><small>DRAG &amp; DROP</small><strong>POSICIÓN DE BOTONES</strong></span><button id="reset-touch-positions" type="button">RESET POSITIONS</button></header>
+                    <div id="touch-layout-stage" class="touch-layout-stage" aria-label="Editor visual de controles táctiles">
+                      <span class="touch-layout-stage__label touch-layout-stage__label--left">LEFT SIDE</span>
+                      <span class="touch-layout-stage__label touch-layout-stage__label--right">RIGHT SIDE</span>
+                      <i class="touch-layout-stage__center"></i>
+                      <button data-touch-position-slot="guardTop" type="button">HIGH</button>
+                      <button data-touch-position-slot="moveLeft" type="button">←</button>
+                      <button data-touch-position-slot="moveRight" type="button">→</button>
+                      <button data-touch-position-slot="guardBottom" type="button">LOW</button>
+                      <button data-touch-position-slot="attackTopLeft" type="button">LP</button>
+                      <button data-touch-position-slot="attackTopRight" type="button">RP</button>
+                      <button data-touch-position-slot="attackBottomLeft" type="button">LK</button>
+                      <button data-touch-position-slot="attackBottomRight" type="button">RK</button>
+                      <button data-touch-position-slot="utilityLeft" type="button">BODY</button>
+                      <button data-touch-position-slot="utilityRight" type="button">EVADE</button>
+                    </div>
+                    <small>Arrastra cualquier botón. También puedes seleccionarlo y usar las flechas para ajustes precisos.</small>
+                  </div>
                   <details class="touch-mapping-details">
                     <summary>EDITAR LOS 10 BOTONES</summary>
                     <div class="touch-binding-grid">
@@ -422,20 +441,16 @@
 
           <div id="touch-controls" class="touch-controls is-hidden" aria-label="Controles táctiles del jugador 1">
             <button id="touch-pause-button" class="touch-pause-button" type="button" aria-label="Pausar partida">Ⅱ</button>
-            <div class="touch-cluster touch-cluster--movement">
-              <button class="touch-button touch-button--guard-high" data-touch-slot="guardTop" data-touch-action="guardHigh" type="button"><b>H</b><small>GUARD</small></button>
-              <button class="touch-button touch-button--left" data-touch-slot="moveLeft" data-touch-action="moveLeft" type="button" aria-label="Mover izquierda">←</button>
-              <button class="touch-button touch-button--right" data-touch-slot="moveRight" data-touch-action="moveRight" type="button" aria-label="Mover derecha">→</button>
-              <button class="touch-button touch-button--guard-low" data-touch-slot="guardBottom" data-touch-action="guardLow" type="button"><b>L</b><small>GUARD</small></button>
-            </div>
-            <div class="touch-cluster touch-cluster--actions">
-              <button class="touch-button touch-button--punch-left" data-touch-slot="attackTopLeft" data-touch-action="leftPunch" type="button"><b>LP</b></button>
-              <button class="touch-button touch-button--punch-right" data-touch-slot="attackTopRight" data-touch-action="rightPunch" type="button"><b>RP</b></button>
-              <button class="touch-button touch-button--kick-left" data-touch-slot="attackBottomLeft" data-touch-action="leftKick" type="button"><b>LK</b></button>
-              <button class="touch-button touch-button--kick-right" data-touch-slot="attackBottomRight" data-touch-action="rightKick" type="button"><b>RK</b></button>
-              <button class="touch-button touch-button--body" data-touch-slot="utilityLeft" data-touch-action="bodyModifier" type="button"><b>BODY</b></button>
-              <button class="touch-button touch-button--evade" data-touch-slot="utilityRight" data-touch-action="evade" type="button"><b>EVADE</b></button>
-            </div>
+            <button class="touch-button touch-button--guard-high" data-touch-slot="guardTop" data-touch-action="guardHigh" type="button"><b>H</b><small>GUARD</small></button>
+            <button class="touch-button touch-button--left" data-touch-slot="moveLeft" data-touch-action="moveLeft" type="button" aria-label="Mover izquierda">←</button>
+            <button class="touch-button touch-button--right" data-touch-slot="moveRight" data-touch-action="moveRight" type="button" aria-label="Mover derecha">→</button>
+            <button class="touch-button touch-button--guard-low" data-touch-slot="guardBottom" data-touch-action="guardLow" type="button"><b>L</b><small>GUARD</small></button>
+            <button class="touch-button touch-button--punch-left" data-touch-slot="attackTopLeft" data-touch-action="leftPunch" type="button"><b>LP</b></button>
+            <button class="touch-button touch-button--punch-right" data-touch-slot="attackTopRight" data-touch-action="rightPunch" type="button"><b>RP</b></button>
+            <button class="touch-button touch-button--kick-left" data-touch-slot="attackBottomLeft" data-touch-action="leftKick" type="button"><b>LK</b></button>
+            <button class="touch-button touch-button--kick-right" data-touch-slot="attackBottomRight" data-touch-action="rightKick" type="button"><b>RK</b></button>
+            <button class="touch-button touch-button--body" data-touch-slot="utilityLeft" data-touch-action="bodyModifier" type="button"><b>BODY</b></button>
+            <button class="touch-button touch-button--evade" data-touch-slot="utilityRight" data-touch-action="evade" type="button"><b>EVADE</b></button>
           </div>
         </div>
       </section>
@@ -443,7 +458,7 @@
       <footer class="footer-note">
         <span><i></i> SYSTEM ONLINE</span>
         <p>ESC para pausar · Cada crítico tiene 1 de 2.2 de probabilidad de knockdown</p>
-        <span>BUILD 0.32.0 // CONTEXTUAL SETTINGS</span>
+        <span>BUILD 0.33.0 // CUSTOM INPUT LAYOUT</span>
       </footer>
     </main>
 

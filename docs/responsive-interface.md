@@ -15,7 +15,7 @@ Menu adaptation is based on the rendered game viewport instead of the browser wi
 - 720 px and below: single-column main menu, hidden decorative fighter card, compact actions, and edge-safe dialogs.
 - 520 px and below: essential labels only, vertically scrollable dialogs, compact online controls, and horizontally scrollable score tables.
 
-The Settings panel uses four compact category tabs and keeps its active-method badge visible at every supported width. General cards collapse from three columns to two and then one, while keyboard, gamepad, and touch mappings reduce their internal columns without dropping actions. Touch controls use container-relative sizing, user-adjustable scale, and fixed corner anchors, so they remain reachable without changing the Canvas coordinate system.
+The Settings panel uses four compact category tabs and keeps its active-method badge visible at every supported width. General cards collapse from three columns to two and then one, while keyboard, gamepad, and touch mappings reduce their internal columns without dropping actions. Touch controls use normalized user-defined coordinates, container-relative sizing, and user-adjustable scale. A custom layout therefore retains the same proportions across supported viewport sizes without changing the Canvas coordinate system.
 
 The scorecard keeps its complete statistics at small sizes through local horizontal scrolling instead of deleting match information. The pause and online panels use bounded vertical scrolling so every action remains reachable.
 

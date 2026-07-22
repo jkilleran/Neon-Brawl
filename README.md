@@ -23,7 +23,7 @@ Open `http://localhost:3000` in both tabs, enter two different fighter names, an
 
 ## Controls
 
-Open Settings directly from the main menu, the header gear, or the local pause screen. The panel is organized into General, Keyboard, Gamepad, and Touch categories. It identifies the last input method used by each player and, when opened from a paused fight, jumps directly to that method's mapping. Keyboard, gamepad, and all ten touch positions can be reassigned, and mappings persist in the current browser. If a replacement is already in use by that player or layout, the two actions swap safely.
+Open Settings directly from the main menu, the header gear, or the local pause screen. The panel is organized into General, Keyboard, Gamepad, and Touch categories. It identifies the last input method used by each player and, when opened from a paused fight, jumps directly to that method's mapping. Keyboard, gamepad, and all ten touch actions can be reassigned. Touch buttons can also be dragged to custom screen positions. Mappings and positions persist in the current browser. If a replacement is already in use by that player or layout, the two actions swap safely.
 
 | Action | Player 1 / Rook | Player 2 / Vex |
 | --- | --- | --- |
@@ -45,9 +45,9 @@ Takedowns and ground control remain disabled. Their prototype logic and legacy s
 
 In Online Arena, both players use the Player 1 keyboard layout on their own computer. Online matches cannot be paused.
 
-Standard Xbox- and PlayStation-style controllers are detected automatically. The first connected controller controls Player 1 and the second controls Player 2 in Local Sparring. Every D-pad and combat action is remappable per player; the left stick always moves and Menu / Options remains reserved for pause.
+Standard Xbox- and PlayStation-style controllers are detected automatically. The first connected controller controls Player 1 and the second controls Player 2 in Local Sparring. By default, `LT / L2` holds high guard, `RT / R2` modifies strikes to the body, and holding both triggers produces low guard. Face buttons throw the four strikes and `RB / R1` evades. Direct actions are remappable per player; low guard always follows the assigned High Guard + Body Modifier chord. The left stick always moves and Menu / Options remains reserved for pause.
 
-Optional touch controls can be set to Auto, Visible, or Hidden. Their ten gameplay positions can be reassigned while preserving one button per action. They provide movement, both guards, all four strikes, the body modifier, and evade without changing Canvas resolution or gameplay timing. See [Universal Input and Settings](docs/input-system.md) for the complete mapping and architecture.
+Optional touch controls can be set to Auto, Visible, or Hidden. Their ten gameplay actions can be reassigned while preserving one button per action, and every button can be repositioned through the graphical drag-and-drop editor. The default Body Modifier sits on the left side for easier two-hand combinations. Touch controls do not change Canvas resolution or gameplay timing. See [Universal Input and Settings](docs/input-system.md) for the complete mapping and architecture.
 
 ## Online Arena
 
@@ -125,7 +125,7 @@ npm run build
 - Dedicated Neon MMA arena plate with reference-aligned fighter placement and dual-foot contact shadows
 - Fixed transparent cage and floor over a 2.1-second low/takeoff/jump-apex crowd loop with no procedural lighting pass
 - Aspect-safe 16:9 viewport, fullscreen letterboxing, high-density Canvas rendering up to 2×, and container-responsive menus
-- Context-aware Settings with active-device detection, presentation preferences, persistent keyboard remapping, standard dual-gamepad support, and an optional performance-safe touch overlay
+- Context-aware Settings with active-device detection, trigger-chord gamepad defense, persistent remapping, and a draggable performance-safe touch overlay
 - Quick Fight, Local Sparring, and infinite-time Practice Lab
 - Three 3-minute rounds with 10-9 scoring
 - Separate head and body damage

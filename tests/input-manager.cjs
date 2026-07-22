@@ -5,6 +5,7 @@ const {
   DEFAULT_BINDINGS,
   DEFAULT_GAMEPAD_BINDINGS,
   DEFAULT_TOUCH_BINDINGS,
+  DEFAULT_TOUCH_POSITIONS,
   formatCode,
   formatGamepadButton,
 } = require("../input-manager.js");
@@ -47,6 +48,10 @@ const input = new NeonBrawlInputManager({
 assert.deepEqual(input.getSettings().bindings[1], DEFAULT_BINDINGS[1]);
 assert.deepEqual(input.getSettings().gamepadBindings[1], DEFAULT_GAMEPAD_BINDINGS[1]);
 assert.deepEqual(input.getSettings().touchBindings, DEFAULT_TOUCH_BINDINGS);
+assert.deepEqual(input.getSettings().touchPositions, DEFAULT_TOUCH_POSITIONS);
+assert.equal(DEFAULT_GAMEPAD_BINDINGS[1].guardHigh, 6, "L2 should be the default high guard");
+assert.equal(DEFAULT_GAMEPAD_BINDINGS[1].bodyModifier, 7, "R2 should be the default body modifier");
+assert.equal(DEFAULT_GAMEPAD_BINDINGS[1].evade, 5, "R1 should remain available for evade");
 assert.equal(input.getPreference("soundEnabled"), true);
 assert.equal(input.getPreference("screenShake"), "full");
 assert.equal(input.getPreference("showControlHints"), false);
@@ -86,6 +91,11 @@ assert.equal(input.setTouchBinding("attackTopLeft", "rightPunch"), true);
 assert.equal(input.getTouchBinding("attackTopLeft"), "rightPunch");
 assert.equal(input.getTouchBinding("attackTopRight"), "leftPunch", "Touch conflicts should swap slots");
 input.resetTouchBindings();
+assert(input.getTouchPosition("utilityLeft").x < 0.5, "BODY should default to the left half of the screen");
+assert.equal(input.setTouchPosition("utilityLeft", { x: 0.4, y: 0.7 }), true);
+assert.deepEqual(input.getTouchPosition("utilityLeft"), { x: 0.4, y: 0.7 });
+input.resetTouchPositions();
+assert.deepEqual(input.getTouchPosition("utilityLeft"), DEFAULT_TOUCH_POSITIONS.utilityLeft);
 
 assert.equal(input.setGamepadBinding(1, "leftPunch", 8), true);
 assert.equal(input.getGamepadBinding(1, "leftPunch"), 8);
@@ -96,8 +106,7 @@ pads = [gamepad({
   axis: 0.7,
   buttons: {
     8: button(true),
-    4: button(true),
-    5: button(true),
+    6: button(true),
   },
 })];
 let capturedGamepadButton = null;
@@ -109,12 +118,33 @@ assert.equal(input.getActiveInputMethod(1), "gamepad");
 assert.deepEqual(capturedGamepadButton, { player: 1, button: 8 }, "New button edges should be available to the mapping UI");
 playerOne = input.getPlayerInput(1);
 assert(playerOne.move > 0.5 && playerOne.move <= 1, "Analog movement should apply its deadzone");
-assert.equal(playerOne.guardHigh, true, "LB/L1 should hold high guard");
-assert.equal(playerOne.bodyModifier, true, "RB/R1 should hold the body modifier");
+assert.equal(playerOne.guardHigh, true, "L2 should hold high guard");
+assert.equal(playerOne.guardLow, false);
+assert.equal(playerOne.bodyModifier, false);
 assert.equal(playerOne.leftPunch, true, "X/Square should trigger the left punch");
 input.endFrame();
 input.pollGamepads();
 assert.equal(input.getPlayerInput(1).leftPunch, false, "Held gamepad strikes must not spam");
+
+pads = [gamepad({ id: "Pad One" })];
+input.pollGamepads();
+input.endFrame();
+pads = [gamepad({ id: "Pad One", buttons: { 7: button(true), 8: button(true) } })];
+input.pollGamepads();
+playerOne = input.getPlayerInput(1);
+assert.equal(playerOne.bodyModifier, true, "R2 should modify the next strike to the body");
+assert.equal(playerOne.leftPunch, true, "R2 and a strike should remain a valid strike combination");
+
+pads = [gamepad({ id: "Pad One" })];
+input.pollGamepads();
+input.endFrame();
+pads = [gamepad({ id: "Pad One", buttons: { 6: button(true), 7: button(true), 8: button(true) } })];
+input.pollGamepads();
+playerOne = input.getPlayerInput(1);
+assert.equal(playerOne.guardHigh, false, "The combined triggers should replace high guard");
+assert.equal(playerOne.guardLow, true, "L2 + R2 should derive low guard");
+assert.equal(playerOne.bodyModifier, true, "R2 remains held while low guard is active");
+assert.equal(playerOne.leftPunch, false, "Low guard should take priority over gamepad strikes");
 
 pads = [
   gamepad({ id: "Pad One" }),
@@ -130,6 +160,20 @@ assert.equal(input.getMostRecentPlayer(), 2);
 const persistedMappings = new NeonBrawlInputManager({ storage, navigator });
 assert.equal(persistedMappings.getGamepadBinding(1, "leftPunch"), 8, "Gamepad mapping should persist");
 assert.deepEqual(persistedMappings.getSettings().touchBindings, DEFAULT_TOUCH_BINDINGS, "Touch layout should persist after reset");
+assert.deepEqual(persistedMappings.getTouchPosition("utilityLeft"), DEFAULT_TOUCH_POSITIONS.utilityLeft);
+
+const legacyStorage = new MemoryStorage();
+legacyStorage.setItem("neonBrawlInputSettingsV1", JSON.stringify({
+  version: 3,
+  bindings: DEFAULT_BINDINGS,
+  gamepadBindings: {
+    1: { ...DEFAULT_GAMEPAD_BINDINGS[1], guardHigh: 4, guardLow: 6, bodyModifier: 5, evade: 7 },
+    2: { ...DEFAULT_GAMEPAD_BINDINGS[2], guardHigh: 4, guardLow: 6, bodyModifier: 5, evade: 7 },
+  },
+  touchBindings: DEFAULT_TOUCH_BINDINGS,
+}));
+const migratedInput = new NeonBrawlInputManager({ storage: legacyStorage, navigator });
+assert.deepEqual(migratedInput.getSettings().gamepadBindings[1], DEFAULT_GAMEPAD_BINDINGS[1], "Legacy controller layouts should migrate to the new trigger defaults");
 
 input.setPreference("touchMode", "on");
 assert.equal(input.shouldShowTouchControls(), true);

@@ -1,6 +1,6 @@
 # Universal Input and Settings
 
-Neon Brawl 0.32.0 routes keyboard, gamepad, and touch controls through one browser-side input manager. Every device produces the same combat input object, so movement, guards, stamina costs, strike priority, and server authority remain independent of the control method.
+Neon Brawl 0.33.0 routes keyboard, gamepad, and touch controls through one browser-side input manager. Every device produces the same combat input object, so movement, guards, stamina costs, strike priority, and server authority remain independent of the control method.
 
 ## Settings access
 
@@ -48,17 +48,19 @@ Controllers are detected with the standard browser Gamepad API and can be used a
 | Action | Xbox-style | PlayStation-style |
 | --- | --- | --- |
 | Movement | Left stick or D-pad | Left stick or D-pad |
-| High guard | `LB` | `L1` |
-| Low guard | `LT` | `L2` |
+| High guard | `LT` | `L2` |
+| Low guard | Hold `LT + RT` | Hold `L2 + R2` |
 | Left punch | `X` | `Square` |
 | Right punch | `Y` | `Triangle` |
 | Left kick | `A` | `Cross` |
 | Right kick | `B` | `Circle` |
-| Body modifier | `RB` | `R1` |
-| Evade | `RT` | `R2` |
+| Body modifier | `RT` | `R2` |
+| Evade | `RB` | `R1` |
 | Pause local match | `Menu` | `Options` |
 
-Every D-pad and combat action can be remapped independently for Player 1 and Player 2. Select an action, then press the desired controller button. Conflicts swap assignments; `Menu` / `Options` remains reserved for pause. The left analog stick always controls movement so a custom D-pad layout cannot strand a player.
+Every direct D-pad and combat action can be remapped independently for Player 1 and Player 2. Select an action, then press the desired controller button. Conflicts swap assignments; `Menu` / `Options` remains reserved for pause. Low guard is derived from the buttons currently assigned to High Guard + Body Modifier, so the chord remains correct after either trigger is remapped. The left analog stick always controls movement so a custom D-pad layout cannot strand a player.
+
+Holding only the Body Modifier and pressing any face-button strike selects that strike's body animation. Holding High Guard and Body Modifier together replaces high guard with low guard and gives that defensive chord priority over controller strike buttons. Controller settings saved before v0.33.0 migrate once to this trigger layout so an old direct low-guard assignment cannot override the new chord.
 
 The analog deadzone is adjustable from 8% to 45%. Strike buttons use a rising-edge check, so holding a button cannot repeatedly spam a strike.
 
@@ -68,7 +70,9 @@ The touch overlay supports `Auto`, `Visible`, and `Hidden` modes. Auto mode appe
 
 The left cluster contains movement and both guards. The right cluster contains four distinct strikes, a holdable body modifier, and evade. A small center button pauses local matches. Pointer capture and independent pointer IDs allow a body modifier and strike button to be held together.
 
-All ten gameplay positions are remappable. Open **Edit all 10 buttons**, choose a new action for a slot, and any conflicting action swaps into the previous slot. This keeps exactly one reachable button per combat action. The pause button remains fixed outside the remappable layout.
+All ten gameplay actions are remappable. Open **Edit all 10 buttons**, choose a new action for a slot, and any conflicting action swaps into the previous slot. This keeps exactly one reachable button per combat action. The pause button remains fixed outside the remappable layout.
+
+The **Button Position** editor represents the complete gameplay surface. Drag a labeled control to any convenient location, or focus it and use the arrow keys for precise movement. Positions are stored as bounded normalized coordinates, so a layout preserves its proportions across phones and tablets with different resolutions. Reset Positions restores the ergonomic default, including the Body Modifier on the left half of the screen.
 
 Touch controls are regular lightweight HTML buttons layered over the Canvas. They do not increase the Canvas resolution, add draw calls to the arena, change the 60 Hz simulation, or alter online packets. Opacity and scale are presentation-only preferences.
 
@@ -82,6 +86,8 @@ Online input continues to contain only normalized combat actions. Keyboard and t
 - Keep device mappings out of `online-simulation.cjs`; the server accepts normalized actions only.
 - Preserve edge-triggered strike inputs and held guard/modifier inputs.
 - Update `tests/input-manager.cjs` whenever an input preference or device mapping changes.
+- Keep gamepad chord actions derived from normalized direct actions so custom High Guard and Body Modifier mappings remain compatible.
 - Keep active-method detection based on meaningful mapped input, not passive controller connection.
 - Preserve contextual Settings behavior: menu access opens General; paused local access opens the active device map.
 - Keep touch UI under `#game-viewport` so it shares the same responsive 16:9 coordinate surface as every other combat overlay.
+- Store touch placement as normalized bounded coordinates rather than device pixels.

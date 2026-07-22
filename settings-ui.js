@@ -41,14 +41,18 @@
       this.methodShortcuts = [...document.querySelectorAll("[data-method-shortcut]")];
       this.gamepadBindingButtons = [...document.querySelectorAll("[data-gamepad-binding-action]")];
       this.touchBindingSelects = [...document.querySelectorAll("[data-touch-binding-slot]")];
+      this.touchPositionButtons = [...document.querySelectorAll("[data-touch-position-slot]")];
+      this.touchLayoutStage = document.querySelector("#touch-layout-stage");
       this.resetGamepadButton = document.querySelector("#reset-gamepad-bindings");
       this.resetTouchButton = document.querySelector("#reset-touch-bindings");
+      this.resetTouchPositionsButton = document.querySelector("#reset-touch-positions");
       this.bindingButtons = [...document.querySelectorAll("[data-binding-player]")];
       this.playerTabs = [...document.querySelectorAll("[data-settings-player]")];
       this.playerPanels = [...document.querySelectorAll("[data-settings-panel]")];
       this.resetPlayerButtons = [...document.querySelectorAll("[data-reset-player]")];
       this.awaitingBinding = null;
       this.awaitingGamepadBinding = null;
+      this.touchDrag = null;
       this.activePlayer = 1;
       this.activeSection = "general";
       this.context = { inMatch: false, mode: "menu", round: 1 };
@@ -92,6 +96,13 @@
             : "No se pudo actualizar esa posición táctil.";
         });
       }
+      for (const button of this.touchPositionButtons) {
+        button.addEventListener("pointerdown", (event) => this.beginTouchPositionDrag(button, event));
+        button.addEventListener("pointermove", (event) => this.updateTouchPositionDrag(button, event));
+        button.addEventListener("pointerup", (event) => this.finishTouchPositionDrag(button, event));
+        button.addEventListener("pointercancel", (event) => this.finishTouchPositionDrag(button, event));
+        button.addEventListener("keydown", (event) => this.nudgeTouchPosition(button, event));
+      }
       for (const button of this.resetPlayerButtons) {
         button.addEventListener("click", () => {
           this.cancelBindingCapture();
@@ -108,6 +119,11 @@
         this.cancelBindingCapture();
         this.input.resetTouchBindings();
         this.captureStatus.textContent = "Diseño táctil restaurado.";
+      });
+      this.resetTouchPositionsButton?.addEventListener("click", () => {
+        this.cancelBindingCapture();
+        this.input.resetTouchPositions();
+        this.captureStatus.textContent = "Posiciones táctiles restauradas. BODY vuelve al lado izquierdo.";
       });
       this.resetAllButton.addEventListener("click", () => {
         this.cancelBindingCapture();
@@ -239,6 +255,88 @@
       this.captureStatus.textContent = `Presiona un botón del mando de P${this.activePlayer}. MENU / OPTIONS está reservado para pausa.`;
     }
 
+    beginTouchPositionDrag(button, event) {
+      if (!this.touchLayoutStage || (event.button != null && event.button !== 0)) return;
+      event.preventDefault?.();
+      button.setPointerCapture?.(event.pointerId);
+      this.input.noteInputMethod?.(1, "touch");
+      this.touchDrag = {
+        button,
+        pointerId: event.pointerId,
+        slot: button.dataset.touchPositionSlot,
+        position: this.input.getTouchPosition(button.dataset.touchPositionSlot),
+      };
+      button.classList.add("is-dragging");
+      this.updateTouchPositionDrag(button, event);
+      this.captureStatus.textContent = `Moviendo ${button.textContent}. Suelta para guardar la posición.`;
+    }
+
+    getTouchPositionFromPointer(event) {
+      const rect = this.touchLayoutStage?.getBoundingClientRect?.();
+      if (!rect?.width || !rect?.height) return null;
+      const clientX = Number(event.clientX);
+      const clientY = Number(event.clientY);
+      if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) return null;
+      const bounds = inputApi.TOUCH_POSITION_BOUNDS;
+      const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
+      return {
+        x: clamp((clientX - rect.left) / rect.width, bounds.minX, bounds.maxX),
+        y: clamp((clientY - rect.top) / rect.height, bounds.minY, bounds.maxY),
+      };
+    }
+
+    paintTouchPosition(button, position) {
+      if (!button || !position) return;
+      button.style.left = `${(position.x * 100).toFixed(2)}%`;
+      button.style.top = `${(position.y * 100).toFixed(2)}%`;
+    }
+
+    updateTouchPositionDrag(button, event) {
+      if (!this.touchDrag
+        || this.touchDrag.button !== button
+        || this.touchDrag.pointerId !== event.pointerId) return;
+      event.preventDefault?.();
+      const position = this.getTouchPositionFromPointer(event);
+      if (!position) return;
+      this.touchDrag.position = position;
+      this.paintTouchPosition(button, position);
+    }
+
+    finishTouchPositionDrag(button, event) {
+      if (!this.touchDrag
+        || this.touchDrag.button !== button
+        || this.touchDrag.pointerId !== event.pointerId) return;
+      event.preventDefault?.();
+      this.updateTouchPositionDrag(button, event);
+      const { slot, position } = this.touchDrag;
+      button.classList.remove("is-dragging");
+      this.touchDrag = null;
+      if (position && this.input.setTouchPosition(slot, position)) {
+        this.captureStatus.textContent = "Posición táctil guardada.";
+      }
+    }
+
+    nudgeTouchPosition(button, event) {
+      const directions = {
+        ArrowLeft: [-1, 0],
+        ArrowRight: [1, 0],
+        ArrowUp: [0, -1],
+        ArrowDown: [0, 1],
+      };
+      const direction = directions[event.code];
+      if (!direction) return;
+      event.preventDefault?.();
+      const slot = button.dataset.touchPositionSlot;
+      const current = this.input.getTouchPosition(slot);
+      const step = event.shiftKey ? 0.025 : 0.01;
+      if (this.input.setTouchPosition(slot, {
+        x: current.x + direction[0] * step,
+        y: current.y + direction[1] * step,
+      })) {
+        this.captureStatus.textContent = `Posición de ${button.textContent} ajustada.`;
+      }
+    }
+
     captureGamepadButton(player, button) {
       if (!this.awaitingGamepadBinding || Number(player) !== this.awaitingGamepadBinding.player) return false;
       const { action } = this.awaitingGamepadBinding;
@@ -294,11 +392,24 @@
       }
       const playerLabel = document.querySelector("#gamepad-mapping-player");
       if (playerLabel) playerLabel.textContent = `PLAYER ${this.activePlayer}`;
+      const chordLabel = document.querySelector("#gamepad-low-guard-chord");
+      if (chordLabel) {
+        chordLabel.textContent = `${inputApi.formatGamepadButton(this.input.getGamepadBinding(this.activePlayer, "guardHigh"))} + ${inputApi.formatGamepadButton(this.input.getGamepadBinding(this.activePlayer, "bodyModifier"))}`;
+      }
     }
 
     refreshTouchBindings() {
+      const actions = Object.fromEntries(inputApi.ACTIONS.map((action) => [action.id, action]));
       for (const select of this.touchBindingSelects) {
         select.value = this.input.getTouchBinding(select.dataset.touchBindingSlot);
+      }
+      for (const button of this.touchPositionButtons) {
+        const slot = button.dataset.touchPositionSlot;
+        const action = actions[this.input.getTouchBinding(slot)];
+        button.textContent = action?.shortLabel || "--";
+        button.setAttribute?.("aria-label", `${action?.label || slot}. Arrastra para mover.`);
+        this.paintTouchPosition(button, this.input.getTouchPosition(slot));
+        button.classList.toggle("is-body", action?.id === "bodyModifier");
       }
     }
 
@@ -329,7 +440,7 @@
         this.contextTitle.textContent = "COMBATE EN PAUSA";
         this.contextCopy.textContent = "Ajusta el método que estás usando y vuelve al combate. El balance, el reloj y el estado de los peleadores no cambian.";
       } else {
-        this.contextLabel.innerHTML = "<span></span> SYSTEM CONFIGURATION // v3";
+        this.contextLabel.innerHTML = "<span></span> SYSTEM CONFIGURATION // v4";
         this.contextMode.textContent = "MAIN MENU";
         this.contextTitle.textContent = "CONFIGURACIÓN COMPLETA";
         this.contextCopy.textContent = "Configura tus dispositivos antes de entrar al octágono. Los cambios se guardan automáticamente en este navegador.";
