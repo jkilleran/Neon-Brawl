@@ -367,6 +367,23 @@ h1 em {
   background-color: rgba(214, 255, 125, 0.04);
 }
 
+.category-button--settings {
+  border-color: rgba(255, 59, 157, 0.24);
+  background:
+    linear-gradient(90deg, rgba(255, 59, 157, 0.09), transparent 60%),
+    rgba(8, 8, 24, 0.78);
+}
+
+.category-button--settings::before {
+  border-color: rgba(255, 59, 157, 0.16);
+  background: rgba(255, 59, 157, 0.035);
+}
+
+.category-button--settings:hover {
+  border-color: rgba(255, 59, 157, 0.68);
+  background-color: rgba(255, 59, 157, 0.04);
+}
+
 .category-button__index {
   color: #77798e;
   font-size: 10px;
@@ -390,6 +407,12 @@ h1 em {
   border-color: rgba(214, 255, 125, 0.36);
   background: rgba(214, 255, 125, 0.07);
   color: var(--lime);
+}
+
+.category-button--settings .category-button__icon {
+  border-color: rgba(255, 59, 157, 0.36);
+  background: rgba(255, 59, 157, 0.07);
+  color: var(--pink);
 }
 
 .category-button__copy strong,
@@ -446,6 +469,10 @@ h1 em {
 
 .category-button--online .category-button__arrow {
   color: var(--lime);
+}
+
+.category-button--settings .category-button__arrow {
+  color: var(--pink);
 }
 
 .menu-panel__header {
@@ -1435,13 +1462,25 @@ h1 em {
   font: 700 11px "Orbitron", sans-serif;
 }
 
-.settings-panel > header button {
+.settings-panel > header button,
+.controller-card > header button,
+.touch-settings-card > header button {
   padding: 5px 8px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.025);
   color: #8f90a5;
   font-size: 7px;
   font-weight: 700;
+  cursor: pointer;
+}
+
+.controller-card > header button,
+.touch-settings-card > header button {
+  padding: 5px 7px;
+  border: 1px solid rgba(255, 59, 157, 0.2);
+  background: rgba(255, 59, 157, 0.04);
+  color: #a98aa0;
+  font: 700 6px "Orbitron", sans-serif;
   cursor: pointer;
 }
 
@@ -1476,6 +1515,46 @@ h1 em {
 
 .binding-grid button:hover,
 .binding-grid button.is-listening {
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+.mapping-note {
+  margin: -2px 0 7px;
+  color: #737489;
+  font-size: 7px;
+  line-height: 1.25;
+}
+
+.gamepad-binding-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 6px;
+}
+
+.gamepad-binding-grid label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 73px;
+  align-items: center;
+  min-height: 25px;
+  gap: 4px;
+  padding: 3px 4px 3px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.045);
+  color: #9293a8;
+  font-size: 7px;
+}
+
+.gamepad-binding-grid button {
+  min-height: 20px;
+  border: 1px solid rgba(214, 255, 125, 0.22);
+  background: rgba(214, 255, 125, 0.045);
+  color: var(--lime);
+  font: 700 6px "Orbitron", sans-serif;
+  cursor: pointer;
+}
+
+.gamepad-binding-grid button:hover,
+.gamepad-binding-grid button.is-listening {
   border-color: var(--yellow);
   color: var(--yellow);
 }
@@ -1556,6 +1635,41 @@ h1 em {
   color: #66677b;
   font-size: 7px;
   line-height: 1.25;
+}
+
+.touch-mapping-details {
+  margin-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.touch-mapping-details summary {
+  padding: 7px 0 4px;
+  color: var(--pink);
+  font: 700 7px "Orbitron", sans-serif;
+  cursor: pointer;
+}
+
+.touch-binding-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 6px;
+  padding-top: 4px;
+}
+
+.touch-binding-grid label {
+  display: grid;
+  gap: 2px;
+  color: #85869a;
+  font-size: 6px;
+}
+
+.touch-binding-grid select {
+  width: 100%;
+  min-height: 23px;
+  border: 1px solid rgba(255, 59, 157, 0.18);
+  background: #090916;
+  color: #e796c0;
+  font: 700 6px "Orbitron", sans-serif;
 }
 
 .binding-capture-status {
@@ -2592,7 +2706,6 @@ h1 em {
 
 @container game (max-width: 460px) {
   .settings-device-status,
-  .controller-card,
   .settings-panel > header small,
   .touch-settings-card > header small,
   .settings-actions .dialog-button:first-child {

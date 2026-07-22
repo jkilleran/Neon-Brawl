@@ -4,7 +4,7 @@ Neon Brawl 0.25.0 routes keyboard, gamepad, and touch controls through one brows
 
 ## Settings access
 
-Open Settings from the gear button in the application header or from the local pause screen. Settings cannot cover an active online match because online combat cannot pause. The panel can still be opened before joining a match or after returning to the lobby.
+Settings is a primary category beside Local and Online on the main menu. It can also be opened from the gear button in the application header or from the local pause screen. Settings cannot cover an active online match because online combat cannot pause. The panel can still be opened before joining a match or after returning to the lobby.
 
 Settings are stored in `localStorage` under `neonBrawlInputSettingsV1`. Storage failure is non-fatal: the game falls back to defaults for that browser session.
 
@@ -40,6 +40,8 @@ Controllers are detected with the standard browser Gamepad API and can be used a
 | Evade | `RT` | `R2` |
 | Pause local match | `Menu` | `Options` |
 
+Every D-pad and combat action can be remapped independently for Player 1 and Player 2. Select an action, then press the desired controller button. Conflicts swap assignments; `Menu` / `Options` remains reserved for pause. The left analog stick always controls movement so a custom D-pad layout cannot strand a player.
+
 The analog deadzone is adjustable from 8% to 45%. Strike buttons use a rising-edge check, so holding a button cannot repeatedly spam a strike.
 
 ## Touch overlay
@@ -47,6 +49,8 @@ The analog deadzone is adjustable from 8% to 45%. Strike buttons use a rising-ed
 The touch overlay supports `Auto`, `Visible`, and `Hidden` modes. Auto mode appears only when the browser reports touch points or a coarse pointer. It controls Player 1 in Quick Fight, Practice Lab, Local Sparring, and Online Arena.
 
 The left cluster contains movement and both guards. The right cluster contains four distinct strikes, a holdable body modifier, and evade. A small center button pauses local matches. Pointer capture and independent pointer IDs allow a body modifier and strike button to be held together.
+
+All ten gameplay positions are remappable. Open **Edit all 10 buttons**, choose a new action for a slot, and any conflicting action swaps into the previous slot. This keeps exactly one reachable button per combat action. The pause button remains fixed outside the remappable layout.
 
 Touch controls are regular lightweight HTML buttons layered over the Canvas. They do not increase the Canvas resolution, add draw calls to the arena, change the 60 Hz simulation, or alter online packets. Opacity and scale are presentation-only preferences.
 

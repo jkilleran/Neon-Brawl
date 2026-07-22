@@ -50,16 +50,65 @@
     }),
   });
 
+  const RESERVED_GAMEPAD_BUTTONS = new Set([9]);
+  const DEFAULT_GAMEPAD_BINDINGS = Object.freeze({
+    1: Object.freeze({
+      moveLeft: 14,
+      moveRight: 15,
+      guardHigh: 4,
+      guardLow: 6,
+      leftPunch: 2,
+      rightPunch: 3,
+      leftKick: 0,
+      rightKick: 1,
+      bodyModifier: 5,
+      evade: 7,
+    }),
+    2: Object.freeze({
+      moveLeft: 14,
+      moveRight: 15,
+      guardHigh: 4,
+      guardLow: 6,
+      leftPunch: 2,
+      rightPunch: 3,
+      leftKick: 0,
+      rightKick: 1,
+      bodyModifier: 5,
+      evade: 7,
+    }),
+  });
   const GAMEPAD_LAYOUT = Object.freeze({
-    guardHigh: Object.freeze({ button: 4, label: "LB / L1" }),
-    guardLow: Object.freeze({ button: 6, label: "LT / L2" }),
-    leftPunch: Object.freeze({ button: 2, label: "X / □" }),
-    rightPunch: Object.freeze({ button: 3, label: "Y / △" }),
-    leftKick: Object.freeze({ button: 0, label: "A / ✕" }),
-    rightKick: Object.freeze({ button: 1, label: "B / ○" }),
-    bodyModifier: Object.freeze({ button: 5, label: "RB / R1" }),
-    evade: Object.freeze({ button: 7, label: "RT / R2" }),
+    ...Object.fromEntries(ACTION_IDS.map((action) => [
+      action,
+      Object.freeze({ button: DEFAULT_GAMEPAD_BINDINGS[1][action] }),
+    ])),
     pause: Object.freeze({ button: 9, label: "MENU / OPTIONS" }),
+  });
+
+  const TOUCH_SLOTS = Object.freeze([
+    Object.freeze({ id: "guardTop", label: "Arriba izquierda" }),
+    Object.freeze({ id: "moveLeft", label: "Centro izquierda" }),
+    Object.freeze({ id: "moveRight", label: "Centro derecha" }),
+    Object.freeze({ id: "guardBottom", label: "Abajo izquierda" }),
+    Object.freeze({ id: "attackTopLeft", label: "Ataque superior izq." }),
+    Object.freeze({ id: "attackTopRight", label: "Ataque superior der." }),
+    Object.freeze({ id: "attackBottomLeft", label: "Ataque inferior izq." }),
+    Object.freeze({ id: "attackBottomRight", label: "Ataque inferior der." }),
+    Object.freeze({ id: "utilityLeft", label: "Utilidad izquierda" }),
+    Object.freeze({ id: "utilityRight", label: "Utilidad derecha" }),
+  ]);
+  const TOUCH_SLOT_IDS = Object.freeze(TOUCH_SLOTS.map((slot) => slot.id));
+  const DEFAULT_TOUCH_BINDINGS = Object.freeze({
+    guardTop: "guardHigh",
+    moveLeft: "moveLeft",
+    moveRight: "moveRight",
+    guardBottom: "guardLow",
+    attackTopLeft: "leftPunch",
+    attackTopRight: "rightPunch",
+    attackBottomLeft: "leftKick",
+    attackBottomRight: "rightKick",
+    utilityLeft: "bodyModifier",
+    utilityRight: "evade",
   });
 
   const cloneBindings = () => ({
@@ -67,9 +116,18 @@
     2: { ...DEFAULT_BINDINGS[2] },
   });
 
+  const cloneGamepadBindings = () => ({
+    1: { ...DEFAULT_GAMEPAD_BINDINGS[1] },
+    2: { ...DEFAULT_GAMEPAD_BINDINGS[2] },
+  });
+
+  const cloneTouchBindings = () => ({ ...DEFAULT_TOUCH_BINDINGS });
+
   const defaultSettings = () => ({
-    version: 1,
+    version: 2,
     bindings: cloneBindings(),
+    gamepadBindings: cloneGamepadBindings(),
+    touchBindings: cloneTouchBindings(),
     gamepadDeadzone: 0.22,
     touchMode: "auto",
     touchOpacity: 0.72,
@@ -110,6 +168,28 @@
     return String(code || "--").replace(/([a-z])([A-Z])/g, "$1 $2").toUpperCase();
   }
 
+  function formatGamepadButton(button) {
+    const labels = {
+      0: "A / ✕",
+      1: "B / ○",
+      2: "X / □",
+      3: "Y / △",
+      4: "LB / L1",
+      5: "RB / R1",
+      6: "LT / L2",
+      7: "RT / R2",
+      8: "VIEW / SHARE",
+      9: "MENU / OPTIONS",
+      10: "LS / L3",
+      11: "RS / R3",
+      12: "D-PAD ↑",
+      13: "D-PAD ↓",
+      14: "D-PAD ←",
+      15: "D-PAD →",
+    };
+    return labels[button] || `BUTTON ${Number(button) + 1}`;
+  }
+
   function normalizeSettings(candidate) {
     const normalized = defaultSettings();
     if (!candidate || typeof candidate !== "object") return normalized;
@@ -125,6 +205,31 @@
           && !usedCodes.has(code)) {
           normalized.bindings[player][action] = code;
           usedCodes.add(code);
+        }
+      }
+      const gamepadSource = candidate.gamepadBindings?.[player];
+      if (gamepadSource && typeof gamepadSource === "object") {
+        const candidateButtons = ACTION_IDS.map((action) => Number(gamepadSource[action]));
+        const uniqueButtons = new Set(candidateButtons);
+        if (candidateButtons.every((button) => (
+          Number.isInteger(button)
+          && button >= 0
+          && button <= 31
+          && !RESERVED_GAMEPAD_BUTTONS.has(button)
+        )) && uniqueButtons.size === ACTION_IDS.length) {
+          for (const action of ACTION_IDS) {
+            normalized.gamepadBindings[player][action] = Number(gamepadSource[action]);
+          }
+        }
+      }
+    }
+    const touchSource = candidate.touchBindings;
+    if (touchSource && typeof touchSource === "object") {
+      const candidateActions = TOUCH_SLOT_IDS.map((slot) => touchSource[slot]);
+      if (candidateActions.every((action) => ACTION_IDS.includes(action))
+        && new Set(candidateActions).size === ACTION_IDS.length) {
+        for (const slot of TOUCH_SLOT_IDS) {
+          normalized.touchBindings[slot] = touchSource[slot];
         }
       }
     }
@@ -152,9 +257,11 @@
       this.gamepadPressed = { 1: new Set(), 2: new Set() };
       this.gamepadMove = { 1: 0, 2: 0 };
       this.previousGamepadHeld = { 1: new Set(), 2: new Set() };
+      this.previousGamepadButtons = { 1: new Set(), 2: new Set() };
       this.connectedPads = [];
       this.changeListeners = new Set();
       this.inputListeners = new Set();
+      this.gamepadButtonListeners = new Set();
     }
 
     detectTouchCapability() {
@@ -193,6 +300,11 @@
           1: { ...this.settings.bindings[1] },
           2: { ...this.settings.bindings[2] },
         },
+        gamepadBindings: {
+          1: { ...this.settings.gamepadBindings[1] },
+          2: { ...this.settings.gamepadBindings[2] },
+        },
+        touchBindings: { ...this.settings.touchBindings },
       };
     }
 
@@ -208,6 +320,11 @@
     onInputChange(listener) {
       this.inputListeners.add(listener);
       return () => this.inputListeners.delete(listener);
+    }
+
+    onGamepadButtonPress(listener) {
+      this.gamepadButtonListeners.add(listener);
+      return () => this.gamepadButtonListeners.delete(listener);
     }
 
     emitInputChange(player, action, active) {
@@ -243,6 +360,64 @@
         this.settings.bindings = cloneBindings();
       }
       this.releaseAll();
+      this.saveSettings();
+    }
+
+    getGamepadBinding(player, action) {
+      return this.settings.gamepadBindings[player]?.[action];
+    }
+
+    setGamepadBinding(player, action, button) {
+      player = Number(player);
+      button = Number(button);
+      if (![1, 2].includes(player)
+        || !ACTION_IDS.includes(action)
+        || !Number.isInteger(button)
+        || button < 0
+        || button > 31
+        || RESERVED_GAMEPAD_BUTTONS.has(button)) return false;
+      const bindings = this.settings.gamepadBindings[player];
+      const previousButton = bindings[action];
+      const conflict = ACTION_IDS.find((candidate) => (
+        candidate !== action && bindings[candidate] === button
+      ));
+      if (conflict) bindings[conflict] = previousButton;
+      bindings[action] = button;
+      this.releaseAll();
+      this.saveSettings();
+      return true;
+    }
+
+    resetGamepadBindings(player = null) {
+      if ([1, 2].includes(Number(player))) {
+        this.settings.gamepadBindings[player] = { ...DEFAULT_GAMEPAD_BINDINGS[player] };
+      } else {
+        this.settings.gamepadBindings = cloneGamepadBindings();
+      }
+      this.releaseAll();
+      this.saveSettings();
+    }
+
+    getTouchBinding(slot) {
+      return this.settings.touchBindings[slot] || "";
+    }
+
+    setTouchBinding(slot, action) {
+      if (!TOUCH_SLOT_IDS.includes(slot) || !ACTION_IDS.includes(action)) return false;
+      const previousAction = this.settings.touchBindings[slot];
+      const conflictSlot = TOUCH_SLOT_IDS.find((candidate) => (
+        candidate !== slot && this.settings.touchBindings[candidate] === action
+      ));
+      if (conflictSlot) this.settings.touchBindings[conflictSlot] = previousAction;
+      this.settings.touchBindings[slot] = action;
+      this.releaseTouch(1);
+      this.saveSettings();
+      return true;
+    }
+
+    resetTouchBindings() {
+      this.settings.touchBindings = cloneTouchBindings();
+      this.releaseTouch(1);
       this.saveSettings();
     }
 
@@ -334,6 +509,7 @@
       for (const player of [1, 2]) {
         const gamepad = pads[player - 1];
         const held = new Set();
+        const activeButtons = new Set();
         let move = 0;
         if (gamepad) {
           const rawAxis = Number(gamepad.axes?.[0]) || 0;
@@ -341,16 +517,24 @@
           if (Math.abs(rawAxis) > deadzone) {
             move = Math.sign(rawAxis) * ((Math.abs(rawAxis) - deadzone) / (1 - deadzone));
           }
-          if (this.buttonActive(gamepad, 14)) move = -1;
-          if (this.buttonActive(gamepad, 15)) move = 1;
-          for (const [action, mapping] of Object.entries(GAMEPAD_LAYOUT)) {
-            if (this.buttonActive(gamepad, mapping.button)) held.add(action);
+          for (let button = 0; button < (gamepad.buttons?.length || 0); button += 1) {
+            if (this.buttonActive(gamepad, button)) activeButtons.add(button);
           }
+          for (const button of activeButtons) {
+            if (!this.previousGamepadButtons[player].has(button)) {
+              for (const listener of this.gamepadButtonListeners) listener({ player, button });
+            }
+          }
+          for (const [action, button] of Object.entries(this.settings.gamepadBindings[player])) {
+            if (activeButtons.has(button)) held.add(action);
+          }
+          if (activeButtons.has(GAMEPAD_LAYOUT.pause.button)) held.add("pause");
         }
         const previous = this.previousGamepadHeld[player];
         this.gamepadPressed[player] = new Set([...held].filter((action) => !previous.has(action)));
         this.gamepadHeld[player] = held;
         this.previousGamepadHeld[player] = new Set(held);
+        this.previousGamepadButtons[player] = activeButtons;
         this.gamepadMove[player] = clamp(move, -1, 1);
       }
       return this.getConnectedGamepads();
@@ -433,6 +617,7 @@
         this.gamepadHeld[player].clear();
         this.gamepadPressed[player].clear();
         this.previousGamepadHeld[player].clear();
+        this.previousGamepadButtons[player].clear();
         this.gamepadMove[player] = 0;
       }
     }
@@ -450,9 +635,15 @@
     ACTION_IDS,
     STRIKE_ACTIONS,
     DEFAULT_BINDINGS,
+    DEFAULT_GAMEPAD_BINDINGS,
+    DEFAULT_TOUCH_BINDINGS,
+    TOUCH_SLOTS,
+    TOUCH_SLOT_IDS,
     GAMEPAD_LAYOUT,
+    RESERVED_GAMEPAD_BUTTONS,
     RESERVED_CODES,
     formatCode,
+    formatGamepadButton,
     normalizeSettings,
   };
 

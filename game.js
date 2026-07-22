@@ -18,8 +18,9 @@
   const combatControls = document.querySelector("#combat-controls");
   const touchControls = document.querySelector("#touch-controls");
   const touchPauseButton = document.querySelector("#touch-pause-button");
-  const touchButtons = [...document.querySelectorAll("[data-touch-action]")];
+  const touchButtons = [...document.querySelectorAll("[data-touch-slot]")];
   const settingsButton = document.querySelector("#settings-button");
+  const menuSettingsButton = document.querySelector("#menu-settings-button");
   const pauseSettingsButton = document.querySelector("#pause-settings-button");
   const controlLabels = [...document.querySelectorAll("[data-control-player][data-control-action]")];
   const pauseSummaryOne = document.querySelector("#pause-summary-p1");
@@ -1307,9 +1308,29 @@
       const active = input.shouldShowTouchControls()
         && this.state === "fighting"
         && !this.settingsUi?.isOpen;
-      const signature = `${active}:${touchOpacity}:${touchScale}`;
+      const touchBindings = input.getSettings().touchBindings;
+      const signature = `${active}:${touchOpacity}:${touchScale}:${JSON.stringify(touchBindings)}`;
       if (!force && signature === this.touchPresentationSignature) return;
       this.touchPresentationSignature = signature;
+      const touchLabels = {
+        moveLeft: "←",
+        moveRight: "→",
+        guardHigh: "<b>H</b><small>GUARD</small>",
+        guardLow: "<b>L</b><small>GUARD</small>",
+        leftPunch: "<b>LP</b>",
+        rightPunch: "<b>RP</b>",
+        leftKick: "<b>LK</b>",
+        rightKick: "<b>RK</b>",
+        bodyModifier: "<b>BODY</b>",
+        evade: "<b>EVADE</b>",
+      };
+      const actionLabels = Object.fromEntries(INPUT_API.ACTIONS.map((action) => [action.id, action.label]));
+      for (const button of touchButtons) {
+        const action = input.getTouchBinding(button.dataset.touchSlot);
+        button.dataset.touchAction = action;
+        button.innerHTML = touchLabels[action] || `<b>${action}</b>`;
+        button.setAttribute("aria-label", actionLabels[action] || action);
+      }
       touchControls.classList.toggle("is-hidden", !active);
       touchControls.classList.toggle("is-active", active);
       touchControls.style.setProperty?.("--touch-opacity", String(touchOpacity));
@@ -3423,21 +3444,25 @@
   });
   document.querySelector("#resume-button").addEventListener("click", () => game.togglePause());
   settingsButton.addEventListener("click", () => game.openSettings());
+  menuSettingsButton?.addEventListener("click", () => game.openSettings());
   pauseSettingsButton.addEventListener("click", () => game.openSettings());
   touchPauseButton.addEventListener("pointerdown", (event) => {
     event.preventDefault();
     game.togglePause();
   });
   for (const button of touchButtons) {
-    const action = button.dataset.touchAction;
     const release = (event) => {
       event.preventDefault?.();
-      input.setTouchAction(action, false, 1);
+      const action = button.dataset.activeTouchAction;
+      if (action) input.setTouchAction(action, false, 1);
+      delete button.dataset.activeTouchAction;
       button.classList.remove("is-pressed");
     };
     button.addEventListener("pointerdown", (event) => {
       event.preventDefault();
       button.setPointerCapture?.(event.pointerId);
+      const action = button.dataset.touchAction;
+      button.dataset.activeTouchAction = action;
       input.setTouchAction(action, true, 1);
       button.classList.add("is-pressed");
     });

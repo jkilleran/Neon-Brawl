@@ -20,16 +20,25 @@
       this.touchScaleValue = document.querySelector("#touch-scale-value");
       this.gamepadDeadzone = document.querySelector("#gamepad-deadzone");
       this.gamepadDeadzoneValue = document.querySelector("#gamepad-deadzone-value");
+      this.gamepadBindingButtons = [...document.querySelectorAll("[data-gamepad-binding-action]")];
+      this.touchBindingSelects = [...document.querySelectorAll("[data-touch-binding-slot]")];
+      this.resetGamepadButton = document.querySelector("#reset-gamepad-bindings");
+      this.resetTouchButton = document.querySelector("#reset-touch-bindings");
       this.bindingButtons = [...document.querySelectorAll("[data-binding-player]")];
       this.playerTabs = [...document.querySelectorAll("[data-settings-player]")];
       this.playerPanels = [...document.querySelectorAll("[data-settings-panel]")];
       this.resetPlayerButtons = [...document.querySelectorAll("[data-reset-player]")];
       this.awaitingBinding = null;
+      this.awaitingGamepadBinding = null;
       this.activePlayer = 1;
+      this.populateTouchBindingOptions();
       this.bindEvents();
       this.input.onSettingsChange(() => {
         this.refresh();
         this.options.onSettingsChanged?.(this.input.getSettings());
+      });
+      this.input.onGamepadButtonPress?.(({ player, button }) => {
+        this.captureGamepadButton(player, button);
       });
       this.refresh();
     }
@@ -41,12 +50,34 @@
       for (const button of this.bindingButtons) {
         button.addEventListener("click", () => this.beginBindingCapture(button));
       }
+      for (const button of this.gamepadBindingButtons) {
+        button.addEventListener("click", () => this.beginGamepadBindingCapture(button));
+      }
+      for (const select of this.touchBindingSelects) {
+        select.addEventListener("change", () => {
+          this.cancelBindingCapture();
+          const saved = this.input.setTouchBinding(select.dataset.touchBindingSlot, select.value);
+          this.captureStatus.textContent = saved
+            ? "Diseño táctil actualizado. Las acciones duplicadas intercambiaron posiciones."
+            : "No se pudo actualizar esa posición táctil.";
+        });
+      }
       for (const button of this.resetPlayerButtons) {
         button.addEventListener("click", () => {
           this.cancelBindingCapture();
           this.input.resetBindings(Number(button.dataset.resetPlayer));
         });
       }
+      this.resetGamepadButton?.addEventListener("click", () => {
+        this.cancelBindingCapture();
+        this.input.resetGamepadBindings(this.activePlayer);
+        this.captureStatus.textContent = `Mando de P${this.activePlayer} restaurado.`;
+      });
+      this.resetTouchButton?.addEventListener("click", () => {
+        this.cancelBindingCapture();
+        this.input.resetTouchBindings();
+        this.captureStatus.textContent = "Diseño táctil restaurado.";
+      });
       this.resetAllButton.addEventListener("click", () => {
         this.cancelBindingCapture();
         this.input.resetSettings();
@@ -75,6 +106,18 @@
       });
     }
 
+    populateTouchBindingOptions() {
+      for (const select of this.touchBindingSelects) {
+        if (select.options?.length) continue;
+        for (const action of inputApi.ACTIONS) {
+          const option = document.createElement("option");
+          option.value = action.id;
+          option.textContent = action.label.toUpperCase();
+          select.append(option);
+        }
+      }
+    }
+
     get isOpen() {
       return !this.screen.classList.contains("is-hidden");
     }
@@ -101,6 +144,7 @@
         panel.classList.toggle("is-hidden", Number(panel.dataset.settingsPanel) !== this.activePlayer);
       }
       this.cancelBindingCapture();
+      this.refreshGamepadLabels();
     }
 
     beginBindingCapture(button) {
@@ -115,11 +159,36 @@
       this.captureStatus.textContent = "Presiona una tecla nueva. ESC cancela; las teclas repetidas intercambian su acción.";
     }
 
+    beginGamepadBindingCapture(button) {
+      this.cancelBindingCapture();
+      this.awaitingGamepadBinding = {
+        player: this.activePlayer,
+        action: button.dataset.gamepadBindingAction,
+        button,
+      };
+      button.classList.add("is-listening");
+      button.textContent = "PRESS BUTTON";
+      this.captureStatus.textContent = `Presiona un botón del mando de P${this.activePlayer}. MENU / OPTIONS está reservado para pausa.`;
+    }
+
+    captureGamepadButton(player, button) {
+      if (!this.awaitingGamepadBinding || Number(player) !== this.awaitingGamepadBinding.player) return false;
+      const { action } = this.awaitingGamepadBinding;
+      const saved = this.input.setGamepadBinding(player, action, button);
+      this.cancelBindingCapture(saved
+        ? `Mando actualizado: ${inputApi.formatGamepadButton(button)}.`
+        : "MENU / OPTIONS está reservado para pausa. Elige otro botón.");
+      return true;
+    }
+
     cancelBindingCapture(message = "Selecciona una tecla para reasignarla. ESC cancela.") {
       if (this.awaitingBinding) this.awaitingBinding.button.classList.remove("is-listening");
+      if (this.awaitingGamepadBinding) this.awaitingGamepadBinding.button.classList.remove("is-listening");
       this.awaitingBinding = null;
+      this.awaitingGamepadBinding = null;
       this.captureStatus.textContent = message;
       this.refreshBindingLabels();
+      this.refreshGamepadLabels();
     }
 
     captureKey(event) {
@@ -148,9 +217,28 @@
       }
     }
 
+    refreshGamepadLabels() {
+      for (const button of this.gamepadBindingButtons) {
+        if (this.awaitingGamepadBinding?.button === button) continue;
+        button.textContent = inputApi.formatGamepadButton(
+          this.input.getGamepadBinding(this.activePlayer, button.dataset.gamepadBindingAction),
+        );
+      }
+      const playerLabel = document.querySelector("#gamepad-mapping-player");
+      if (playerLabel) playerLabel.textContent = `PLAYER ${this.activePlayer}`;
+    }
+
+    refreshTouchBindings() {
+      for (const select of this.touchBindingSelects) {
+        select.value = this.input.getTouchBinding(select.dataset.touchBindingSlot);
+      }
+    }
+
     refresh() {
       const settings = this.input.getSettings();
       this.refreshBindingLabels();
+      this.refreshGamepadLabels();
+      this.refreshTouchBindings();
       this.touchMode.value = settings.touchMode;
       this.touchOpacity.value = Math.round(settings.touchOpacity * 100);
       this.touchOpacityValue.textContent = `${Math.round(settings.touchOpacity * 100)}%`;

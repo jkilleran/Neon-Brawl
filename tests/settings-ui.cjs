@@ -22,6 +22,7 @@ class FakeElement {
     this.listeners = new Map();
     this.textContent = "";
     this.value = "";
+    this.options = [];
   }
 
   addEventListener(type, listener) {
@@ -34,6 +35,7 @@ class FakeElement {
   }
 
   focus() {}
+  append(child) { this.options.push(child); }
 }
 
 const selectors = new Map();
@@ -58,8 +60,13 @@ element("#touch-scale");
 element("#touch-scale-value");
 element("#gamepad-deadzone");
 element("#gamepad-deadzone-value");
+element("#reset-gamepad-bindings");
+element("#reset-touch-bindings");
+element("#gamepad-mapping-player");
 
 const bindingButton = new FakeElement({ bindingPlayer: "1", bindingAction: "leftPunch" });
+const gamepadBindingButton = new FakeElement({ gamepadBindingAction: "leftPunch" });
+const touchBindingSelect = new FakeElement({ touchBindingSlot: "attackTopLeft" });
 const playerTabs = [
   new FakeElement({ settingsPlayer: "1" }),
   new FakeElement({ settingsPlayer: "2" }),
@@ -71,12 +78,15 @@ const playerPanels = [
 const resetButtons = [new FakeElement({ resetPlayer: "1" })];
 
 global.document = {
+  createElement: () => new FakeElement(),
   querySelector: (selector) => selectors.get(selector),
   querySelectorAll(selector) {
     if (selector === "[data-binding-player]") return [bindingButton];
     if (selector === "[data-settings-player]") return playerTabs;
     if (selector === "[data-settings-panel]") return playerPanels;
     if (selector === "[data-reset-player]") return resetButtons;
+    if (selector === "[data-gamepad-binding-action]") return [gamepadBindingButton];
+    if (selector === "[data-touch-binding-slot]") return [touchBindingSelect];
     return [];
   },
 };
@@ -97,6 +107,16 @@ assert.equal(ui.captureKey({ code: "KeyQ", preventDefault() {}, stopPropagation(
 assert.equal(input.getBinding(1, "leftPunch"), "KeyQ");
 assert.equal(bindingButton.textContent, "Q");
 
+gamepadBindingButton.dispatch("click");
+assert.equal(gamepadBindingButton.textContent, "PRESS BUTTON");
+assert.equal(ui.captureGamepadButton(1, 8), true);
+assert.equal(input.getGamepadBinding(1, "leftPunch"), 8);
+assert.equal(gamepadBindingButton.textContent, "VIEW / SHARE");
+
+touchBindingSelect.value = "rightPunch";
+touchBindingSelect.dispatch("change");
+assert.equal(input.getTouchBinding("attackTopLeft"), "rightPunch");
+
 playerTabs[1].dispatch("click");
 assert.equal(playerPanels[0].classList.contains("is-hidden"), true);
 assert.equal(playerPanels[1].classList.contains("is-hidden"), false);
@@ -108,4 +128,4 @@ assert.equal(input.shouldShowTouchControls(), true);
 selectors.get("#settings-close").dispatch("click");
 assert.equal(closeRequested, true);
 
-console.log("Settings UI test passed: capture, player tabs, preferences and close flow.");
+console.log("Settings UI test passed: keyboard, gamepad, touch mapping, player tabs and close flow.");

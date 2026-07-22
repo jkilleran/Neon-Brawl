@@ -23,7 +23,7 @@ Open `http://localhost:3000` in both tabs, enter two different fighter names, an
 
 ## Controls
 
-Open the gear button to access Settings. Both keyboard layouts can be reassigned, and mappings persist in the current browser. If a replacement key is already in use by that player, the two actions swap safely.
+Open Settings directly from the main menu, the header gear, or the local pause screen. Keyboard, gamepad, and all ten touch positions can be reassigned, and mappings persist in the current browser. If a replacement is already in use by that player or layout, the two actions swap safely.
 
 | Action | Player 1 / Rook | Player 2 / Vex |
 | --- | --- | --- |
@@ -45,9 +45,9 @@ Takedowns and ground control remain disabled. Their prototype logic and legacy s
 
 In Online Arena, both players use the Player 1 keyboard layout on their own computer. Online matches cannot be paused.
 
-Standard Xbox- and PlayStation-style controllers are detected automatically. The first connected controller controls Player 1 and the second controls Player 2 in Local Sparring. The left stick or D-pad moves, shoulder buttons control guards and the body modifier, face buttons produce the four strikes, and the right trigger evades.
+Standard Xbox- and PlayStation-style controllers are detected automatically. The first connected controller controls Player 1 and the second controls Player 2 in Local Sparring. Every D-pad and combat action is remappable per player; the left stick always moves and Menu / Options remains reserved for pause.
 
-Optional touch controls can be set to Auto, Visible, or Hidden. They provide movement, both guards, all four strikes, the body modifier, and evade without changing Canvas resolution or gameplay timing. See [Universal Input and Settings](docs/input-system.md) for the complete mapping and architecture.
+Optional touch controls can be set to Auto, Visible, or Hidden. Their ten gameplay positions can be reassigned while preserving one button per action. They provide movement, both guards, all four strikes, the body modifier, and evade without changing Canvas resolution or gameplay timing. See [Universal Input and Settings](docs/input-system.md) for the complete mapping and architecture.
 
 ## Online Arena
 

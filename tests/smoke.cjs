@@ -51,12 +51,13 @@ assert.match(markup, /WASD \+ TYGH/, "Pause menu should list Player 1 controls")
 assert.match(markup, /FLECHAS \+ IOKL/, "Pause menu should list Player 2 controls");
 assert.match(markup, /body-modifier-summary[\s\S]*mantener \+ cualquier golpe/, "Pause menu should explain the body modifier");
 assert.match(markup, /combat-config\.js[\s\S]*animation-manifest\.js[\s\S]*input-manager\.js[\s\S]*settings-ui\.js[\s\S]*game\.js/, "Shared configs and universal input modules must load before the game");
-assert.match(markup, /id="settings-screen"[\s\S]*KEYBOARD MAPPING[\s\S]*GAMEPAD \/\/ STANDARD[\s\S]*TOUCH OVERLAY/, "Settings should expose keyboard, controller and touch options");
-assert.match(markup, /id="touch-controls"[\s\S]*data-touch-action="bodyModifier"[\s\S]*data-touch-action="evade"/, "The optional touch overlay should expose modifier and evade actions");
+assert.match(markup, /id="settings-screen"[\s\S]*KEYBOARD MAPPING[\s\S]*GAMEPAD MAPPING[\s\S]*TOUCH MAPPING/, "Settings should expose keyboard, controller and touch mapping");
+assert.match(markup, /id="touch-controls"[\s\S]*data-touch-slot="utilityLeft" data-touch-action="bodyModifier"[\s\S]*data-touch-slot="utilityRight" data-touch-action="evade"/, "The optional touch overlay should expose remappable modifier and evade slots");
 assert.equal(inputApi.DEFAULT_BINDINGS[1].leftPunch, "KeyT");
 assert.match(markup, /Tres asaltos de 3 minutos/, "Menu should explain round duration");
 assert.match(markup, /data-menu-target="local"/, "Main menu should expose the local category");
 assert.match(markup, /data-menu-target="online"/, "Main menu should expose the online category");
+assert.match(markup, /id="menu-settings-button"[\s\S]*SETTINGS/, "Main menu should expose Settings as a primary category");
 assert.match(markup, /data-menu-panel="local"[\s\S]*data-mode="cpu"[\s\S]*data-mode="practice"/, "Local category should contain local game modes");
 assert.match(markup, /data-menu-panel="online"[\s\S]*data-mode="online"/, "Online category should contain online game modes");
 assert.match(markup, /data-mode="practice"/, "Menu should expose practice mode");
@@ -248,6 +249,7 @@ const make = (selector) => {
   "#touch-pause-button",
   "#settings-screen",
   "#settings-button",
+  "#menu-settings-button",
   "#pause-settings-button",
   "#pause-summary-p1",
   "#pause-summary-p2",
@@ -296,9 +298,17 @@ const menuCategoryButtons = [
 const menuBackButtons = [new FakeElement(), new FakeElement()];
 const menuButtons = [new FakeElement(), new FakeElement()];
 const touchButtons = [
-  "guardHigh", "moveLeft", "moveRight", "guardLow", "leftPunch",
-  "rightPunch", "leftKick", "rightKick", "bodyModifier", "evade",
-].map((touchAction) => new FakeElement({ touchAction }));
+  ["guardTop", "guardHigh"],
+  ["moveLeft", "moveLeft"],
+  ["moveRight", "moveRight"],
+  ["guardBottom", "guardLow"],
+  ["attackTopLeft", "leftPunch"],
+  ["attackTopRight", "rightPunch"],
+  ["attackBottomLeft", "leftKick"],
+  ["attackBottomRight", "rightKick"],
+  ["utilityLeft", "bodyModifier"],
+  ["utilityRight", "evade"],
+].map(([touchSlot, touchAction]) => new FakeElement({ touchSlot, touchAction }));
 selectors.get("#menu-screen").dataset.menuSection = "root";
 const windowListeners = new Map();
 const animationFrames = [];
@@ -336,7 +346,7 @@ global.document = {
     if (selector === "[data-menu-target]") return menuCategoryButtons;
     if (selector === "[data-menu-back]") return menuBackButtons;
     if (selector === ".menu-button") return menuButtons;
-    if (selector === "[data-touch-action]") return touchButtons;
+    if (selector === "[data-touch-slot]") return touchButtons;
     if (selector === "[data-control-player][data-control-action]") return [];
     return [];
   },
@@ -419,6 +429,15 @@ assert.equal(game.getOnlineKeyboardInput().leftPunch, true, "Touch should enter 
 touchLeftPunch.dispatch("pointerup", { pointerId: 1, preventDefault() {} });
 input.endFrame();
 assert.equal(game.getOnlineKeyboardInput().leftPunch, false, "Touch release should clear the normalized action");
+
+input.setTouchBinding("attackTopLeft", "rightPunch");
+game.syncTouchControlPresentation(true);
+assert.equal(touchLeftPunch.dataset.touchAction, "rightPunch", "Touch slots should update to their saved action mapping");
+touchLeftPunch.dispatch("pointerdown", { pointerId: 2, preventDefault() {} });
+assert.equal(game.getOnlineKeyboardInput().rightPunch, true, "A remapped touch slot should drive its new normalized action");
+touchLeftPunch.dispatch("pointerup", { pointerId: 2, preventDefault() {} });
+input.endFrame();
+input.resetTouchBindings();
 
 game.fighterOne.resetRound(380, 1);
 game.fighterTwo.resetRound(900, -1);
