@@ -1,7 +1,7 @@
 {
   "name": "neon-brawl",
   "private": true,
-  "version": "0.26.0",
+  "version": "0.32.0",
   "type": "commonjs",
   "description": "A lightweight one- or two-player MMA game built with Canvas and JavaScript.",
   "engines": {

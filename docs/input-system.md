@@ -1,6 +1,6 @@
 # Universal Input and Settings
 
-Neon Brawl 0.26.0 routes keyboard, gamepad, and touch controls through one browser-side input manager. Every device produces the same combat input object, so movement, guards, stamina costs, strike priority, and server authority remain independent of the control method.
+Neon Brawl 0.32.0 routes keyboard, gamepad, and touch controls through one browser-side input manager. Every device produces the same combat input object, so movement, guards, stamina costs, strike priority, and server authority remain independent of the control method.
 
 ## Settings access
 
