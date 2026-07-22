@@ -1,6 +1,6 @@
 # Universal Input and Settings
 
-Neon Brawl 0.33.0 routes keyboard, gamepad, and touch controls through one browser-side input manager. Every device produces the same combat input object, so movement, guards, stamina costs, strike priority, and server authority remain independent of the control method.
+Neon Brawl 0.34.0 routes keyboard, gamepad, and touch controls through one browser-side input manager. Every device produces the same combat input object, so movement, guards, stamina costs, strike priority, and server authority remain independent of the control method.
 
 ## Settings access
 
@@ -55,12 +55,12 @@ Controllers are detected with the standard browser Gamepad API and can be used a
 | Left kick | `A` | `Cross` |
 | Right kick | `B` | `Circle` |
 | Body modifier | `RT` | `R2` |
-| Evade | `RB` | `R1` |
+| Evade | Unassigned | Unassigned |
 | Pause local match | `Menu` | `Options` |
 
-Every direct D-pad and combat action can be remapped independently for Player 1 and Player 2. Select an action, then press the desired controller button. Conflicts swap assignments; `Menu` / `Options` remains reserved for pause. Low guard is derived from the buttons currently assigned to High Guard + Body Modifier, so the chord remains correct after either trigger is remapped. The left analog stick always controls movement so a custom D-pad layout cannot strand a player.
+Every direct D-pad and combat action can be remapped independently for Player 1 and Player 2. Select an action, then press the desired controller button. Conflicts swap assignments; press Delete while listening to leave an action unassigned. `LB / L1` and `RB / R1` have no default action, evade begins unassigned, and `Menu` / `Options` remains reserved for pause. Low guard is derived from the buttons currently assigned to High Guard + Body Modifier, so the chord remains correct after either trigger is remapped. The left analog stick always controls movement so a custom D-pad layout cannot strand a player.
 
-Holding only the Body Modifier and pressing any face-button strike selects that strike's body animation. Holding High Guard and Body Modifier together replaces high guard with low guard and gives that defensive chord priority over controller strike buttons. Controller settings saved before v0.33.0 migrate once to this trigger layout so an old direct low-guard assignment cannot override the new chord.
+Holding only the Body Modifier and pressing any face-button strike selects that strike's body animation. Holding High Guard and Body Modifier together replaces high guard with low guard and gives that defensive chord priority over controller strike buttons. Controller settings saved before v0.34.0 migrate once to this final trigger layout so old direct low-guard, body, or evade assignments cannot override it.
 
 The analog deadzone is adjustable from 8% to 45%. Strike buttons use a rising-edge check, so holding a button cannot repeatedly spam a strike.
 

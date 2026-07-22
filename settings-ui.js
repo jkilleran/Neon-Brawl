@@ -252,7 +252,7 @@
       };
       button.classList.add("is-listening");
       button.textContent = "PRESS BUTTON";
-      this.captureStatus.textContent = `Presiona un botón del mando de P${this.activePlayer}. MENU / OPTIONS está reservado para pausa.`;
+      this.captureStatus.textContent = `Presiona un botón del mando de P${this.activePlayer}. DELETE desasigna; MENU / OPTIONS está reservado.`;
     }
 
     beginTouchPositionDrag(button, event) {
@@ -358,6 +358,24 @@
     }
 
     captureKey(event) {
+      if (this.awaitingGamepadBinding) {
+        event.preventDefault?.();
+        event.stopPropagation?.();
+        if (event.code === "Escape") {
+          this.cancelBindingCapture("Cambio cancelado.");
+          return true;
+        }
+        if (["Backspace", "Delete"].includes(event.code)) {
+          const { player, action } = this.awaitingGamepadBinding;
+          const cleared = this.input.clearGamepadBinding(player, action);
+          this.cancelBindingCapture(cleared
+            ? "Control de mando desasignado."
+            : "Ese control no puede desasignarse.");
+          return true;
+        }
+        this.captureStatus.textContent = "Usa el mando para asignar, DELETE para dejar libre o ESC para cancelar.";
+        return true;
+      }
       if (!this.awaitingBinding) return false;
       event.preventDefault?.();
       event.stopPropagation?.();
@@ -440,7 +458,7 @@
         this.contextTitle.textContent = "COMBATE EN PAUSA";
         this.contextCopy.textContent = "Ajusta el método que estás usando y vuelve al combate. El balance, el reloj y el estado de los peleadores no cambian.";
       } else {
-        this.contextLabel.innerHTML = "<span></span> SYSTEM CONFIGURATION // v4";
+        this.contextLabel.innerHTML = "<span></span> SYSTEM CONFIGURATION // v5";
         this.contextMode.textContent = "MAIN MENU";
         this.contextTitle.textContent = "CONFIGURACIÓN COMPLETA";
         this.contextCopy.textContent = "Configura tus dispositivos antes de entrar al octágono. Los cambios se guardan automáticamente en este navegador.";

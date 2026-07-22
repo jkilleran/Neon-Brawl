@@ -54,6 +54,7 @@ assert.match(markup, /combat-config\.js[\s\S]*animation-manifest\.js[\s\S]*input
 assert.match(markup, /id="settings-screen"[\s\S]*KEYBOARD MAPPING[\s\S]*GAMEPAD MAPPING[\s\S]*TOUCH MAPPING/, "Settings should expose keyboard, controller and touch mapping");
 assert.match(markup, /Guardia alta[\s\S]*data-gamepad-binding-action="guardHigh"[\s\S]*LT \/ L2[\s\S]*gamepad-low-guard-chord[\s\S]*L2 \+ R2/, "Gamepad Settings should explain the trigger guard chord");
 assert.match(markup, /Golpe al cuerpo[\s\S]*data-gamepad-binding-action="bodyModifier"[\s\S]*RT \/ R2/, "R2 should be the default body modifier");
+assert.match(markup, /Evasión[\s\S]*data-gamepad-binding-action="evade"[\s\S]*SIN ASIGNAR/, "Evade should be unassigned by default");
 assert.match(markup, /id="touch-layout-stage"[\s\S]*data-touch-position-slot="utilityLeft"[\s\S]*BODY/, "Touch Settings should provide a graphical position editor");
 assert.match(markup, /data-settings-section-target="general"[\s\S]*data-settings-section-target="keyboard"[\s\S]*data-settings-section-target="gamepad"[\s\S]*data-settings-section-target="touch"/, "Settings should have four organized categories");
 assert.match(markup, /id="sound-mode"[\s\S]*id="screen-shake-mode"[\s\S]*id="control-hints-mode"[\s\S]*id="settings-fullscreen-button"/, "General Settings should expose the essential presentation options");

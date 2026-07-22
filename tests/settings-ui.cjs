@@ -157,6 +157,10 @@ assert.equal(gamepadBindingButton.textContent, "PRESS BUTTON");
 assert.equal(ui.captureGamepadButton(1, 8), true);
 assert.equal(input.getGamepadBinding(1, "leftPunch"), 8);
 assert.equal(gamepadBindingButton.textContent, "VIEW / SHARE");
+gamepadBindingButton.dispatch("click");
+assert.equal(ui.captureKey({ code: "Delete", preventDefault() {}, stopPropagation() {} }), true);
+assert.equal(input.getGamepadBinding(1, "leftPunch"), null);
+assert.equal(gamepadBindingButton.textContent, "SIN ASIGNAR");
 
 sectionTabs[3].dispatch("click");
 touchBindingSelect.value = "rightPunch";

@@ -51,13 +51,14 @@ assert.deepEqual(input.getSettings().touchBindings, DEFAULT_TOUCH_BINDINGS);
 assert.deepEqual(input.getSettings().touchPositions, DEFAULT_TOUCH_POSITIONS);
 assert.equal(DEFAULT_GAMEPAD_BINDINGS[1].guardHigh, 6, "L2 should be the default high guard");
 assert.equal(DEFAULT_GAMEPAD_BINDINGS[1].bodyModifier, 7, "R2 should be the default body modifier");
-assert.equal(DEFAULT_GAMEPAD_BINDINGS[1].evade, 5, "R1 should remain available for evade");
+assert.equal(DEFAULT_GAMEPAD_BINDINGS[1].evade, null, "Evade should remain unassigned by default");
 assert.equal(input.getPreference("soundEnabled"), true);
 assert.equal(input.getPreference("screenShake"), "full");
 assert.equal(input.getPreference("showControlHints"), false);
 assert.equal(formatCode("ArrowLeft"), "←");
 assert.equal(formatCode("KeyT"), "T");
 assert.equal(formatGamepadButton(2), "X / □");
+assert.equal(formatGamepadButton(null), "SIN ASIGNAR");
 
 input.handleKeyDown("KeyD");
 assert.equal(input.getActiveInputMethod(1), "keyboard");
@@ -100,6 +101,10 @@ assert.deepEqual(input.getTouchPosition("utilityLeft"), DEFAULT_TOUCH_POSITIONS.
 assert.equal(input.setGamepadBinding(1, "leftPunch", 8), true);
 assert.equal(input.getGamepadBinding(1, "leftPunch"), 8);
 assert.equal(input.setGamepadBinding(1, "leftPunch", 9), false, "Pause button should remain reserved");
+assert.equal(input.setGamepadBinding(1, "evade", 5), true);
+assert.equal(input.getGamepadBinding(1, "evade"), 5);
+assert.equal(input.clearGamepadBinding(1, "evade"), true);
+assert.equal(input.getGamepadBinding(1, "evade"), null);
 
 pads = [gamepad({
   id: "Pad One",
@@ -164,7 +169,7 @@ assert.deepEqual(persistedMappings.getTouchPosition("utilityLeft"), DEFAULT_TOUC
 
 const legacyStorage = new MemoryStorage();
 legacyStorage.setItem("neonBrawlInputSettingsV1", JSON.stringify({
-  version: 3,
+  version: 4,
   bindings: DEFAULT_BINDINGS,
   gamepadBindings: {
     1: { ...DEFAULT_GAMEPAD_BINDINGS[1], guardHigh: 4, guardLow: 6, bodyModifier: 5, evade: 7 },
@@ -173,7 +178,7 @@ legacyStorage.setItem("neonBrawlInputSettingsV1", JSON.stringify({
   touchBindings: DEFAULT_TOUCH_BINDINGS,
 }));
 const migratedInput = new NeonBrawlInputManager({ storage: legacyStorage, navigator });
-assert.deepEqual(migratedInput.getSettings().gamepadBindings[1], DEFAULT_GAMEPAD_BINDINGS[1], "Legacy controller layouts should migrate to the new trigger defaults");
+assert.deepEqual(migratedInput.getSettings().gamepadBindings[1], DEFAULT_GAMEPAD_BINDINGS[1], "Legacy controller layouts should migrate to the final trigger defaults");
 
 input.setPreference("touchMode", "on");
 assert.equal(input.shouldShowTouchControls(), true);

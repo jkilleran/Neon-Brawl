@@ -67,7 +67,7 @@
       leftKick: 0,
       rightKick: 1,
       bodyModifier: 7,
-      evade: 5,
+      evade: null,
     }),
     2: Object.freeze({
       moveLeft: 14,
@@ -78,7 +78,7 @@
       leftKick: 0,
       rightKick: 1,
       bodyModifier: 7,
-      evade: 5,
+      evade: null,
     }),
   });
   const GAMEPAD_LAYOUT = Object.freeze({
@@ -151,7 +151,7 @@
   );
 
   const defaultSettings = () => ({
-    version: 4,
+    version: 5,
     bindings: cloneBindings(),
     gamepadBindings: cloneGamepadBindings(),
     touchBindings: cloneTouchBindings(),
@@ -200,6 +200,7 @@
   }
 
   function formatGamepadButton(button) {
+    if (button === null || button === undefined || button === "") return "SIN ASIGNAR";
     const labels = {
       0: "A / ✕",
       1: "B / ○",
@@ -240,18 +241,34 @@
         }
       }
       const gamepadSource = candidate.gamepadBindings?.[player];
-      if (Number(candidate.version) >= 4 && gamepadSource && typeof gamepadSource === "object") {
-        const candidateButtons = GAMEPAD_DIRECT_ACTION_IDS.map((action) => Number(gamepadSource[action]));
-        const uniqueButtons = new Set(candidateButtons);
-        if (candidateButtons.every((button) => (
-          Number.isInteger(button)
-          && button >= 0
-          && button <= 31
-          && !RESERVED_GAMEPAD_BUTTONS.has(button)
-        )) && uniqueButtons.size === GAMEPAD_DIRECT_ACTION_IDS.length) {
-          for (const action of GAMEPAD_DIRECT_ACTION_IDS) {
-            normalized.gamepadBindings[player][action] = Number(gamepadSource[action]);
+      if (Number(candidate.version) >= 5 && gamepadSource && typeof gamepadSource === "object") {
+        const candidateBindings = {};
+        const assignedButtons = new Set();
+        let valid = true;
+        for (const action of GAMEPAD_DIRECT_ACTION_IDS) {
+          if (!Object.hasOwn(gamepadSource, action)) {
+            valid = false;
+            break;
           }
+          const rawButton = gamepadSource[action];
+          if (rawButton === null) {
+            candidateBindings[action] = null;
+            continue;
+          }
+          const button = Number(rawButton);
+          if (!Number.isInteger(button)
+            || button < 0
+            || button > 31
+            || RESERVED_GAMEPAD_BUTTONS.has(button)
+            || assignedButtons.has(button)) {
+            valid = false;
+            break;
+          }
+          candidateBindings[action] = button;
+          assignedButtons.add(button);
+        }
+        if (valid) {
+          normalized.gamepadBindings[player] = candidateBindings;
         }
       }
     }
@@ -466,6 +483,15 @@
       ));
       if (conflict) bindings[conflict] = previousButton;
       bindings[action] = button;
+      this.releaseAll();
+      this.saveSettings();
+      return true;
+    }
+
+    clearGamepadBinding(player, action) {
+      player = Number(player);
+      if (![1, 2].includes(player) || !GAMEPAD_DIRECT_ACTION_IDS.includes(action)) return false;
+      this.settings.gamepadBindings[player][action] = null;
       this.releaseAll();
       this.saveSettings();
       return true;
